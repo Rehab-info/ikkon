@@ -168,7 +168,7 @@ td.nm { font-family: var(--font-display); font-weight: 700; white-space: nowrap;
 
 @media (max-width: 720px) {
   .hero .wrap { grid-template-columns: 1fr; padding-block: 28px 8px; }
-  .janome { width: 160px; justify-self: start; order: -1; }
+  .janome { width: 160px; justify-self: center; order: -1; }
   .frow { grid-template-columns: 1fr; gap: 4px; }
   .frow > label, .frow > span { padding-top: 0; }
   .types4 { grid-template-columns: 1fr; }
