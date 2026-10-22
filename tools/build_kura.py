@@ -9,7 +9,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 kura = json.loads((ROOT / "data/kura.json").read_text(encoding="utf-8"))
 sakes = {s["id"]: s for s in json.loads((ROOT / "data/sakes.json").read_text(encoding="utf-8"))}
-VERSION = "18"
+VERSION = "19"
 
 AREAS = ["仙台・県央", "県南", "塩竈", "大崎・加美・遠田", "栗原・登米", "石巻・気仙沼"]
 # 地域の写真(images/ に置いたものだけ表示)
