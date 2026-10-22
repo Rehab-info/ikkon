@@ -1,33 +1,38 @@
-/* Layout: 蛇の目猪口の白磁と藍。上に味わいマップ、下に絞り込みと銘柄カード。 */
+/* Layout: 居酒屋の夜。暖簾のような濃い帯の下に、和紙の地と赤提灯の朱。上に味わいマップ、下に絞り込みと銘柄カード。 */
 :root {
-  --bg: #f2f5f9;
-  --surface: #ffffff;
-  --ink: #142033;
-  --muted: #586579;
-  --line: #d4dbe6;
-  --ai: #1b4d9b;          /* 蛇の目の藍 */
-  --ai-soft: #e2eaf6;
-  --on-ai: #ffffff;
-  --t-kun: #a8436f;       /* 薫酒 */
-  --t-sou: #1f7f8e;       /* 爽酒 */
-  --t-jun: #9a6a12;       /* 醇酒 */
-  --t-juku: #7a4526;      /* 熟酒 */
+  --bg: #f3ece0;          /* 和紙 */
+  --surface: #fbf7ef;
+  --ink: #2a1d14;         /* 焦げ茶の木 */
+  --muted: #6e5b4a;
+  --line: #ddcfbb;
+  --ai: #b8261e;          /* 赤提灯 */
+  --ai-soft: #f4ddd3;
+  --on-ai: #fff8ee;
+  --head-bg: #2a1d14;     /* 暖簾 */
+  --head-ink: #f6ecdc;
+  --head-muted: #c9b59c;
+  --t-kun: #9b3d6a;       /* 薫酒 */
+  --t-sou: #2f6f6a;       /* 爽酒 */
+  --t-jun: #9a640c;       /* 醇酒 */
+  --t-juku: #6b3b1f;      /* 熟酒 */
   --font-display: "Shippori Mincho B1", "Hiragino Mincho ProN", "Yu Mincho", serif;
   --font-body: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif;
   --radius: 10px;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0e1420; --surface: #161f2e; --ink: #e5eaf2; --muted: #9ba7b9; --line: #2a3648;
-    --ai: #86abe6; --ai-soft: #1b2a44; --on-ai: #0e1420;
-    --t-kun: #e38bb1; --t-sou: #6cc6d4; --t-jun: #e2b75e; --t-juku: #cf9a74;
+    --bg: #1b1310; --surface: #271c16; --ink: #f1e6d6; --muted: #b9a58f; --line: #3f2f25;
+    --ai: #e8574a; --ai-soft: #3a1f1a; --on-ai: #1b1310;
+    --head-bg: #110b08; --head-ink: #f1e6d6; --head-muted: #a8937c;
+    --t-kun: #e48ab0; --t-sou: #74c2b8; --t-jun: #e8b85c; --t-juku: #d39a74;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #0e1420; --surface: #161f2e; --ink: #e5eaf2; --muted: #9ba7b9; --line: #2a3648;
-  --ai: #86abe6; --ai-soft: #1b2a44; --on-ai: #0e1420;
-  --t-kun: #e38bb1; --t-sou: #6cc6d4; --t-jun: #e2b75e; --t-juku: #cf9a74;
+  --bg: #1b1310; --surface: #271c16; --ink: #f1e6d6; --muted: #b9a58f; --line: #3f2f25;
+  --ai: #e8574a; --ai-soft: #3a1f1a; --on-ai: #1b1310;
+  --head-bg: #110b08; --head-ink: #f1e6d6; --head-muted: #a8937c;
+  --t-kun: #e48ab0; --t-sou: #74c2b8; --t-jun: #e8b85c; --t-juku: #d39a74;
   color-scheme: dark;
 }
 
@@ -52,17 +57,17 @@ a { color: var(--ai); }
 h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; line-height: 1.35; margin: 0; }
 
 /* header */
-.site-head { border-bottom: 1px solid var(--line); background: var(--bg); }
+.site-head { background: var(--head-bg); border-bottom: 3px solid var(--ai); }
 .site-head .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-block: 14px; flex-wrap: wrap; }
-.logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--ink); }
+.logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--head-ink); }
 .logo .mark { width: 30px; height: 30px; border-radius: 50%; background:
   radial-gradient(circle, var(--surface) 0 30%, var(--ai) 31% 46%, var(--surface) 47% 60%, var(--ai) 61% 74%, var(--surface) 75%);
-  border: 1px solid var(--line); flex: none; }
+  border: 1px solid var(--head-muted); flex: none; }
 .logo b { font-family: var(--font-display); font-size: 22px; letter-spacing: .08em; }
-.logo small { color: var(--muted); font-size: 12px; letter-spacing: .06em; }
+.logo small { color: var(--head-muted); font-size: 12px; letter-spacing: .06em; }
 .nav { display: flex; gap: 4px; }
-.nav a { text-decoration: none; color: var(--muted); padding: 6px 12px; border-radius: 999px; font-size: 14px; }
-.nav a[aria-current="page"] { color: var(--ai); background: var(--ai-soft); font-weight: 700; }
+.nav a { text-decoration: none; color: var(--head-muted); padding: 6px 12px; border-radius: 999px; font-size: 14px; }
+.nav a[aria-current="page"] { color: var(--on-ai); background: var(--ai); font-weight: 700; }
 
 /* hero */
 .hero .wrap { display: grid; grid-template-columns: 1.2fr 1fr; gap: 32px; align-items: center; padding-block: 40px 24px; }
@@ -128,7 +133,7 @@ h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; line-height: 
 
 /* dialog */
 dialog { border: 1px solid var(--line); border-radius: 14px; padding: 0; width: min(640px, calc(100vw - 24px)); max-height: calc(100dvh - 32px); background: var(--surface); color: var(--ink); }
-dialog::backdrop { background: rgba(10, 18, 32, .55); }
+dialog::backdrop { background: rgba(20, 12, 8, .6); }
 .dlg { padding: 22px; display: grid; gap: 18px; }
 .dlg-head { display: flex; justify-content: space-between; gap: 12px; align-items: start; }
 .dlg-head h2 { font-size: 24px; }
