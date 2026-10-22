@@ -214,6 +214,7 @@
       (s.story ? '<div><h4>蔵の物語</h4><p>' + esc(s.story) + '</p></div>' : '') +
       '<div><h4>買い方</h4><p>' + esc(s.buyNote) + '</p></div>' +
       '<div class="dlg-links">' + (s.url ? '<a class="btn-ghost small inline" href="' + esc(s.url) + '" target="_blank" rel="noopener">蔵元の公式サイト</a>' :
+        s.orgUrl ? '<a class="btn-ghost small inline" href="' + esc(s.orgUrl) + '" target="_blank" rel="noopener">蔵元の紹介(宮城県酒造組合)</a>' :
         '<a class="btn-ghost small inline" href="https://www.google.com/search?q=' + encodeURIComponent(s.brewery + ' ' + s.pref + ' 公式') + '" target="_blank" rel="noopener">蔵元を検索する</a>') +
       (s.pref === '宮城' ? '<a class="btn-ghost small inline" href="miyagi.html">宮城で飲める・買える店</a>' : '') + '</div>' +
       '</div>';
