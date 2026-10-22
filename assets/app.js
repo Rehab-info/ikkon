@@ -13,7 +13,13 @@
   };
   var TASTE = { all: 'すべて', sweet: '甘口寄り', mid: '中間', dry: '辛口寄り' };
   var TEMPGROUP = { all: 'すべて', cold: '冷やして', room: '常温', kan: '燗で' };
-  var PRICE = { low: '手頃 〜1,500円', mid: '中 1,500〜3,000円', high: '贅沢 3,000円〜' };
+  var PRICE = { low: '手頃 〜2,000円', mid: '中 2,000〜4,000円', high: '贅沢 4,000円〜' };
+  var WORLD = {
+    kun: ['白身魚のカルパッチョ', 'フレッシュチーズ', '生春巻き'],
+    sou: ['魚介のフリット', 'グリーンサラダ', '蒸し鶏の前菜'],
+    jun: ['鶏のクリーム煮', 'ハードチーズ', '餃子'],
+    juku: ['ブルーチーズ', '麻婆豆腐', 'ビターチョコレート']
+  };
   var PRICE_SHORT = { low: '手頃', mid: '中価格', high: '贅沢' };
   var BUY = { wide: 'スーパーでも', shop: '酒販店・通販', tokuyaku: '特約店のみ' };
 
@@ -34,7 +40,7 @@
 
   function matches(s) {
     if (state.q) {
-      var hay = [s.name, s.kana, s.brewery, s.pref, s.region, s.spec, s.note].concat(s.pairing).join(' ');
+      var hay = [s.name, s.kana, s.brewery, s.pref, s.region, s.spec, s.note, s.oneliner || '', s.rice || ''].concat(s.pairing).join(' ');
       if (hay.indexOf(state.q) === -1) return false;
     }
     if (state.type.length && state.type.indexOf(s.type) === -1) return false;
@@ -109,6 +115,7 @@
       '<div class="card-body">' +
       '<div class="card-top"><div><div class="kana">' + esc(s.kana) + '</div><h3>' + esc(s.name) + '</h3></div>' +
       '<span class="type-pill t-' + s.type + '">' + t.label + '</span></div>' +
+      '<p class="one">' + esc(s.oneliner || '') + '</p>' +
       '<div class="meta">' + esc(s.spec) + ' ・ ' + esc(s.brewery) + '(' + esc(s.pref) + ')</div>' +
       scale('甘口', '辛口', s.sweet) + scale('淡麗', '濃醇', s.body) +
       '<div class="tags"><span class="tag">おすすめ ' + esc(s.best) + '</span>' +
@@ -193,17 +200,22 @@
       '<div class="dlg">' +
       '<div class="dlg-head"><div><div class="kana">' + esc(s.kana) + '</div><h2 id="d-name">' + esc(s.name) + '</h2></div>' +
       '<button type="button" class="close" id="d-close" aria-label="閉じる">×</button></div>' +
-      '<div class="dlg-intro">' + media(s, 'dlg-media') + '<p>' + esc(s.note) + '</p></div>' +
+      '<div class="dlg-intro">' + media(s, 'dlg-media') + '<div class="intro-text"><p class="one">' + esc(s.oneliner || '') + '</p><p>' + esc(s.note) + '</p></div></div>' +
       '<dl class="spec-table">' +
       '<dt>タイプ</dt><dd><span class="t-' + s.type + '">' + t.label + '</span>(' + t.sub + ')</dd>' +
       '<dt>種類</dt><dd>' + esc(s.spec) + '</dd>' +
       '<dt>蔵元</dt><dd>' + esc(s.brewery) + '(' + esc(s.pref) + ')</dd>' +
+      (s.rice ? '<dt>酒米</dt><dd>' + esc(s.rice) + '</dd>' : '') +
       '<dt>価格帯</dt><dd>' + PRICE[s.price] + '(四合瓶の目安)</dd></dl>' +
       '<div>' + scale('甘口', '辛口', s.sweet) + scale('淡麗', '濃醇', s.body) + '</div>' +
       '<div><h4>おすすめの温度</h4><div class="temp-scale">' + temps + '</div></div>' +
-      '<div><h4>合う料理</h4><ul class="pair">' + s.pairing.map(function (p) { return '<li>' + esc(p) + '</li>'; }).join('') + '</ul></div>' +
+      '<div><h4>合う料理</h4><ul class="pair">' + s.pairing.map(function (p) { return '<li>' + esc(p) + '</li>'; }).join('') + '</ul>' +
+      '<p class="world"><b>洋食・中華なら</b> ' + WORLD[s.type].map(esc).join('、') + '</p></div>' +
+      (s.story ? '<div><h4>蔵の物語</h4><p>' + esc(s.story) + '</p></div>' : '') +
       '<div><h4>買い方</h4><p>' + esc(s.buyNote) + '</p></div>' +
-      (s.pref === '宮城' ? '<div><a class="btn-ghost small inline" href="miyagi.html">宮城で飲める・買える店を見る</a></div>' : '') +
+      '<div class="dlg-links">' + (s.url ? '<a class="btn-ghost small inline" href="' + esc(s.url) + '" target="_blank" rel="noopener">蔵元の公式サイト</a>' :
+        '<a class="btn-ghost small inline" href="https://www.google.com/search?q=' + encodeURIComponent(s.brewery + ' ' + s.pref + ' 公式') + '" target="_blank" rel="noopener">蔵元を検索する</a>') +
+      (s.pref === '宮城' ? '<a class="btn-ghost small inline" href="miyagi.html">宮城で飲める・買える店</a>' : '') + '</div>' +
       '</div>';
     var dlg = $('detail');
     if (dlg.showModal) { if (!dlg.open) dlg.showModal(); } else dlg.setAttribute('open', '');
@@ -230,6 +242,63 @@
     Array.prototype.forEach.call($('map').querySelectorAll('[data-id]'), function (n) {
       n.classList.toggle('off', !ids[n.getAttribute('data-id')]);
     });
+  }
+
+  /* ---------- はじめての一杯 ---------- */
+  var QUIZ = {
+    aroma: { label: { rich: '華やか', calm: '控えめ' } },
+    body: { label: { light: 'すっきり軽く', full: 'しっかり旨み' } },
+    temp: { label: { cold: '冷やして', warm: '常温・燗で' } }
+  };
+  var answer = { aroma: 'rich', body: 'light', temp: 'cold' };  // 初めての人に好まれやすいフルーティー・フレッシュ寄り
+  function quizScore(s) {
+    var sc = 0, g = tempGroups(s);
+    if (answer.aroma === 'rich') sc += { kun: 3, sou: 1, jun: 0, juku: 0 }[s.type];
+    else sc += { kun: -1, sou: 2, jun: 3, juku: 2 }[s.type];
+    sc += (answer.body === 'light' ? -s.body : s.body) * 1.5;
+    var coldBest = /冷え/.test(s.best);
+    if (answer.temp === 'cold') sc += (g.cold ? 1.5 : -2) + (coldBest ? 1 : 0);
+    else sc += ((g.kan || g.room) ? 1.5 : -2) + (!coldBest ? 1 : 0);
+    sc += { wide: 0.8, shop: 0.4, tokuyaku: -0.6 }[s.buy];  // 手に入りやすさ
+    return sc;
+  }
+  function renderQuiz() {
+    ['aroma', 'body', 'temp'].forEach(function (k) {
+      Array.prototype.forEach.call($('q-' + k).querySelectorAll('.chip'), function (b) {
+        b.setAttribute('aria-pressed', String(answer[k] === b.getAttribute('data-k')));
+      });
+    });
+    var ranked = sakes.slice().sort(function (a, b) { return quizScore(b) - quizScore(a); });
+    var top = ranked[0], alt = ranked.slice(1, 3);
+    var t = TYPES[top.type];
+    $('quiz-result').innerHTML =
+      '<div class="pick">' + media(top, 'pick-media') +
+      '<div class="pick-body"><div class="eyebrow">今夜のおすすめ</div>' +
+      '<h3>' + esc(top.name) + '</h3>' +
+      '<p class="one">' + esc(top.oneliner || '') + '</p>' +
+      '<div class="tags"><span class="type-pill t-' + top.type + '">' + t.label + '</span>' +
+      '<span class="tag">おすすめ ' + esc(top.best) + '</span><span class="tag plain">' + PRICE_SHORT[top.price] + '</span>' +
+      '<span class="tag plain">' + BUY[top.buy] + '</span></div>' +
+      '<button type="button" class="btn" data-open="' + top.id + '">詳しく見る</button></div></div>' +
+      '<div class="alts"><span>ほかの候補</span>' + alt.map(function (a) {
+        return '<button type="button" class="btn-ghost small" data-open="' + a.id + '">' + esc(a.name.split(' ')[0]) + '</button>';
+      }).join('') + '</div>';
+  }
+  function initQuiz() {
+    ['aroma', 'body', 'temp'].forEach(function (k) {
+      var lab = QUIZ[k].label;
+      $('q-' + k).innerHTML = Object.keys(lab).map(function (v) {
+        return '<button type="button" class="chip" data-k="' + v + '" aria-pressed="false">' + lab[v] + '</button>';
+      }).join('');
+      $('q-' + k).addEventListener('click', function (e) {
+        var b = e.target.closest('.chip'); if (!b) return;
+        answer[k] = b.getAttribute('data-k'); renderQuiz();
+      });
+    });
+    $('quiz-result').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-open]'); if (b) openDetail(b.getAttribute('data-open'));
+    });
+    renderQuiz();
   }
 
   function init(data) {
@@ -287,6 +356,7 @@
     dlg.addEventListener('click', function (e) { if (e.target === dlg) dlg.close(); });
     dlg.addEventListener('close', function () { try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {} });
     drawMap();
+    initQuiz();
     update();
     var h = (location.hash || '').slice(1);
     if (h) openDetail(h);
