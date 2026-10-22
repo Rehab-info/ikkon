@@ -386,7 +386,7 @@ body::after {
 .hc-body { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 32px; min-height: 520px; padding-block: 32px 24px; }
 .hc-moon {
   justify-self: center; width: min(300px, 80%); aspect-ratio: 1; max-width: 100%; border-radius: 50%;
-  background: url(../images/moon.jpg) center / cover;
+  background: url(../images/moon.jpg?v=2) center / cover;
   box-shadow: 0 0 0 10px var(--bg), 0 0 0 11px var(--line), 0 0 80px 10px var(--moonlight), var(--shadow-2);
   will-change: transform;
 }
