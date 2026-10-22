@@ -247,3 +247,30 @@ td.nm { font-family: var(--font-display); font-weight: 700; white-space: nowrap;
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
 #search, #results { scroll-margin-top: env(safe-area-inset-top, 0px); }
+
+/* 宮城の店 */
+.jump { display: flex; flex-wrap: wrap; gap: 8px; }
+.jump a { text-decoration: none; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 8px 16px; font-size: 14px; min-height: 40px; display: inline-flex; align-items: center; }
+.notice { font-size: 13px; color: var(--muted); margin: 12px 0 0; max-width: 46em; }
+.places { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; }
+.place { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; display: grid; gap: 10px; align-content: start; min-width: 0; }
+.place-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.place h3 { font-size: 19px; }
+.area { flex: none; font-size: 12px; color: var(--muted); border: 1px solid var(--line); border-radius: 4px; padding: 0 8px; }
+.can { display: flex; flex-wrap: wrap; gap: 6px; font-size: 12px; }
+.can span { padding: 1px 9px; border-radius: 999px; background: var(--bg); color: var(--muted); border: 1px solid var(--line); }
+.can .can-drink { background: var(--ai); color: var(--on-ai); border-color: var(--ai); font-weight: 700; }
+.can .can-buy { background: var(--ai-soft); color: var(--ai); border-color: var(--ai); font-weight: 700; }
+.place p { margin: 0; font-size: 14px; }
+.info { display: grid; grid-template-columns: 5.5em minmax(0, 1fr); gap: 2px 10px; margin: 0; font-size: 13.5px; }
+.info dt { color: var(--muted); }
+.info dd { margin: 0; }
+.related { font-size: 13px; color: var(--muted); }
+.links { display: flex; flex-wrap: wrap; gap: 8px; }
+.links a, .btn-ghost.inline { display: inline-flex; align-items: center; min-height: 40px; padding: 6px 14px; border: 1px solid var(--line); border-radius: 999px; text-decoration: none; font-size: 13.5px; color: var(--ai); background: var(--bg); }
+.links a:first-child { background: var(--ai); color: var(--on-ai); border-color: var(--ai); font-weight: 700; }
+@media (max-width: 720px) {
+  .places { grid-template-columns: 1fr; gap: 10px; }
+  .place { padding: 14px; }
+  .nav a { padding: 8px 10px; font-size: 13.5px; }
+}

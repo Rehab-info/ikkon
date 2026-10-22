@@ -202,6 +202,7 @@
       '<div><h4>おすすめの温度</h4><div class="temp-scale">' + temps + '</div></div>' +
       '<div><h4>合う料理</h4><ul class="pair">' + s.pairing.map(function (p) { return '<li>' + esc(p) + '</li>'; }).join('') + '</ul></div>' +
       '<div><h4>買い方</h4><p>' + esc(s.buyNote) + '</p></div>' +
+      (s.pref === '宮城' ? '<div><a class="btn-ghost small inline" href="miyagi.html">宮城で飲める・買える店を見る</a></div>' : '') +
       '</div>';
     var dlg = $('detail');
     if (dlg.showModal) { if (!dlg.open) dlg.showModal(); } else dlg.setAttribute('open', '');
