@@ -20,8 +20,9 @@ jobs:
             [ -z "$path" ] && continue
             if [ ! -f "$path" ]; then
               mkdir -p "$(dirname "$path")"
-              curl -fsSL -A "Mozilla/5.0" -o "$path" "$url"
-              echo "saved $path"
+              code=$(curl -sSL -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" -e "https://www.pakutaso.com/" -o "$path" -w "%{http_code}" "$url" || echo fail)
+              echo "$path -> $code"
+              if [ "$code" != "200" ]; then rm -f "$path"; echo "::warning::failed $url ($code)"; fi
             fi
           done
       - name: Commit photos

@@ -1,3 +1,4 @@
 # 取得する写真(保存先 URL 出典)。ぱくたそ:商用可・クレジット不要、直リンク禁止のため保存して使う
 images/kurikoma.jpg https://download.pakutaso.com/shared/img/thumb/069AME0226_TP_V.jpg ぱくたそ「秋の栗駒山へ続く紅葉に囲まれた木道と登山者」ameman
 images/matsushima.jpg https://download.pakutaso.com/shared/img/thumb/070AME0226_TP_V.jpg ぱくたそ「朝焼けに染まる松島の湾」ameman
+
