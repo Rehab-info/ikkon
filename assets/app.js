@@ -303,6 +303,19 @@
     renderQuiz();
   }
 
+  /* ---------- 月の視差(スクロールで少しだけ遅れて動く) ---------- */
+  function initParallax() {
+    var moon = $('hc-moon');
+    if (!moon || (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
+    var ticking = false;
+    function apply() {
+      var y = Math.min(window.scrollY || 0, 700);
+      moon.style.transform = 'translateY(' + (y * 0.18).toFixed(1) + 'px)';
+      ticking = false;
+    }
+    window.addEventListener('scroll', function () { if (!ticking) { ticking = true; requestAnimationFrame(apply); } }, { passive: true });
+  }
+
   function init(data) {
     sakes = data;
     $('total').textContent = sakes.length;
@@ -359,6 +372,7 @@
     dlg.addEventListener('close', function () { try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {} });
     drawMap();
     initQuiz();
+    initParallax();
     update();
     var h = (location.hash || '').slice(1);
     if (h) openDetail(h);

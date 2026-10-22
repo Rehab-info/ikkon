@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;700&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap">
-<link rel="stylesheet" href="assets/style.css?v=12">
+<link rel="stylesheet" href="assets/style.css?v=13">
 </head>
 <body>
 <header class="site-head">
@@ -20,15 +20,23 @@
 </header>
 
 <main>
-  <section class="hero">
+  <section class="hero-c">
     <div class="wrap">
-      <div>
-        <div class="eyebrow">全国の名酒 <span id="total">21</span>銘柄</div>
-        <h1>今夜の一杯を、<br>味わいから選ぶ。</h1>
-        <p>甘口か辛口か、すっきりか濃厚か。味わい・料理・飲む温度・予算から、全国の名酒を探せます。</p>
+      <div class="hc-body">
+        <div class="hc-moon" id="hc-moon" role="img" aria-label="満月"></div>
+        <div class="hc-tate">
+          <h1>今宵、<br>一献いかが。</h1>
+          <p>月の夜に、好みの一杯をえらぶ。</p>
+        </div>
+        <nav class="hc-side" aria-label="はじめに">
+          <small>全国の名酒 <span id="total">30</span>銘柄と宮城の地酒</small>
+          <a href="#first">好みから選ぶ</a>
+          <a href="kura.html">宮城の蔵をたずねる</a>
+          <a href="guide.html#temperature">温度と器を知る</a>
+        </nav>
       </div>
-      <div class="janome" aria-hidden="true"><span>一献</span></div>
     </div>
+    <div class="hc-foot"><span class="hc-seal" aria-hidden="true">献</span></div>
   </section>
 
   <section class="section" id="first">
@@ -91,6 +99,6 @@
     <span>お酒は20歳になってから。飲酒運転は法律で禁止されています。</span>
   </div>
 </footer>
-<script src="assets/app.js?v=12"></script>
+<script src="assets/app.js?v=13"></script>
 </body>
 </html>
