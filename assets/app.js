@@ -89,11 +89,20 @@
   }
 
   /* ---------- taste map ---------- */
-  var W = 640, H = 380, M = { l: 56, r: 24, t: 28, b: 44 };
+  var W = 640, H = 380, M = { l: 56, r: 24, t: 28, b: 44 }, R = 7;
+  function sizeMap() {
+    var box = $('map-box');
+    var w = Math.round(Math.min(640, Math.max(300, (box.clientWidth || 640) - 16)));
+    W = w;
+    if (w < 520) { H = Math.round(w * 1.15); M = { l: 12, r: 12, t: 30, b: 46 }; R = 6; }
+    else { H = 380; M = { l: 56, r: 24, t: 28, b: 44 }; R = 7; }
+    $('map').setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+  }
   function px(s) { return M.l + ((s.sweet + 2) / 4) * (W - M.l - M.r); }
   function py(s) { return M.t + (1 - (s.body + 2) / 4) * (H - M.t - M.b); }
 
   function drawMap() {
+    sizeMap();
     var cx = px({ sweet: 0 }), cy = py({ body: 0 });
     var out = [];
     out.push('<line class="axis" x1="' + M.l + '" y1="' + cy + '" x2="' + (W - M.r) + '" y2="' + cy + '"/>');
@@ -113,29 +122,30 @@
     pts.forEach(function (p) { placed.push({ x: p.x - 8, y: p.y - 8, w: 16, h: 16 }); });
     pts.forEach(function (p) {
       var label = p.s.name.split(' ')[0];
-      var w = label.length * 11.5 + 2, h = 14;
+      var w = label.length * 11.5 + 2, h = 14, o = R + 4;
       var cands = [
-        [p.x + 11, p.y + 4, 'start'], [p.x - 11, p.y + 4, 'end'],
-        [p.x, p.y - 12, 'middle'], [p.x, p.y + 20, 'middle'],
-        [p.x + 11, p.y - 9, 'start'], [p.x + 11, p.y + 17, 'start'],
-        [p.x - 11, p.y - 9, 'end'], [p.x - 11, p.y + 17, 'end']
+        [p.x + o, p.y + 4, 'start'], [p.x - o, p.y + 4, 'end'],
+        [p.x, p.y - o - 1, 'middle'], [p.x, p.y + o + 9, 'middle'],
+        [p.x + o, p.y - 9, 'start'], [p.x + o, p.y + 17, 'start'],
+        [p.x - o, p.y - 9, 'end'], [p.x - o, p.y + 17, 'end']
       ];
-      var pick = cands[0], box;
+      var pick = null, inside1 = null, box;
       for (var i = 0; i < cands.length; i++) {
         var c = cands[i];
         var bx = c[2] === 'start' ? c[0] : (c[2] === 'end' ? c[0] - w : c[0] - w / 2);
         box = { x: bx, y: c[1] - 11, w: w, h: h };
         var inside = bx >= 2 && bx + w <= W - 2 && box.y >= 2 && box.y + h <= H - 2;
         var hit = placed.some(function (q) { return box.x < q.x + q.w && box.x + box.w > q.x && box.y < q.y + q.h && box.y + box.h > q.y; });
+        if (inside && !inside1) inside1 = c;
         if (inside && !hit) { pick = c; break; }
-        if (i === cands.length - 1) pick = cands[0];
       }
+      if (!pick) pick = inside1 || cands[0];
       var fx = pick[2] === 'start' ? pick[0] : (pick[2] === 'end' ? pick[0] - w : pick[0] - w / 2);
       placed.push({ x: fx, y: pick[1] - 11, w: w, h: h });
       p.label = label; p.lx = pick[0]; p.ly = pick[1]; p.anchor = pick[2];
     });
     pts.forEach(function (p) {
-      out.push('<circle class="dot" data-id="' + p.s.id + '" cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="7" fill="var(--t-' + p.s.type + ')" tabindex="0" role="button" aria-label="' + esc(p.s.name) + '"><title>' + esc(p.s.name) + '</title></circle>');
+      out.push('<circle class="dot" data-id="' + p.s.id + '" cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="' + R + '" fill="var(--t-' + p.s.type + ')" tabindex="0" role="button" aria-label="' + esc(p.s.name) + '"><title>' + esc(p.s.name) + '</title></circle>');
       out.push('<text class="dot-label" data-id="' + p.s.id + '" x="' + p.lx.toFixed(1) + '" y="' + p.ly.toFixed(1) + '" text-anchor="' + p.anchor + '">' + esc(p.label) + '</text>');
     });
     $('map').innerHTML = out.join('');
@@ -182,6 +192,9 @@
     var ids = {};
     hits.forEach(function (s) { ids[s.id] = 1; });
     $('count').textContent = hits.length;
+    var n = state.type.length + state.price.length + state.buy.length +
+      (state.taste !== 'all' ? 1 : 0) + (state.temp !== 'all' ? 1 : 0) + (state.region !== 'all' ? 1 : 0);
+    $('fcount').textContent = n; $('fcount').hidden = n === 0;
     $('list').innerHTML = hits.length ? hits.map(card).join('') :
       '<div class="empty">条件に合う銘柄がありません。条件を減らしてみてください。</div>';
     Array.prototype.forEach.call($('map').querySelectorAll('[data-id]'), function (n) {
@@ -208,6 +221,21 @@
     $('f-region').addEventListener('change', function (e) { state.region = e.target.value; update(); });
     $('q').addEventListener('input', function (e) { state.q = e.target.value.trim(); update(); });
     $('filters').addEventListener('submit', function (e) { e.preventDefault(); });
+    var panel = $('filter-panel');
+    if (window.matchMedia && window.matchMedia('(min-width: 721px)').matches) panel.open = true;
+    $('apply').addEventListener('click', function () {
+      panel.open = false;
+      $('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    $('open-filters').addEventListener('click', function () {
+      panel.open = true;
+      $('search').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    var rt;
+    window.addEventListener('resize', function () {
+      clearTimeout(rt);
+      rt = setTimeout(function () { var w = W; sizeMap(); if (W !== w) { drawMap(); update(); } }, 150);
+    });
     $('reset').addEventListener('click', function () {
       state = { q: '', type: [], taste: 'all', temp: 'all', price: [], buy: [], region: 'all' };
       $('q').value = ''; $('f-region').value = 'all'; update();

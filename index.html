@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;700&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap">
-<link rel="stylesheet" href="assets/style.css?v=3">
+<link rel="stylesheet" href="assets/style.css?v=4">
 </head>
 <body>
 <header class="site-head">
@@ -25,9 +25,27 @@
       <div>
         <div class="eyebrow">全国の名酒 <span id="total">21</span>銘柄</div>
         <h1>今夜の一杯を、<br>味わいから選ぶ。</h1>
-        <p>甘口か辛口か、すっきりか濃厚か。気になる味わいや合わせたい料理、飲む温度、予算から、全国の名酒を探せます。</p>
+        <p>甘口か辛口か、すっきりか濃厚か。味わい・料理・飲む温度・予算から、全国の名酒を探せます。</p>
       </div>
       <div class="janome" aria-hidden="true"><span>一献</span></div>
+    </div>
+  </section>
+
+  <section class="section" id="search">
+    <div class="wrap stack">
+      <div class="searchbox"><label for="q" class="sr">名前・料理・地域で検索</label><input class="search" id="q" type="search" enterkeyhint="search" placeholder="銘柄・料理・地域で検索(例:刺身、新潟)"></div>
+      <details class="filter-panel" id="filter-panel">
+        <summary><span>条件で絞り込む</span><span class="fcount" id="fcount" hidden>0</span></summary>
+        <form class="filters" id="filters" autocomplete="off">
+          <div class="frow"><span>タイプ</span><div class="chips" id="f-type"></div></div>
+          <div class="frow"><span>甘辛</span><div class="chips" id="f-taste"></div></div>
+          <div class="frow"><span>飲む温度</span><div class="chips" id="f-temp"></div></div>
+          <div class="frow"><span>価格帯</span><div class="chips" id="f-price"></div></div>
+          <div class="frow"><span>手に入りやすさ</span><div class="chips" id="f-buy"></div></div>
+          <div class="frow"><label for="f-region">地域</label><select id="f-region"></select></div>
+          <div class="factions"><button type="button" class="btn-ghost" id="reset">条件をクリア</button><button type="button" class="btn" id="apply">結果を見る</button></div>
+        </form>
+      </details>
     </div>
   </section>
 
@@ -37,24 +55,14 @@
         <h2>味わいマップ</h2>
         <p>点を押すと詳しい情報が開きます</p>
       </div>
-      <div class="map-box"><svg id="map" viewBox="0 0 640 380" role="img" aria-label="甘辛と淡麗・濃醇で銘柄を配置した味わいマップ"></svg></div>
+      <div class="map-box" id="map-box"><svg id="map" viewBox="0 0 640 380" role="img" aria-label="甘辛と淡麗・濃醇で銘柄を配置した味わいマップ"></svg></div>
       <div class="legend" id="legend"></div>
     </div>
   </section>
 
-  <section class="section">
+  <section class="section" id="results">
+    <div class="result-bar"><div class="wrap"><span><b id="count">0</b> 銘柄</span><button type="button" class="btn-ghost small" id="open-filters">条件を変える</button></div></div>
     <div class="wrap">
-      <div class="section-head"><h2>条件で絞り込む</h2></div>
-      <form class="filters" id="filters" autocomplete="off">
-        <div class="frow"><label for="q">名前・料理で検索</label><input class="search" id="q" type="search" placeholder="例:獺祭、刺身、新潟"></div>
-        <div class="frow"><span>タイプ</span><div class="chips" id="f-type"></div></div>
-        <div class="frow"><span>甘辛</span><div class="chips" id="f-taste"></div></div>
-        <div class="frow"><span>飲む温度</span><div class="chips" id="f-temp"></div></div>
-        <div class="frow"><span>価格帯</span><div class="chips" id="f-price"></div></div>
-        <div class="frow"><span>手に入りやすさ</span><div class="chips" id="f-buy"></div></div>
-        <div class="frow"><label for="f-region">地域</label><select id="f-region"></select></div>
-      </form>
-      <div class="result-bar"><span><b id="count">0</b> 銘柄</span><button type="button" class="linkbtn" id="reset">条件をクリア</button></div>
       <div class="grid" id="list"></div>
     </div>
   </section>
@@ -68,6 +76,6 @@
     <span>お酒は20歳になってから。飲酒運転は法律で禁止されています。</span>
   </div>
 </footer>
-<script src="assets/app.js?v=3"></script>
+<script src="assets/app.js?v=4"></script>
 </body>
 </html>
