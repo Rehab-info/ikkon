@@ -130,7 +130,7 @@
     var w = Math.round(Math.min(640, Math.max(300, (box.clientWidth || 640) - 16)));
     W = w;
     if (w < 520) { H = Math.round(w * 1.15); M = { l: 12, r: 12, t: 30, b: 46 }; R = 6; }
-    else { H = 380; M = { l: 56, r: 24, t: 28, b: 44 }; R = 7; }
+    else { H = 460; M = { l: 56, r: 24, t: 28, b: 44 }; R = 7; }
     $('map').setAttribute('viewBox', '0 0 ' + W + ' ' + H);
   }
   function px(s) { return M.l + ((s.sweet + 2) / 4) * (W - M.l - M.r); }
@@ -155,9 +155,11 @@
     var placed = [];
     var pts = sakes.map(function (s) { return { s: s, x: px(s), y: py(s) }; });
     pts.forEach(function (p) { placed.push({ x: p.x - 8, y: p.y - 8, w: 16, h: 16 }); });
+    // 四隅の「濃醇甘口」などの文字とも重ねない
+    placed.push({ x: M.l, y: M.t, w: 56, h: 18 }, { x: W - M.r - 56, y: M.t, w: 56, h: 18 }, { x: M.l, y: H - M.b - 22, w: 56, h: 18 }, { x: W - M.r - 56, y: H - M.b - 22, w: 56, h: 18 });
     pts.forEach(function (p) {
       var label = p.s.name.split(' ')[0];
-      var w = label.length * 11.5 + 2, h = 14, o = R + 4;
+      var w = label.length * 12.5 + 2, h = 15, o = R + 4;
       var cands = [
         [p.x + o, p.y + 4, 'start'], [p.x - o, p.y + 4, 'end'],
         [p.x, p.y - o - 1, 'middle'], [p.x, p.y + o + 9, 'middle'],
@@ -174,7 +176,7 @@
         if (inside && !inside1) inside1 = c;
         if (inside && !hit) { pick = c; break; }
       }
-      if (!pick) pick = inside1 || cands[0];
+      if (!pick) { p.label = null; return; }  // 重なるときは名前を出さない(点に触れると名前が出る)
       var fx = pick[2] === 'start' ? pick[0] : (pick[2] === 'end' ? pick[0] - w : pick[0] - w / 2);
       placed.push({ x: fx, y: pick[1] - 11, w: w, h: h });
       p.label = label; p.lx = pick[0]; p.ly = pick[1]; p.anchor = pick[2];
@@ -184,7 +186,7 @@
     });
     pts.forEach(function (p) {
       out.push('<circle class="dot" data-id="' + p.s.id + '" cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="' + R + '" fill="var(--t-' + p.s.type + ')" tabindex="0" role="button" aria-label="' + esc(p.s.name) + '"><title>' + esc(p.s.name) + '</title></circle>');
-      out.push('<text class="dot-label" data-id="' + p.s.id + '" x="' + p.lx.toFixed(1) + '" y="' + p.ly.toFixed(1) + '" text-anchor="' + p.anchor + '">' + esc(p.label) + '</text>');
+      if (p.label) out.push('<text class="dot-label" data-id="' + p.s.id + '" x="' + p.lx.toFixed(1) + '" y="' + p.ly.toFixed(1) + '" text-anchor="' + p.anchor + '">' + esc(p.label) + '</text>');
     });
     $('map').innerHTML = out.join('');
   }
@@ -332,7 +334,7 @@
     chipGroup($('f-buy'), BUY, 'buy', true);
     var regions = [];
     sakes.forEach(function (s) { if (regions.indexOf(s.region) === -1) regions.push(s.region); });
-    var order = ['東北', '新潟・北陸', '東海', '近畿', '中国・四国', '九州'];
+    var order = ['東北', '関東', '新潟・北陸', '東海', '近畿', '中国・四国', '九州'];
     regions.sort(function (a, b) { return order.indexOf(a) - order.indexOf(b); });
     $('f-region').innerHTML = '<option value="all">すべての地域</option>' + regions.map(function (r) {
       return '<option>' + esc(r) + '</option>' + (r === '東北' ? '<option value="pref:宮城">　└ 宮城県</option>' : '');
