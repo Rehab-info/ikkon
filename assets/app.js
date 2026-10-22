@@ -75,9 +75,37 @@
     var pct = ((v + 2) / 4) * 100;
     return '<div class="scale"><span>' + left + '</span><div class="bar"><i style="left:' + pct.toFixed(1) + '%"></i></div><span>' + right + '</span></div>';
   }
+  /* ---------- bottle illustration / photo ---------- */
+  var GLASS = { kun: '#9cbfd2', sou: '#3f7a52', jun: '#6e4524', juku: '#3d2517' };
+  function bottle(s) {
+    var brand = s.name.split(' ')[0].replace(/[ 　]/g, '');
+    var chars = Array.from ? Array.from(brand) : brand.split('');
+    var fs = Math.min(13, Math.floor(52 / chars.length));
+    var y0 = 106 - (chars.length * fs) / 2 + fs * 0.85;
+    var txt = chars.map(function (c, i) {
+      return '<text x="30" y="' + (y0 + i * fs).toFixed(1) + '" font-size="' + fs + '" text-anchor="middle">' + esc(c) + '</text>';
+    }).join('');
+    return '<svg class="bottle" viewBox="0 0 60 164" aria-hidden="true">' +
+      '<path d="M24 12h12v26c0 10 16 14 16 30v84q0 6-6 6H14q-6 0-6-6V68c0-16 16-20 16-30z" fill="' + GLASS[s.type] + '"/>' +
+      '<path d="M13 72v74" stroke="#fff" stroke-opacity=".28" stroke-width="3" stroke-linecap="round"/>' +
+      '<rect x="22" y="3" width="16" height="13" rx="2" fill="var(--ai)"/>' +
+      '<rect x="14" y="76" width="32" height="60" rx="2" fill="#fbf6ea" stroke="#2a1d14" stroke-opacity=".15"/>' +
+      '<rect x="14" y="76" width="32" height="5" fill="var(--t-' + s.type + ')"/>' +
+      '<g fill="#2a1d14" font-family="Shippori Mincho B1, Hiragino Mincho ProN, Yu Mincho, serif" font-weight="700">' + txt + '</g>' +
+      '</svg>';
+  }
+  function media(s, cls) {
+    var ill = bottle(s);
+    if (!s.photo) return '<div class="' + cls + '">' + ill + '</div>';
+    return '<div class="' + cls + ' has-photo"><img src="' + esc(s.photo) + '" alt="' + esc(s.name) + 'の写真" loading="lazy" ' +
+      'onerror="this.parentNode.classList.remove(\'has-photo\');this.remove()">' + ill + '</div>';
+  }
+
   function card(s) {
     var t = TYPES[s.type];
     return '<button type="button" class="card" data-id="' + s.id + '">' +
+      media(s, 'card-media') +
+      '<div class="card-body">' +
       '<div class="card-top"><div><div class="kana">' + esc(s.kana) + '</div><h3>' + esc(s.name) + '</h3></div>' +
       '<span class="type-pill t-' + s.type + '">' + t.label + '</span></div>' +
       '<div class="meta">' + esc(s.spec) + ' ・ ' + esc(s.brewery) + '(' + esc(s.pref) + ')</div>' +
@@ -85,7 +113,7 @@
       '<div class="tags"><span class="tag">おすすめ ' + esc(s.best) + '</span>' +
       '<span class="tag plain">' + PRICE_SHORT[s.price] + '</span>' +
       '<span class="tag plain">' + BUY[s.buy] + '</span></div>' +
-      '</button>';
+      '</div></button>';
   }
 
   /* ---------- taste map ---------- */
@@ -164,7 +192,7 @@
       '<div class="dlg">' +
       '<div class="dlg-head"><div><div class="kana">' + esc(s.kana) + '</div><h2 id="d-name">' + esc(s.name) + '</h2></div>' +
       '<button type="button" class="close" id="d-close" aria-label="閉じる">×</button></div>' +
-      '<p>' + esc(s.note) + '</p>' +
+      '<div class="dlg-intro">' + media(s, 'dlg-media') + '<p>' + esc(s.note) + '</p></div>' +
       '<dl class="spec-table">' +
       '<dt>タイプ</dt><dd><span class="t-' + s.type + '">' + t.label + '</span>(' + t.sub + ')</dd>' +
       '<dt>種類</dt><dd>' + esc(s.spec) + '</dd>' +

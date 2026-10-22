@@ -130,7 +130,15 @@ h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; line-height: 
 
 /* cards */
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 14px; }
-.card { text-align: left; font: inherit; color: inherit; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; cursor: pointer; display: grid; gap: 10px; align-content: start; min-width: 0; }
+.card { text-align: left; font: inherit; color: inherit; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; cursor: pointer; display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 14px; align-items: start; min-width: 0; }
+.card-body { display: grid; gap: 9px; min-width: 0; }
+.card-media, .dlg-media { position: relative; background: var(--ai-soft); border-radius: 8px; display: grid; place-items: center; overflow: hidden; }
+.card-media { aspect-ratio: 3 / 5; max-width: 100%; padding: 8px 0; }
+.card-media .bottle, .dlg-media .bottle { height: 100%; width: auto; max-width: 100%; display: block; }
+.card-media img, .dlg-media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.has-photo .bottle { visibility: hidden; }
+.dlg-intro { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 16px; align-items: start; }
+.dlg-media { aspect-ratio: 3 / 5; max-width: 100%; padding: 10px 0; }
 .card:hover { border-color: var(--ai); }
 .card-top { display: flex; justify-content: space-between; gap: 8px; align-items: start; }
 .card h3 { font-size: 19px; }
@@ -211,7 +219,8 @@ td.nm { font-family: var(--font-display); font-weight: 700; white-space: nowrap;
   .factions button { flex: 1; }
   .legend { gap: 8px 14px; font-size: 12.5px; }
   .grid { grid-template-columns: 1fr; gap: 10px; }
-  .card { padding: 14px; }
+  .card { padding: 12px; grid-template-columns: 64px minmax(0, 1fr); gap: 12px; }
+  .dlg-intro { grid-template-columns: 88px minmax(0, 1fr); gap: 12px; font-size: 14px; }
   .card h3 { font-size: 18px; }
   dialog { width: 100%; max-width: 100%; margin: auto 0 0; border-radius: 18px 18px 0 0; border-bottom: none; max-height: 88dvh; }
   dialog[open] { animation: sheet .22s ease-out; }

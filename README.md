@@ -10,6 +10,7 @@ guide.html        飲み方ガイド(4タイプ・温度帯・料理・買い方
 data/sakes.json   銘柄データ(ここを編集して銘柄を追加)
 assets/style.css  デザイン
 assets/app.js     絞り込みとマップの処理
+images/           銘柄の写真(自分で撮影したもの・許可を得たもの)
 .nojekyll         GitHub Pages の Jekyll 処理を無効化
 ```
 
@@ -42,7 +43,8 @@ assets/app.js     絞り込みとマップの処理
   "best": "涼冷え",             // temps の中で一番のおすすめ
   "pairing": ["牡蠣", "白身の刺身", "茶碗蒸し"],
   "note": "味わいの紹介文",
-  "buyNote": "買い方のメモ"
+  "buyNote": "買い方のメモ",
+  "photo": "images/urakasumi.jpg"  // 任意。ない場合は瓶のイラストを表示
 }
 ```
 
