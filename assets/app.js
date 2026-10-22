@@ -42,7 +42,8 @@
     if (state.temp !== 'all' && !tempGroups(s)[state.temp]) return false;
     if (state.price.length && state.price.indexOf(s.price) === -1) return false;
     if (state.buy.length && state.buy.indexOf(s.buy) === -1) return false;
-    if (state.region !== 'all' && s.region !== state.region) return false;
+    if (state.region === 'pref:宮城') { if (s.pref !== '宮城') return false; }
+    else if (state.region !== 'all' && s.region !== state.region) return false;
     return true;
   }
 
@@ -246,7 +247,9 @@
     sakes.forEach(function (s) { if (regions.indexOf(s.region) === -1) regions.push(s.region); });
     var order = ['東北', '新潟・北陸', '東海', '近畿', '中国・四国', '九州'];
     regions.sort(function (a, b) { return order.indexOf(a) - order.indexOf(b); });
-    $('f-region').innerHTML = '<option value="all">すべての地域</option>' + regions.map(function (r) { return '<option>' + esc(r) + '</option>'; }).join('');
+    $('f-region').innerHTML = '<option value="all">すべての地域</option>' + regions.map(function (r) {
+      return '<option>' + esc(r) + '</option>' + (r === '東北' ? '<option value="pref:宮城">　└ 宮城県</option>' : '');
+    }).join('');
     $('f-region').addEventListener('change', function (e) { state.region = e.target.value; update(); });
     $('q').addEventListener('input', function (e) { state.q = e.target.value.trim(); update(); });
     $('filters').addEventListener('submit', function (e) { e.preventDefault(); });
