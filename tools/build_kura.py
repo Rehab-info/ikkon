@@ -9,9 +9,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 kura = json.loads((ROOT / "data/kura.json").read_text(encoding="utf-8"))
 sakes = {s["id"]: s for s in json.loads((ROOT / "data/sakes.json").read_text(encoding="utf-8"))}
-VERSION = "14"
+VERSION = "15"
 
 AREAS = ["仙台・県央", "県南", "塩竈", "大崎・加美・遠田", "栗原・登米", "石巻・気仙沼"]
+# 地域の写真(images/ に置いたものだけ表示)
+AREA_IMG = {"仙台・県央": ("images/sendai.jpg", "仙台市の町並み")}
 TOUR = {"yes": ("見学できる", "tour-yes"), "partial": ("一部見学", "tour-ask"), "ask": ("要相談", "tour-ask"), "no": ("見学不可", "tour-no")}
 e = html.escape
 
@@ -37,6 +39,13 @@ def card(k):
         </article>'''
 
 
+def photo(a):
+    if a not in AREA_IMG or not (ROOT / AREA_IMG[a][0]).exists():
+        return ""
+    src, cap = AREA_IMG[a]
+    return f'      <figure class="area-photo"><img src="{e(src)}" alt="{e(cap)}" loading="lazy"><figcaption>{e(cap)}</figcaption></figure>\n'
+
+
 sections = []
 for i, a in enumerate(AREAS):
     ks = [k for k in kura if k["area"] == a]
@@ -44,7 +53,7 @@ for i, a in enumerate(AREAS):
     sections.append(f'''  <section class="section area-sec" id="area{i + 1}">
     <div class="wrap">
       <div class="section-head"><h2>{e(a)}</h2><p>{len(ks)}蔵</p></div>
-      <div class="places">
+{photo(a)}      <div class="places">
 {cards}
       </div>
     </div>

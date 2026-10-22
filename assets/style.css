@@ -408,3 +408,9 @@ body::after {
   .hero-c::before { width: 520px; height: 520px; transform: translate(-50%, -78%); }
 }
 @media (prefers-reduced-motion: reduce) { .card:hover { transform: none; } }
+
+/* 地域の写真 */
+.area-photo { margin: 0 0 16px; }
+.area-photo img { display: block; width: 100%; max-width: 100%; aspect-ratio: 16 / 6; object-fit: cover; border-radius: var(--radius); box-shadow: var(--shadow-1); }
+.area-photo figcaption { font-size: 12px; color: var(--muted); margin-top: 6px; }
+@media (max-width: 720px) { .area-photo img { aspect-ratio: 16 / 9; } }
