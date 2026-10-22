@@ -9,11 +9,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 kura = json.loads((ROOT / "data/kura.json").read_text(encoding="utf-8"))
 sakes = {s["id"]: s for s in json.loads((ROOT / "data/sakes.json").read_text(encoding="utf-8"))}
-VERSION = "15"
+VERSION = "16"
 
 AREAS = ["仙台・県央", "県南", "塩竈", "大崎・加美・遠田", "栗原・登米", "石巻・気仙沼"]
 # 地域の写真(images/ に置いたものだけ表示)
-AREA_IMG = {"仙台・県央": ("images/sendai.jpg", "仙台市の町並み")}
+AREA_IMG = {"仙台・県央": ("images/sendai.jpg", "仙台市の町並み"), "塩竈": ("images/matsushima.jpg", "塩竈の蔵からほど近い松島湾")}
 TOUR = {"yes": ("見学できる", "tour-yes"), "partial": ("一部見学", "tour-ask"), "ask": ("要相談", "tour-ask"), "no": ("見学不可", "tour-no")}
 e = html.escape
 
