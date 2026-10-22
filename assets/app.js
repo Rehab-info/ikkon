@@ -119,8 +119,7 @@
       '<div class="meta">' + esc(s.spec) + ' ・ ' + esc(s.brewery) + '(' + esc(s.pref) + ')</div>' +
       scale('甘口', '辛口', s.sweet) + scale('淡麗', '濃醇', s.body) +
       '<div class="tags"><span class="tag">おすすめ ' + esc(s.best) + '</span>' +
-      '<span class="tag plain">' + PRICE_SHORT[s.price] + '</span>' +
-      '<span class="tag plain">' + BUY[s.buy] + '</span></div>' +
+      '<span class="tag plain">' + PRICE_SHORT[s.price] + '</span></div>' +
       '</div></button>';
   }
 
@@ -206,7 +205,8 @@
       '<dt>種類</dt><dd>' + esc(s.spec) + '</dd>' +
       '<dt>蔵元</dt><dd>' + esc(s.brewery) + '(' + esc(s.pref) + ')</dd>' +
       (s.rice ? '<dt>酒米</dt><dd>' + esc(s.rice) + '</dd>' : '') +
-      '<dt>価格帯</dt><dd>' + PRICE[s.price] + '(四合瓶の目安)</dd></dl>' +
+      '<dt>価格帯</dt><dd>' + PRICE[s.price] + '(四合瓶の目安)</dd>' +
+      '<dt>入手</dt><dd>' + BUY[s.buy] + '</dd></dl>' +
       '<div>' + scale('甘口', '辛口', s.sweet) + scale('淡麗', '濃醇', s.body) + '</div>' +
       '<div><h4>おすすめの温度</h4><div class="temp-scale">' + temps + '</div></div>' +
       '<div><h4>合う料理</h4><ul class="pair">' + s.pairing.map(function (p) { return '<li>' + esc(p) + '</li>'; }).join('') + '</ul>' +
