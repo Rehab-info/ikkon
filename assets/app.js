@@ -180,6 +180,9 @@
       p.label = label; p.lx = pick[0]; p.ly = pick[1]; p.anchor = pick[2];
     });
     pts.forEach(function (p) {
+      out.push('<circle class="dot-hit" data-id="' + p.s.id + '" cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="13" aria-hidden="true"></circle>');
+    });
+    pts.forEach(function (p) {
       out.push('<circle class="dot" data-id="' + p.s.id + '" cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="' + R + '" fill="var(--t-' + p.s.type + ')" tabindex="0" role="button" aria-label="' + esc(p.s.name) + '"><title>' + esc(p.s.name) + '</title></circle>');
       out.push('<text class="dot-label" data-id="' + p.s.id + '" x="' + p.lx.toFixed(1) + '" y="' + p.ly.toFixed(1) + '" text-anchor="' + p.anchor + '">' + esc(p.label) + '</text>');
     });
@@ -361,10 +364,10 @@
     });
     var map = $('map');
     map.addEventListener('click', function (e) {
-      var d = e.target.closest('.dot'); if (d) openDetail(d.getAttribute('data-id'));
+      var d = e.target.closest('.dot, .dot-hit'); if (d) openDetail(d.getAttribute('data-id'));
     });
     map.addEventListener('keydown', function (e) {
-      var d = e.target.closest('.dot');
+      var d = e.target.closest('.dot, .dot-hit');
       if (d && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openDetail(d.getAttribute('data-id')); }
     });
     var dlg = $('detail');
