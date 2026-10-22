@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>一献</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="全国の名酒を、味わい・料理・飲み方・価格帯から探せる日本酒案内。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;700&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header class="site-head">
+  <div class="wrap">
+    <a class="logo" href="index.html"><span class="mark" aria-hidden="true"></span><b>一献</b><small>日本酒案内</small></a>
+    <nav class="nav"><a href="index.html" aria-current="page">銘柄を探す</a><a href="guide.html">飲み方ガイド</a></nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="wrap">
+      <div>
+        <div class="eyebrow">全国の名酒 <span id="total">21</span>銘柄</div>
+        <h1>今夜の一杯を、<br>味わいから選ぶ。</h1>
+        <p>甘口か辛口か、すっきりか濃厚か。気になる味わいや合わせたい料理、飲む温度、予算から、全国の名酒を探せます。</p>
+      </div>
+      <div class="janome" aria-hidden="true"><span>一献</span></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>味わいマップ</h2>
+        <p>点を押すと詳しい情報が開きます</p>
+      </div>
+      <div class="map-box"><svg id="map" viewBox="0 0 640 380" role="img" aria-label="甘辛と淡麗・濃醇で銘柄を配置した味わいマップ"></svg></div>
+      <div class="legend" id="legend"></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head"><h2>条件で絞り込む</h2></div>
+      <form class="filters" id="filters" autocomplete="off">
+        <div class="frow"><label for="q">名前・料理で検索</label><input class="search" id="q" type="search" placeholder="例:獺祭、刺身、新潟"></div>
+        <div class="frow"><span>タイプ</span><div class="chips" id="f-type"></div></div>
+        <div class="frow"><span>甘辛</span><div class="chips" id="f-taste"></div></div>
+        <div class="frow"><span>飲む温度</span><div class="chips" id="f-temp"></div></div>
+        <div class="frow"><span>価格帯</span><div class="chips" id="f-price"></div></div>
+        <div class="frow"><span>手に入りやすさ</span><div class="chips" id="f-buy"></div></div>
+        <div class="frow"><label for="f-region">地域</label><select id="f-region"></select></div>
+      </form>
+      <div class="result-bar"><span><b id="count">0</b> 銘柄</span><button type="button" class="linkbtn" id="reset">条件をクリア</button></div>
+      <div class="grid" id="list"></div>
+    </div>
+  </section>
+</main>
+
+<dialog id="detail" aria-labelledby="d-name"></dialog>
+
+<footer class="site-foot">
+  <div class="wrap">
+    <span>価格帯は四合瓶(720ml)の定価をもとにした目安です。実際の販売価格は店舗や時期で変わります。</span>
+    <span>お酒は20歳になってから。飲酒運転は法律で禁止されています。</span>
+  </div>
+</footer>
+<script src="assets/app.js"></script>
+</body>
+</html>
