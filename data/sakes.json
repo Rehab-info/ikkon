@@ -265,7 +265,8 @@
   "buyNote": "地酒を扱う酒販店や通販で手に入ります。",
   "oneliner": "料理を引き立てる辛口の食中酒。",
   "story": "宮城県大崎市の蔵。「究極の食中酒」を掲げ、震災後には川崎町にも新しい蔵を構えました。",
-  "url": "https://www.niizawa-brewery.co.jp/"
+  "url": "https://www.niizawa-brewery.co.jp/",
+  "kura": "niisawa"
  },
  {
   "id": "urakasumi",
@@ -295,7 +296,8 @@
   "buyNote": "百貨店や酒販店で見つけやすい銘柄です。",
   "oneliner": "控えめな香りとやわらかさ。和食に寄り添う。",
   "story": "塩竈市の蔵。鹽竈神社の御神酒を造ってきた歴史を持ちます。",
-  "url": "https://www.urakasumi.com/"
+  "url": "https://www.urakasumi.com/",
+  "kura": "saura"
  },
  {
   "id": "ichinokura",
@@ -326,7 +328,8 @@
   "buyNote": "県内のスーパーや酒店で広く買えます。大崎市の蔵では見学(要予約)もできます。",
   "oneliner": "キレのある辛口。宮城の晩酌の定番。",
   "story": "1973年に宮城の4つの蔵が合併して生まれた蔵。大崎市松山で酒を造っています。",
-  "url": "https://ichinokura.co.jp/"
+  "url": "https://ichinokura.co.jp/",
+  "kura": "ichinokura"
  },
  {
   "id": "hitakami",
@@ -358,7 +361,9 @@
   "oneliner": "魚に合う辛口。燗で旨みが増す。",
   "story": "石巻市の蔵。港町らしく、魚に合う酒を目指して造られています。",
   "rice": "ひとめぼれ",
-  "orgUrl": "https://miyagisake.jp/kuramoto/hirakou/"
+  "orgUrl": "https://miyagisake.jp/kuramoto/hirakou/",
+  "url": "https://www.hirakoushuzou.jp/",
+  "kura": "hirakou"
  },
  {
   "id": "suminoe",
@@ -389,7 +394,8 @@
   "oneliner": "すっきりドライ。軽やかな食中酒。",
   "story": "石巻市の蔵。震災で大きな被害を受けながらも、酒造りを続けてきました。",
   "rice": "五百万石",
-  "orgUrl": "https://miyagisake.jp/kuramoto/suminoe/"
+  "orgUrl": "https://miyagisake.jp/kuramoto/suminoe/",
+  "kura": "suminoe"
  },
  {
   "id": "kenkonichi",
@@ -420,7 +426,9 @@
   "oneliner": "ササニシキの旨みある辛口。",
   "story": "宮城県村田町の蔵。宮城の米ササニシキを使った酒造りで知られます。",
   "rice": "ササニシキ",
-  "orgUrl": "https://miyagisake.jp/kuramoto/onuma/"
+  "orgUrl": "https://miyagisake.jp/kuramoto/onuma/",
+  "url": "https://kenkonichi.com/",
+  "kura": "onuma"
  },
  {
   "id": "wataya",
@@ -450,7 +458,9 @@
   "buyNote": "地酒専門店を中心に流通しています。",
   "oneliner": "柑橘の香りと、ふわりと消える旨み。",
   "story": "栗原市一迫の蔵。米の産地や生産者を大切にした酒造りをしています。",
-  "orgUrl": "https://miyagisake.jp/kuramoto/kanenoi/"
+  "orgUrl": "https://miyagisake.jp/kuramoto/kanenoi/",
+  "url": "https://www.kanenoi.co.jp/",
+  "kura": "kanenoi"
  },
  {
   "id": "miyakanbai",
@@ -478,8 +488,10 @@
   "note": "青リンゴのような爽やかな香りと、甘み・酸・キレのバランスのよさ。華やかな宮城の酒を飲みたいときに。",
   "buyNote": "特約店中心の流通です。",
   "oneliner": "青リンゴのような香りで華やか。",
-  "story": "大崎市古川の家族で営む蔵。自ら米づくりにも取り組んでいます。",
-  "orgUrl": "https://miyagisake.jp/kuramoto/kanbai/"
+  "story": "県内で唯一、酒米の栽培から醸造までを自社で行う大崎市古川の「栽培醸造蔵」です。",
+  "orgUrl": "https://miyagisake.jp/kuramoto/kanbai/",
+  "url": "http://miyakanbai.com/",
+  "kura": "kanbai"
  },
  {
   "id": "soutenden",
@@ -509,7 +521,71 @@
   "buyNote": "地酒を扱う酒販店や通販で手に入ります。",
   "oneliner": "すっきり辛口。三陸の海の幸と。",
   "story": "気仙沼の港に面した蔵。2011年の震災で被災し、再建して酒造りを続けています。",
-  "orgUrl": "https://miyagisake.jp/kuramoto/otokoyama/"
+  "orgUrl": "https://miyagisake.jp/kuramoto/otokoyama/",
+  "url": "https://www.kesennuma.co.jp/",
+  "kura": "otokoyama"
+ },
+ {
+  "id": "katsuyamaken",
+  "name": "勝山 純米吟醸 献",
+  "kana": "かつやま けん",
+  "spec": "純米吟醸",
+  "brewery": "仙台伊澤家 勝山酒造",
+  "pref": "宮城",
+  "region": "東北",
+  "type": "kun",
+  "sweet": 0.2,
+  "body": 0.15,
+  "price": "mid",
+  "buy": "shop",
+  "temps": [
+   "花冷え",
+   "涼冷え"
+  ],
+  "best": "涼冷え",
+  "pairing": [
+   "白身の刺身",
+   "鯛の塩焼き",
+   "ホタテのバター焼き"
+  ],
+  "note": "兵庫県産の山田錦で造る純米吟醸。透明感のある旨みで、料理に寄り添う味わいを目指した一本です。",
+  "buyNote": "酒販店や百貨店、通販で手に入ります。",
+  "oneliner": "透明感ある旨み。仙台の御用蔵の吟醸。",
+  "story": "仙台藩の御酒御用蔵の流れをくむ蔵。この「献」は2019年にIWCの日本酒部門で最高賞を受けました。",
+  "rice": "山田錦",
+  "url": "https://www.katsu-yama.com/",
+  "kura": "isawake"
+ },
+ {
+  "id": "tenjomugen",
+  "name": "天上夢幻 吟醸原酒 超辛口",
+  "kana": "てんじょうむげん",
+  "spec": "吟醸(原酒)",
+  "brewery": "中勇酒造店",
+  "pref": "宮城",
+  "region": "東北",
+  "type": "kun",
+  "sweet": 1.7,
+  "body": -0.35,
+  "price": "low",
+  "buy": "shop",
+  "temps": [
+   "花冷え",
+   "涼冷え",
+   "常温"
+  ],
+  "best": "花冷え",
+  "pairing": [
+   "白身の刺身",
+   "焼き鳥(塩)",
+   "天ぷら"
+  ],
+  "note": "淡麗辛口でありながら、華やかな吟醸香もあわせ持つ蔵の看板商品。原酒らしい飲みごたえもあります。",
+  "buyNote": "地酒を扱う酒販店や通販で手に入ります。",
+  "oneliner": "超辛口なのに華やかな香り。",
+  "story": "加美町の蔵。1980年代に、まだ珍しかった吟醸酒をいち早く商品化しました。",
+  "url": "http://tenjo-mugen.co.jp/",
+  "kura": "nakayu"
  },
  {
   "id": "hiroki",

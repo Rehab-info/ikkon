@@ -316,3 +316,17 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
   .glossary { grid-template-columns: 1fr; gap: 2px; padding: 14px; }
   .glossary dd { margin-bottom: 10px; }
 }
+
+/* 宮城の蔵 */
+.brands { display: flex; flex-wrap: wrap; gap: 6px; }
+.brands span { font-family: var(--font-display); font-weight: 700; font-size: 15px; color: var(--ai); background: var(--ai-soft); border-radius: 4px; padding: 0 10px; }
+.tour { display: inline-block; font-size: 12px; font-weight: 700; border-radius: 999px; padding: 0 9px; margin-right: 4px; border: 1px solid var(--line); }
+.tour-yes { background: var(--ai); color: var(--on-ai); border-color: var(--ai); }
+.tour-ask { color: var(--ai); border-color: var(--ai); }
+.tour-no { color: var(--muted); }
+.kura:target { outline: 2px solid var(--ai); outline-offset: 2px; }
+.kura, .area-sec { scroll-margin-top: 12px; }
+@media (max-width: 720px) {
+  .nav a { padding: 8px 8px; font-size: 13px; }
+  .site-head .wrap { gap: 6px; }
+}
