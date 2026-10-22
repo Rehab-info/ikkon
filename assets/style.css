@@ -331,3 +331,11 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
   .nav a { padding: 8px 8px; font-size: 13px; }
   .site-head .wrap { gap: 6px; }
 }
+
+/* ロゴの蛇の目を見出しの印に */
+.section-head h2, .prose h2 { display: flex; align-items: center; gap: 10px; }
+.section-head h2::before, .prose h2::before {
+  content: ""; flex: none; width: .78em; height: .78em; border-radius: 50%;
+  background: radial-gradient(circle, var(--surface) 0 26%, var(--ai) 27% 44%, var(--surface) 45% 60%, var(--ai) 61% 78%, var(--surface) 79%);
+  box-shadow: 0 0 0 1px var(--line);
+}
