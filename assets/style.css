@@ -449,15 +449,15 @@ body::after {
 .series-more::after { content: " →"; }
 .pair-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; }
 .pair-card { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; display: grid; gap: 10px; align-content: start; box-shadow: var(--shadow-1); min-width: 0; }
-.pair-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.pair-head { display: grid; gap: 4px; justify-items: start; }  /* 酒 → × → アテ を縦に。カードの幅で折り返しても崩れない */
 .pair-head small { display: block; font-size: 12px; color: var(--muted); letter-spacing: .08em; }
 .pair-sake a, .pair-food b { font-family: var(--font-display); font-weight: 700; font-size: 18px; color: var(--ink); text-decoration: none; line-height: 1.4; }
 .pair-sake a:hover { color: var(--ai); }
-.pair-x { font-family: var(--font-display); font-size: 22px; color: var(--kin); line-height: 1; }
+.pair-x { font-family: var(--font-display); font-size: 20px; color: var(--kin); line-height: 1; padding-left: .2em; }
 .pair-card p { margin: 0; font-size: 14.5px; }
 .pair-meta { font-size: 12px; color: var(--muted); }
 .draft-mark { position: absolute; top: 10px; right: 10px; font-size: 12px; font-weight: 700; color: var(--on-kin); background: var(--kin); border-radius: 4px; padding: 0 8px; }
-.empty { margin: 0; padding: 28px; text-align: center; color: var(--muted); background: var(--surface); border: 1px dashed var(--line); border-radius: var(--radius); }
+.pair-list .empty { margin: 0; padding: 28px; grid-column: 1 / -1; }
 .call { background: var(--ai-soft); border-radius: var(--radius); padding: 22px; display: grid; gap: 8px; justify-items: start; }
 .call h2 { font-size: 20px; }
 .call p { margin: 0; font-size: 14.5px; }
@@ -469,3 +469,17 @@ body::after {
   .nav a { padding: 8px 6px; font-size: 12.5px; }
 }
 .pair-list + .call { margin-top: 18px; }
+
+/* みんなのレビュー */
+.rv-sum { display: flex; align-items: baseline; gap: 8px; font-size: 14px; color: var(--muted); }
+.rv-sum b { font-size: 18px; color: var(--ink); }
+.stars { color: var(--ai); letter-spacing: .06em; }
+.stars i { font-style: normal; color: var(--line); }
+.rv-list { list-style: none; margin: 10px 0 0; padding: 0; }
+.rv-list li { padding: 12px 0; border-top: 1px solid var(--line); }
+.rv-meta { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; font-size: 13px; color: var(--muted); }
+.rv-meta b { color: var(--ink); }
+.rv-list p { margin: 4px 0 0; font-size: 14.5px; white-space: pre-line; overflow-wrap: anywhere; }
+.rv-none { margin: 0; font-size: 14px; color: var(--muted); }
+.rv-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; }
+.rv-note { font-size: 12px; color: var(--muted); margin: 6px 0 0; }

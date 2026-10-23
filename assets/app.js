@@ -264,6 +264,7 @@
       '<p class="world"><b>洋食・中華なら</b> ' + WORLD[s.type].map(esc).join('、') + '</p></div>' +
       (s.story ? '<div><h4>蔵の物語</h4><p>' + esc(s.story) + '</p></div>' : '') +
       '<div><h4>買い方</h4><p>' + esc(s.buyNote) + '</p></div>' +
+      reviewBlock(s) +
       '<div class="dlg-links">' + (s.url ? '<a class="btn-ghost small inline" href="' + esc(s.url) + '" target="_blank" rel="noopener">蔵元の公式サイト</a>' :
         s.orgUrl ? '<a class="btn-ghost small inline" href="' + esc(s.orgUrl) + '" target="_blank" rel="noopener">蔵元の紹介(宮城県酒造組合)</a>' :
         '<a class="btn-ghost small inline" href="https://www.google.com/search?q=' + encodeURIComponent(s.brewery + ' ' + s.pref + ' 公式') + '" target="_blank" rel="noopener">蔵元を検索する</a>') +
@@ -273,7 +274,55 @@
     var dlg = $('detail');
     if (dlg.showModal) { if (!dlg.open) dlg.showModal(); } else dlg.setAttribute('open', '');
     $('d-close').addEventListener('click', function () { dlg.close(); });
+    var more = dlg.querySelector('[data-more]');
+    if (more) more.addEventListener('click', function () {
+      Array.prototype.forEach.call(dlg.querySelectorAll('.rv-list li[hidden]'), function (li) { li.hidden = false; });
+      more.remove();
+    });
     try { history.replaceState(null, '', '#' + s.id); } catch (e) {}
+  }
+
+  /* ---------- みんなのレビュー(スタッフが確認したものだけを data/reviews.json に載せる) ---------- */
+  var reviews = {}, reviewForm = null;
+  function loadReviews(d) {
+    reviewForm = d && d.form && d.form.url && d.form.sakeEntry ? d.form : null;
+    ((d && d.reviews) || []).forEach(function (r) {
+      if (!(r.stars >= 1 && r.stars <= 5)) return;
+      (reviews[r.sake] = reviews[r.sake] || []).push(r);
+    });
+    Object.keys(reviews).forEach(function (k) {
+      reviews[k].sort(function (a, b) { return a.date < b.date ? 1 : (a.date > b.date ? -1 : 0); });  // 新しい順
+    });
+  }
+  function stars(n) {
+    var full = Math.round(n);
+    return '<span class="stars" aria-hidden="true">' + '★★★★★'.slice(0, full) + '<i>' + '★★★★★'.slice(full) + '</i></span>';
+  }
+  function dayJa(d) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(d || '');
+    return m ? (+m[1]) + '年' + (+m[2]) + '月' + (+m[3]) + '日' : '';
+  }
+  function reviewBlock(s) {
+    var list = reviews[s.id] || [];
+    if (!list.length && !reviewForm) return '';
+    var sum = '';
+    if (list.length) {
+      var avg = list.reduce(function (a, r) { return a + r.stars; }, 0) / list.length;
+      sum = '<div class="rv-sum">' + stars(avg) + '<b><span class="sr">5段階で平均</span>' + avg.toFixed(1) + '</b><span>(' + list.length + '件)</span></div>' +
+        '<ul class="rv-list">' + list.map(function (r, i) {
+          return '<li' + (i >= 3 ? ' hidden' : '') + '><div class="rv-meta">' + stars(r.stars) + '<span class="sr">5段階で' + r.stars + '</span>' +
+            '<b>' + esc(r.name || '匿名') + '</b>' + (r.date ? '<time datetime="' + esc(r.date) + '">' + dayJa(r.date) + '</time>' : '') + '</div>' +
+            '<p>' + esc(r.text) + '</p></li>';
+        }).join('') + '</ul>';
+    } else {
+      sum = '<p class="rv-none">まだレビューはありません。飲んだ感想をお寄せください。</p>';
+    }
+    var acts = (list.length > 3 ? '<button type="button" class="btn-ghost small" data-more>すべて見る(' + list.length + '件)</button>' : '') +
+      (reviewForm ? '<a class="btn-ghost small inline" href="' + esc(reviewForm.url + (reviewForm.url.indexOf('?') === -1 ? '?' : '&') + 'usp=pp_url&' +
+        reviewForm.sakeEntry + '=' + encodeURIComponent(s.name)) + '" target="_blank" rel="noopener">レビューを書く</a>' : '');
+    return '<div class="rv"><h4>みんなのレビュー</h4>' + sum +
+      (acts ? '<div class="rv-actions">' + acts + '</div>' : '') +
+      (reviewForm ? '<p class="rv-note">いただいたレビューは、スタッフが確認してから掲載します。</p>' : '') + '</div>';
   }
 
   /* ---------- update ---------- */
@@ -441,8 +490,15 @@
     if (h) openDetail(h);
   }
 
-  fetch('data/sakes.json')
-    .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+  // レビューは読めなくても銘柄は表示する
+  var reviewsLoaded = fetch('data/reviews.json')
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(loadReviews, function () {});
+  Promise.all([
+    fetch('data/sakes.json').then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); }),
+    reviewsLoaded
+  ])
+    .then(function (res) { return res[0]; })
     .then(init, function () {
       $('list').innerHTML = '<div class="empty">銘柄データを読み込めませんでした。ページを再読み込みしてください。</div>';
     })

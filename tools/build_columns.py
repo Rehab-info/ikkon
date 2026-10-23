@@ -20,14 +20,30 @@ e = html.escape
 OUT = ROOT / "column"
 OUT.mkdir(exist_ok=True)
 
-# 打ち間違いで記事が黙って消えないよう、先に確かめる
-errors = []
-for s in data["series"]:
-    for x in s["entries"]:
-        if s["kind"] == "pairing" and x.get("sake") not in sakes:
-            errors.append(f'{s["id"]}/{x.get("id")}: 銘柄「{x.get("sake")}」が data/sakes.json にありません')
+# 打ち間違いや書き忘れで記事が黙って消えたり壊れたりしないよう、先に確かめる
+SERIES_KEYS = ["id", "kind", "title", "eyebrow", "lead", "body", "callTitle", "callText", "entries"]
+ENTRY_KEYS = {"pairing": ["id", "sake", "food", "text"], "cup": ["id", "name", "text"]}
+errors, series_ids = [], set()
+for i, s in enumerate(data["series"], start=1):
+    where = s.get("id") or f"{i}番目の連載"
+    errors += [f'{where}: 「{k}」がありません' for k in SERIES_KEYS if not s.get(k) and k != "entries"]
+    if s.get("id") in series_ids:
+        errors.append(f'{where}: 連載の id が重複しています')
+    series_ids.add(s.get("id"))
+    if s.get("kind") not in ENTRY_KEYS:
+        errors.append(f'{where}: kind「{s.get("kind")}」は pairing か cup にしてください')
+        continue
+    entry_ids = set()
+    for j, x in enumerate(s.get("entries", []), start=1):
+        at = f'{where}/{x.get("id") or f"{j}番目の記事"}'
+        errors += [f'{at}: 「{k}」がありません' for k in ENTRY_KEYS[s["kind"]] if not x.get(k)]
+        if x.get("id") in entry_ids:
+            errors.append(f'{at}: 記事の id が重複しています')
+        entry_ids.add(x.get("id"))
+        if s["kind"] == "pairing" and x.get("sake") and x["sake"] not in sakes:
+            errors.append(f'{at}: 銘柄「{x["sake"]}」が data/sakes.json にありません')
 if errors:
-    sys.exit("\n".join(errors))
+    sys.exit("data/columns.json に誤りがあります:\n" + "\n".join(errors))
 
 
 def nav(current):
@@ -108,7 +124,7 @@ def call_box(s):
     if url:
         action = f'<a class="btn" href="{e(url)}" target="_blank" rel="noopener">投稿する</a>'
     else:
-        action = '<p class="call-wait">投稿の受付は準備中です。始まったら、このページでお知らせします。</p>'
+        action = '<p class="call-wait">投稿の受付は準備中です。始まったら、ここから送れるようになります。</p>'
     return f'''    <aside class="call">
       <h2>{e(s["callTitle"])}</h2>
       <p>{e(s["callText"])}</p>
@@ -117,6 +133,9 @@ def call_box(s):
 
 
 series_cards = []
+# data/columns.json から消した連載のページが残って公開され続けないよう、作り直す前に消す
+for old in OUT.glob("*.html"):
+    old.unlink()
 for s in data["series"]:
     items = visible(s["entries"])
     cards = "\n".join((pairing_card if s["kind"] == "pairing" else cup_card)(x) for x in items)
@@ -126,7 +145,7 @@ for s in data["series"]:
     body = f'''  <section class="hero column-hero">
     <div class="wrap">
       <div>
-        <div class="eyebrow"><a href="index.html">コラム</a> ・ {e(s["eyebrow"])}</div>
+        <div class="eyebrow"><a href="index.html">呑助のこの一杯！</a> ・ {e(s["eyebrow"])}</div>
         <h1>{e(s["title"])}</h1>
         <p class="column-lead">{e(s["lead"])}</p>
         <div class="column-body">{paras}</div>
@@ -154,8 +173,8 @@ index_body = f'''  <section class="hero column-hero">
     <div class="wrap">
       <div>
         <div class="eyebrow">コラム</div>
-        <h1>一献の、<br>読みもの。</h1>
-        <p class="column-lead">スタッフが見つけた宮城の酒の楽しみ方を、連載でお届けします。いずれは、読んでくださる皆さんの声も載せていきます。</p>
+        <h1>呑助の<br>この一杯！</h1>
+        <p class="column-lead">お酒好きのスタッフが、独断と偏見で「今」おすすめする店や旬の飲み方、イベントに行った感想、そしてお酒への愛をつづります。</p>
       </div>
     </div>
   </section>
@@ -166,5 +185,5 @@ index_body = f'''  <section class="hero column-hero">
       </div>
     </div>
   </section>'''
-(OUT / "index.html").write_text(shell("一献 コラム", "宮城の酒の楽しみ方を伝える一献のコラム。", index_body), encoding="utf-8")
+(OUT / "index.html").write_text(shell("一献 呑助のこの一杯！", "お酒好きのスタッフが、独断と偏見で「今」おすすめする店や旬の飲み方、イベントの感想をつづるコラム。", index_body), encoding="utf-8")
 print("column/", len(data["series"]), "series", "(drafts shown)" if SHOW_DRAFTS else "")
