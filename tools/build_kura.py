@@ -4,12 +4,14 @@
 """
 import json
 import html
+import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 kura = json.loads((ROOT / "data/kura.json").read_text(encoding="utf-8"))
 sakes = {s["id"]: s for s in json.loads((ROOT / "data/sakes.json").read_text(encoding="utf-8"))}
-VERSION = "22"
+# キャッシュ対策の番号は index.html に合わせる(上げるときは tools/bump_version.py)
+VERSION = re.search(r"style\.css\?v=(\d+)", (ROOT / "index.html").read_text(encoding="utf-8")).group(1)
 
 AREAS = ["仙台・県央", "県南", "塩竈", "大崎・加美・遠田", "栗原・登米", "石巻・気仙沼"]
 # 地域の写真(images/ に置いたものだけ表示)

@@ -29,6 +29,13 @@
   function $(id) { return document.getElementById(id); }
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
 
+  // カタカナ→ひらがな、全角英数→半角、英字は小文字にそろえて比べる
+  function norm(s) {
+    s = String(s);
+    if (s.normalize) s = s.normalize('NFKC');
+    return s.toLowerCase().replace(/[\u30a1-\u30f6]/g, function (c) { return String.fromCharCode(c.charCodeAt(0) - 0x60); });
+  }
+
   function tasteOf(s) { return s.sweet <= -0.5 ? 'sweet' : (s.sweet >= 0.5 ? 'dry' : 'mid'); }
   function tempGroups(s) {
     var g = {};
@@ -40,7 +47,7 @@
 
   function matches(s) {
     if (state.q) {
-      var hay = [s.name, s.kana, s.brewery, s.pref, s.region, s.spec, s.note, s.oneliner || '', s.rice || ''].concat(s.pairing).join(' ');
+      var hay = norm([s.name, s.kana, s.brewery, s.pref, s.region, s.spec, s.note, s.oneliner || '', s.rice || ''].concat(s.pairing).join(' '));
       if (hay.indexOf(state.q) === -1) return false;
     }
     if (state.type.length && state.type.indexOf(s.type) === -1) return false;
@@ -166,14 +173,13 @@
         [p.x + o, p.y - 9, 'start'], [p.x + o, p.y + 17, 'start'],
         [p.x - o, p.y - 9, 'end'], [p.x - o, p.y + 17, 'end']
       ];
-      var pick = null, inside1 = null, box;
+      var pick = null, box;
       for (var i = 0; i < cands.length; i++) {
         var c = cands[i];
         var bx = c[2] === 'start' ? c[0] : (c[2] === 'end' ? c[0] - w : c[0] - w / 2);
         box = { x: bx, y: c[1] - 11, w: w, h: h };
         var inside = bx >= 2 && bx + w <= W - 2 && box.y >= 2 && box.y + h <= H - 2;
         var hit = placed.some(function (q) { return box.x < q.x + q.w && box.x + box.w > q.x && box.y < q.y + q.h && box.y + box.h > q.y; });
-        if (inside && !inside1) inside1 = c;
         if (inside && !hit) { pick = c; break; }
       }
       if (!pick) { p.label = null; return; }  // 重なるときは名前を出さない(点に触れると名前が出る)
@@ -186,7 +192,7 @@
     });
     pts.forEach(function (p) {
       out.push('<circle class="dot" data-id="' + p.s.id + '" cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="' + R + '" fill="var(--t-' + p.s.type + ')" tabindex="0" role="button" aria-label="' + esc(p.s.name) + '"><title>' + esc(p.s.name) + '</title></circle>');
-      if (p.label) out.push('<text class="dot-label" data-id="' + p.s.id + '" x="' + p.lx.toFixed(1) + '" y="' + p.ly.toFixed(1) + '" text-anchor="' + p.anchor + '">' + esc(p.label) + '</text>');
+      if (p.label) out.push('<text class="dot-label" data-id="' + p.s.id + '" x="' + p.lx.toFixed(1) + '" y="' + p.ly.toFixed(1) + '" text-anchor="' + p.anchor + '" aria-hidden="true">' + esc(p.label) + '</text>');
     });
     $('map').innerHTML = out.join('');
   }
@@ -321,6 +327,7 @@
       ticking = false;
     }
     window.addEventListener('scroll', function () { if (!ticking) { ticking = true; requestAnimationFrame(apply); } }, { passive: true });
+    apply();
   }
 
   function init(data) {
@@ -342,7 +349,7 @@
       return '<option>' + esc(r) + '</option>' + (r === '東北' ? '<option value="pref:宮城">　└ 宮城県</option>' : '');
     }).join('');
     $('f-region').addEventListener('change', function (e) { state.region = e.target.value; update(); });
-    $('q').addEventListener('input', function (e) { state.q = e.target.value.trim(); update(); });
+    $('q').addEventListener('input', function (e) { state.q = norm(e.target.value.trim()); update(); });
     $('filters').addEventListener('submit', function (e) { e.preventDefault(); });
     var panel = $('filter-panel');
     if (window.matchMedia && window.matchMedia('(min-width: 721px)').matches) panel.open = true;
@@ -368,7 +375,7 @@
     });
     var map = $('map');
     map.addEventListener('click', function (e) {
-      var d = e.target.closest('.dot, .dot-hit'); if (d) openDetail(d.getAttribute('data-id'));
+      var d = e.target.closest('.dot, .dot-hit, .dot-label'); if (d) openDetail(d.getAttribute('data-id'));
     });
     map.addEventListener('keydown', function (e) {
       var d = e.target.closest('.dot, .dot-hit');

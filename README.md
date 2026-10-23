@@ -79,3 +79,11 @@ python3 -m http.server 8000
 ```
 python3 tools/build_kura.py
 ```
+
+## デザインや動きを直したとき
+
+`assets/style.css` や `assets/app.js` を直したら、次を実行してください。各ページの `?v=` の番号がまとめて上がり、閲覧者のブラウザに古いファイルが残らなくなります(`kura.html` も作り直されます)。
+
+```
+python3 tools/bump_version.py
+```
