@@ -9,13 +9,26 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 kura = json.loads((ROOT / "data/kura.json").read_text(encoding="utf-8"))
 sakes = {s["id"]: s for s in json.loads((ROOT / "data/sakes.json").read_text(encoding="utf-8"))}
-VERSION = "21"
+VERSION = "22"
 
 AREAS = ["仙台・県央", "県南", "塩竈", "大崎・加美・遠田", "栗原・登米", "石巻・気仙沼"]
 # 地域の写真(images/ に置いたものだけ表示)
 AREA_IMG = {"仙台・県央": ("images/sendai.jpg", "仙台市の町並み"), "塩竈": ("images/matsushima-l.jpg", "塩竈の蔵からほど近い松島湾")}
 TOUR = {"yes": ("見学できる", "tour-yes"), "partial": ("一部見学", "tour-ask"), "ask": ("要相談", "tour-ask"), "no": ("見学不可", "tour-no")}
 e = html.escape
+
+# 打ち間違いで蔵や銘柄が黙って消えないよう、先に確かめる
+errors = []
+for k in kura:
+    if k["area"] not in AREAS:
+        errors.append(f'{k["id"]}: 地域「{k["area"]}」が AREAS にありません')
+    if k["tour"] not in TOUR:
+        errors.append(f'{k["id"]}: 見学「{k["tour"]}」が TOUR にありません')
+    for s in k["sakes"]:
+        if s not in sakes:
+            errors.append(f'{k["id"]}: 銘柄 ID「{s}」が data/sakes.json にありません')
+if errors:
+    raise SystemExit("data/kura.json に誤りがあります:\n" + "\n".join(errors))
 
 
 def card(k):
@@ -27,7 +40,7 @@ def card(k):
     links.append(f'<a href="https://miyagisake.jp/kuramoto/{e(k["id"])}/" target="_blank" rel="noopener">宮城県酒造組合の紹介</a>')
     related = ""
     if k["sakes"]:
-        items = "、".join(f'<a href="index.html#{e(s)}">{e(sakes[s]["name"])}</a>' for s in k["sakes"] if s in sakes)
+        items = "、".join(f'<a href="index.html#{e(s)}">{e(sakes[s]["name"])}</a>' for s in k["sakes"])
         related = f'<div class="related">このサイトで紹介:{items}</div>'
     return f'''        <article class="place kura" id="{e(k["id"])}" data-tour="{e(k["tour"])}">
           <div class="place-head"><h3>{e(k["name"])}</h3><span class="area">{e(k["city"])}</span></div>

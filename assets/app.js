@@ -247,7 +247,9 @@
     $('list').innerHTML = hits.length ? hits.map(card).join('') :
       '<div class="empty">条件に合う銘柄がありません。条件を減らしてみてください。</div>';
     Array.prototype.forEach.call($('map').querySelectorAll('[data-id]'), function (n) {
-      n.classList.toggle('off', !ids[n.getAttribute('data-id')]);
+      var off = !ids[n.getAttribute('data-id')];
+      n.classList.toggle('off', off);
+      if (n.classList.contains('dot')) n.setAttribute('tabindex', off ? '-1' : '0');
     });
   }
 
@@ -385,8 +387,11 @@
 
   fetch('data/sakes.json')
     .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
-    .then(init)
-    .catch(function () {
+    .then(init, function () {
       $('list').innerHTML = '<div class="empty">銘柄データを読み込めませんでした。ページを再読み込みしてください。</div>';
+    })
+    .catch(function (e) {
+      console.error(e);
+      $('list').innerHTML = '<div class="empty">表示中にエラーが起きました。ページを再読み込みしてください。</div>';
     });
 })();
