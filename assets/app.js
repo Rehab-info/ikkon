@@ -24,7 +24,7 @@
   var BUY = { wide: 'スーパーでも', shop: '酒販店・通販', tokuyaku: '特約店のみ' };
 
   var sakes = [];
-  var state = { q: '', type: [], taste: 'all', temp: 'all', price: [], buy: [], region: 'all' };
+  var state = { q: '', roma: '', type: [], taste: 'all', temp: 'all', price: [], buy: [], region: 'all' };
 
   function $(id) { return document.getElementById(id); }
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
@@ -34,6 +34,46 @@
     s = String(s);
     if (s.normalize) s = s.normalize('NFKC');
     return s.toLowerCase().replace(/[\u30a1-\u30f6]/g, function (c) { return String.fromCharCode(c.charCodeAt(0) - 0x60); });
+  }
+
+  // ローマ字検索: よみがなをローマ字にし、入力のつづりの違い(shi/si、ou/o など)をそろえて比べる
+  var KANA_ROMA = (function () {
+    var t = {}, rows = {
+      '': 'あいうえお', k: 'かきくけこ', s: 'さしすせそ', t: 'たちつてと', n: 'なにぬねの', h: 'はひふへほ',
+      m: 'まみむめも', r: 'らりるれろ', g: 'がぎぐげご', z: 'ざじずぜぞ', d: 'だぢづでど', b: 'ばびぶべぼ', p: 'ぱぴぷぺぽ'
+    };
+    Object.keys(rows).forEach(function (c) {
+      Array.prototype.forEach.call(rows[c], function (k, i) { t[k] = c + 'aiueo'.charAt(i); });
+    });
+    t['や'] = 'ya'; t['ゆ'] = 'yu'; t['よ'] = 'yo'; t['わ'] = 'wa'; t['を'] = 'o'; t['ん'] = 'n';
+    'ぁぃぅぇぉ'.split('').forEach(function (k, i) { t[k] = 'aiueo'.charAt(i); });
+    return t;
+  })();
+  function kanaToRoma(s) {
+    var out = '', dbl = false;
+    Array.prototype.forEach.call(s, function (k) {
+      var small = { 'ゃ': 'ya', 'ゅ': 'yu', 'ょ': 'yo' }[k];
+      if (small) { out = out.replace(/i$/, '') + small; return; }  // きゃ → ki + ya → kya
+      if (k === 'っ') { dbl = true; return; }
+      var r = KANA_ROMA[k];
+      if (r === undefined) { dbl = false; return; }
+      if (dbl && /^[^aiueo]/.test(r)) r = r.charAt(0) + r;
+      dbl = false;
+      out += r;
+    });
+    return out;
+  }
+  function romaNorm(s) {
+    s = String(s);
+    if (s.normalize) s = s.normalize('NFD');
+    s = s.toLowerCase().replace(/[^a-z]/g, '')  // 長音記号(ō など)や空白・' を落とす
+      .replace(/cch/g, 'tch').replace(/chi/g, 'ti').replace(/ch/g, 'ty').replace(/cy/g, 'ty')
+      .replace(/shi/g, 'si').replace(/sh/g, 'sy').replace(/tsu/g, 'tu').replace(/fu/g, 'hu')
+      .replace(/jy/g, 'zy').replace(/ji/g, 'zi').replace(/j/g, 'zy').replace(/di/g, 'zi').replace(/du/g, 'zu')
+      .replace(/wo/g, 'o').replace(/nn/g, 'n').replace(/m(?=[bp])/g, 'n');
+    var prev;
+    do { prev = s; s = s.replace(/ou|oo/g, 'o').replace(/uu/g, 'u'); } while (s !== prev);  // 長音はのばさない形に
+    return s;
   }
 
   function tasteOf(s) { return s.sweet <= -0.5 ? 'sweet' : (s.sweet >= 0.5 ? 'dry' : 'mid'); }
@@ -48,7 +88,7 @@
   function matches(s) {
     if (state.q) {
       var hay = norm([s.name, s.kana, s.brewery, s.pref, s.region, s.spec, s.note, s.oneliner || '', s.rice || ''].concat(s.pairing).join(' '));
-      if (hay.indexOf(state.q) === -1) return false;
+      if (hay.indexOf(state.q) === -1 && !(state.roma && s.roma.indexOf(state.roma) !== -1)) return false;
     }
     if (state.type.length && state.type.indexOf(s.type) === -1) return false;
     if (state.taste !== 'all' && tasteOf(s) !== state.taste) return false;
@@ -332,6 +372,7 @@
 
   function init(data) {
     sakes = data;
+    sakes.forEach(function (s) { s.roma = romaNorm(kanaToRoma(norm(s.kana))); });
     $('total').textContent = sakes.length;
     $('legend').innerHTML = Object.keys(TYPES).map(function (k) {
       return '<span><i style="background:var(--t-' + k + ')"></i>' + TYPES[k].label + '(' + TYPES[k].sub + ')</span>';
@@ -349,7 +390,15 @@
       return '<option>' + esc(r) + '</option>' + (r === '東北' ? '<option value="pref:宮城">　└ 宮城県</option>' : '');
     }).join('');
     $('f-region').addEventListener('change', function (e) { state.region = e.target.value; update(); });
-    $('q').addEventListener('input', function (e) { state.q = norm(e.target.value.trim()); update(); });
+    $('q').addEventListener('input', function (e) {
+      state.q = norm(e.target.value.trim());
+      var plain = state.q.normalize ? state.q.normalize('NFD').replace(/[\u0300-\u036f]/g, '') : state.q;
+      if (/^[a-z' \-]+$/.test(plain)) {
+        // 入力途中の子音(kokury の ry など)は落として比べる
+        state.roma = romaNorm(plain.replace(/[^aiueon' \-]+$/, '') || plain);
+      } else state.roma = '';
+      update();
+    });
     $('filters').addEventListener('submit', function (e) { e.preventDefault(); });
     var panel = $('filter-panel');
     if (window.matchMedia && window.matchMedia('(min-width: 721px)').matches) panel.open = true;
@@ -367,7 +416,7 @@
       rt = setTimeout(function () { var w = W; sizeMap(); if (W !== w) { drawMap(); update(); } }, 150);
     });
     $('reset').addEventListener('click', function () {
-      state = { q: '', type: [], taste: 'all', temp: 'all', price: [], buy: [], region: 'all' };
+      state = { q: '', roma: '', type: [], taste: 'all', temp: 'all', price: [], buy: [], region: 'all' };
       $('q').value = ''; $('f-region').value = 'all'; update();
     });
     $('list').addEventListener('click', function (e) {
