@@ -1,6 +1,6 @@
 """CSS・JS のキャッシュ対策の番号(?v=)を、すべてのページでまとめて1つ上げるスクリプト。
 使い方: python3 tools/bump_version.py
-assets/style.css や assets/app.js を直したら実行してください(kura.html も作り直します)。
+assets/style.css や assets/app.js を直したら実行してください(kura.html とコラムのページも作り直します)。
 """
 import re
 import subprocess
@@ -17,4 +17,5 @@ for name in PAGES:
     text = path.read_text(encoding="utf-8")
     path.write_text(re.sub(r"(\.(?:css|js)\?v=)\d+", r"\g<1>" + new, text), encoding="utf-8")
 subprocess.run([sys.executable, str(ROOT / "tools/build_kura.py")], check=True)
+subprocess.run([sys.executable, str(ROOT / "tools/build_columns.py")], check=True)
 print(f"v={old} → v={new}")

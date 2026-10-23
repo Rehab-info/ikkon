@@ -94,7 +94,7 @@ page = f'''<!doctype html>
 <header class="site-head">
   <div class="wrap">
     <a class="logo" href="index.html"><span class="mark" aria-hidden="true"></span><b>一献</b><small>日本酒案内</small></a>
-    <nav class="nav"><a href="index.html">銘柄</a><a href="guide.html">飲み方</a><a href="kura.html" aria-current="page">宮城の蔵</a><a href="miyagi.html">宮城の店</a></nav>
+    <nav class="nav"><a href="index.html">銘柄</a><a href="guide.html">飲み方</a><a href="kura.html" aria-current="page">宮城の蔵</a><a href="miyagi.html">宮城の店</a><a href="column/index.html">コラム</a></nav>
   </div>
 </header>
 

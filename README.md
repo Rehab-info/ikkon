@@ -14,6 +14,9 @@ kura.html         宮城の蔵(data/kura.json から自動生成)
 miyagi.html       宮城で飲める・買える店
 data/kura.json    宮城の蔵元24蔵のデータ
 tools/build_kura.py  kura.html を作り直すスクリプト
+data/columns.json コラム(連載と記事)のデータ
+column/           コラムのページ(data/columns.json から自動生成)
+tools/build_columns.py  コラムのページを作り直すスクリプト
 images/           銘柄の写真(自分で撮影したもの・許可を得たもの)
 .nojekyll         GitHub Pages の Jekyll 処理を無効化
 ```
@@ -87,3 +90,11 @@ python3 tools/build_kura.py
 ```
 python3 tools/bump_version.py
 ```
+
+## コラムを追加する
+
+`data/columns.json` の連載(series)の `entries` に1件追加します。GitHub に上げると、公開のときに自動でページが作り直されます。
+
+- `"draft": true` を付けると下書き扱いになり、公開ページには出ません。
+- 手元で下書きも含めて確認するときは `python3 tools/build_columns.py --drafts`、公開用に戻すときは `python3 tools/build_columns.py` を実行します。
+- 読者の投稿を受け付けるときは、投稿フォーム(Googleフォームなど)のURLを `submitUrl` に入れると「投稿する」ボタンが出ます。
