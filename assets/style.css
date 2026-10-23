@@ -1,16 +1,19 @@
-/* Layout: 居酒屋の夜。暖簾のような濃い帯の下に、和紙の地と赤提灯の朱。上に味わいマップ、下に絞り込みと銘柄カード。 */
+/* Layout: 宵藍と月光。色相を藍の系統にそろえ(調和)、明るい地と濃い藍で明暗をはっきりさせ(好ましさ)、
+   藍の中に月と金の印を小さく浮かべる(寒色の地に暖色の図)。上に味わいマップ、下に絞り込みと銘柄カード。 */
 :root {
-  --bg: #f3ece0;          /* 和紙 */
-  --surface: #fbf7ef;
-  --ink: #2a1d14;         /* 焦げ茶の木 */
-  --muted: #6e5b4a;
-  --line: #ddcfbb;
-  --ai: #b8261e;          /* 赤提灯 */
-  --ai-soft: #f4ddd3;
-  --on-ai: #fff8ee;
-  --head-bg: #2a1d14;     /* 暖簾 */
-  --head-ink: #f6ecdc;
-  --head-muted: #c9b59c;
+  --bg: #f1efe9;          /* 月白:わずかに暖かい白 */
+  --surface: #fbfaf6;
+  --ink: #1d2433;         /* 藍墨 */
+  --muted: #5b6272;
+  --line: #d8d8d2;
+  --ai: #2c4a7a;          /* 藍 */
+  --ai-soft: #e2e8f2;
+  --on-ai: #f8f6f0;
+  --head-bg: #18223a;     /* 宵の藍 */
+  --head-ink: #f3efe4;
+  --head-muted: #b3b9c6;
+  --kin: #c9a65a;         /* 月光の金(印だけに使う) */
+  --on-kin: #18223a;
   --t-kun: #9b3d6a;       /* 薫酒 */
   --t-sou: #2f6f6a;       /* 爽酒 */
   --t-jun: #9a640c;       /* 醇酒 */
@@ -22,17 +25,19 @@
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #1b1310; --surface: #271c16; --ink: #f1e6d6; --muted: #b9a58f; --line: #3f2f25;
-    --ai: #e8574a; --ai-soft: #3a1f1a; --on-ai: #1b1310;
-    --head-bg: #110b08; --head-ink: #f1e6d6; --head-muted: #a8937c;
+    --bg: #121a2b; --surface: #1a2438; --ink: #ece8de; --muted: #a9b0bf; --line: #2c3850;
+    --ai: #8fb0e6; --ai-soft: #22314d; --on-ai: #121a2b;
+    --head-bg: #0c1322; --head-ink: #ece8de; --head-muted: #9aa3b5;
+    --kin: #d9b56a; --on-kin: #121a2b;
     --t-kun: #e48ab0; --t-sou: #74c2b8; --t-jun: #e8b85c; --t-juku: #d39a74;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #1b1310; --surface: #271c16; --ink: #f1e6d6; --muted: #b9a58f; --line: #3f2f25;
-  --ai: #e8574a; --ai-soft: #3a1f1a; --on-ai: #1b1310;
-  --head-bg: #110b08; --head-ink: #f1e6d6; --head-muted: #a8937c;
+  --bg: #121a2b; --surface: #1a2438; --ink: #ece8de; --muted: #a9b0bf; --line: #2c3850;
+  --ai: #8fb0e6; --ai-soft: #22314d; --on-ai: #121a2b;
+  --head-bg: #0c1322; --head-ink: #ece8de; --head-muted: #9aa3b5;
+  --kin: #d9b56a; --on-kin: #121a2b;
   --t-kun: #e48ab0; --t-sou: #74c2b8; --t-jun: #e8b85c; --t-juku: #d39a74;
   color-scheme: dark;
 }
@@ -162,7 +167,7 @@ h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; line-height: 
 
 /* dialog */
 dialog { border: 1px solid var(--line); border-radius: 14px; padding: 0; width: min(640px, calc(100vw - 24px)); max-height: calc(100dvh - 32px); background: var(--surface); color: var(--ink); }
-dialog::backdrop { background: rgba(20, 12, 8, .6); }
+dialog::backdrop { background: rgba(12, 19, 34, .6); }
 .dlg { padding: 22px; display: grid; gap: 18px; }
 .dlg-head { display: flex; justify-content: space-between; gap: 12px; align-items: start; }
 .dlg-head h2 { font-size: 24px; }
@@ -347,8 +352,8 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 
 /* ---------- 奥行き:質感・光・影 ---------- */
 :root {
-  --shadow-1: 0 1px 0 rgba(42, 29, 20, .06), 0 10px 24px -18px rgba(42, 29, 20, .45);
-  --shadow-2: 0 1px 0 rgba(42, 29, 20, .06), 0 18px 36px -20px rgba(42, 29, 20, .55);
+  --shadow-1: 0 1px 0 rgba(24, 34, 58, .06), 0 10px 24px -18px rgba(24, 34, 58, .42);
+  --shadow-2: 0 1px 0 rgba(24, 34, 58, .06), 0 18px 36px -20px rgba(24, 34, 58, .52);
   --moonlight: rgba(255, 246, 222, .9);
   --grain-opacity: .05;
 }
@@ -369,7 +374,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 /* 和紙の繊維のような細かな質感 */
 body::after {
   content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 30; opacity: var(--grain-opacity);
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .3  0 0 0 0 .22  0 0 0 0 .15  0 0 0 1 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .2  0 0 0 0 .22  0 0 0 0 .28  0 0 0 1 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
 }
 /* 面に影をつけて層を分ける */
 .card, .quiz, .map-box, .filter-panel, .place, .type-card, .glossary { box-shadow: var(--shadow-1); }
@@ -405,7 +410,7 @@ body::after {
 .hc-side a::after { content: "→"; color: var(--ai); font-family: var(--font-body); }
 .hc-side a:hover { color: var(--ai); }
 .hc-foot { position: relative; z-index: 1; display: flex; justify-content: center; padding-bottom: 8px; }
-.hc-seal { display: inline-grid; place-items: center; width: 34px; height: 34px; background: var(--ai); color: var(--on-ai); font-family: var(--font-display); font-size: 14px; border-radius: 3px; box-shadow: var(--shadow-1); }
+.hc-seal { display: inline-grid; place-items: center; width: 34px; height: 34px; background: var(--kin); color: var(--on-kin); font-family: var(--font-display); font-size: 14px; border-radius: 3px; box-shadow: var(--shadow-1); }
 @media (max-width: 720px) {
   .hc-body { grid-template-columns: 1fr; justify-items: center; gap: 26px; min-height: 0; padding-block: 28px 12px; }
   .hc-moon { width: 190px; }
@@ -423,3 +428,6 @@ body::after {
 
 /* 味わいマップの点:見た目は小さく、押せる範囲は24px以上(WCAG 2.2 ターゲットサイズ) */
 .map-box .dot-hit { fill: transparent; cursor: pointer; }
+
+/* 家紋(ロゴ)の縁に月光の金 */
+.logo .mark { box-shadow: 0 0 0 2px var(--kin); }
