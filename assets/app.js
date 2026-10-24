@@ -237,6 +237,18 @@
     $('map').innerHTML = out.join('');
   }
 
+  /* ---------- 楽天アフィリエイト ---------- */
+  // 楽天市場の検索ページへのリンクを、アフィリエイトID付きのリンクに包む
+  var RAKUTEN_AFF = '58c36830.1e80c147.58c36831.fb6bd4b1';
+  function rakuten(url) {
+    return 'https://hb.afl.rakuten.co.jp/hgc/' + RAKUTEN_AFF + '/?pc=' + encodeURIComponent(url) + '&m=' + encodeURIComponent(url);
+  }
+  function buyLinks(s) {
+    var q = s.rakutenQuery || s.name;
+    return '<div class="buy-links"><a class="btn small" href="' + esc(rakuten('https://search.rakuten.co.jp/search/mall/' + encodeURIComponent(q) + '/')) +
+      '" target="_blank" rel="sponsored noopener">楽天市場で探す</a><span class="pr">広告(楽天アフィリエイト)</span></div>';
+  }
+
   /* ---------- detail dialog ---------- */
   function openDetail(id) {
     var s = sakes.filter(function (x) { return x.id === id; })[0];
@@ -263,7 +275,7 @@
       '<div><h4>合う料理</h4><ul class="pair">' + s.pairing.map(function (p) { return '<li>' + esc(p) + '</li>'; }).join('') + '</ul>' +
       '<p class="world"><b>洋食・中華なら</b> ' + WORLD[s.type].map(esc).join('、') + '</p></div>' +
       (s.story ? '<div><h4>蔵の物語</h4><p>' + esc(s.story) + '</p></div>' : '') +
-      '<div><h4>買い方</h4><p>' + esc(s.buyNote) + '</p></div>' +
+      '<div><h4>買い方</h4><p>' + esc(s.buyNote) + '</p>' + buyLinks(s) + '</div>' +
       reviewBlock(s) +
       '<div class="dlg-links">' + (s.url ? '<a class="btn-ghost small inline" href="' + esc(s.url) + '" target="_blank" rel="noopener">蔵元の公式サイト</a>' :
         s.orgUrl ? '<a class="btn-ghost small inline" href="' + esc(s.orgUrl) + '" target="_blank" rel="noopener">蔵元の紹介(宮城県酒造組合)</a>' :

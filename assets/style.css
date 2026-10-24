@@ -483,3 +483,8 @@ body::after {
 .rv-none { margin: 0; font-size: 14px; color: var(--muted); }
 .rv-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; }
 .rv-note { font-size: 12px; color: var(--muted); margin: 6px 0 0; }
+
+/* 楽天アフィリエイト */
+.buy-links { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 10px; }
+.buy-links .btn { text-decoration: none; display: inline-flex; align-items: center; font-size: 14px; padding: 8px 18px; min-height: 40px; }
+.pr { font-size: 12px; color: var(--muted); }
