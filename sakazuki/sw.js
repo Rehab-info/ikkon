@@ -1,5 +1,5 @@
 // さかづき帳: オフラインでも開けるようにする。中身を直したら VERSION を上げる。
-const VERSION = "sakazuki-beta-2";
+const VERSION = "sakazuki-beta-3";
 const SHELL = ["./", "./index.html", "./manifest.webmanifest", "./icon-180.png", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", ev => {
