@@ -1,0 +1,608 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#EBEFF1" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0F151C" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="さかづき帳">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="description" content="飲んだ日本酒を、月日とともに記録する帳面。">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<!-- app:head -->
+<title>さかづき帳</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Antique&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+<style>
+/* Layout: app shell — stats band, view area, fixed bottom tab bar. Signature: vertical sake-label cards. */
+:root{
+  --paper:#EBEFF1; --surface:#FFFFFF; --ink:#18283A; --muted:#5A6977; --line:#D2D9DF;
+  --accent:#2C6A4D; --accent-soft:#DCEBE2; --gold:#A9832A; --danger:#B03A2E;
+  --label:#F7F4EC; --label-ink:#1E2B38;
+  --f-display:"Zen Antique","Hiragino Mincho ProN","Yu Mincho",serif;
+  --f-body:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",system-ui,sans-serif;
+  --r:10px; color-scheme:light;
+  padding-top:env(safe-area-inset-top,0px);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#0F151C; --surface:#18212B; --ink:#E5EBF0; --muted:#93A1AE; --line:#2A3643;
+  --accent:#72B391; --accent-soft:#1E3329; --gold:#D6B358; --danger:#E0766A;
+  --label:#22303D; --label-ink:#EDE6D3; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#0F151C; --surface:#18212B; --ink:#E5EBF0; --muted:#93A1AE; --line:#2A3643;
+  --accent:#72B391; --accent-soft:#1E3329; --gold:#D6B358; --danger:#E0766A;
+  --label:#22303D; --label-ink:#EDE6D3; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{background:var(--paper)}
+body{margin:0;color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.6;-webkit-text-size-adjust:100%;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:0 calc(84px + env(safe-area-inset-bottom,0px))}
+img{max-width:100%}
+.wrap{max-width:880px;margin:0 auto}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+header.top{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;padding-block:20px 12px}
+.brand{font-family:var(--f-display);font-size:34px;line-height:1;letter-spacing:.04em;margin:0}
+.brand .beta{font-family:var(--f-body);font-size:11px;font-weight:700;letter-spacing:.06em;vertical-align:top;margin-left:6px;padding:1px 6px;border-radius:4px;background:var(--gold);color:var(--surface)}
+.brand small{display:block;font-family:var(--f-body);font-size:11px;letter-spacing:.18em;color:var(--muted);margin-top:6px}
+.save-state{font-size:11px;color:var(--muted);text-align:right;white-space:nowrap}
+.save-state.bad{color:var(--danger);font-weight:700}
+
+.notice{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--gold);border-radius:8px;padding:10px 12px;font-size:13px;margin-bottom:12px;display:flex;flex-direction:column;gap:8px}
+.notice.bad{border-left-color:var(--danger)}
+.notice .actions{justify-content:flex-start}
+.notice .btn{padding:6px 12px;font-size:13px}
+
+.stats{display:grid;grid-template-columns:repeat(4,1fr);border-top:1.5px solid var(--ink);border-bottom:1px solid var(--line);margin-bottom:16px}
+.stat{padding:10px 4px;text-align:center;border-right:1px solid var(--line)}
+.stat:last-child{border-right:0}
+.stat b{display:block;font-family:var(--f-display);font-size:24px;font-weight:400;line-height:1.1;font-variant-numeric:tabular-nums}
+.stat span{font-size:11px;color:var(--muted);letter-spacing:.06em}
+
+.toolbar{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;font-size:13px}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.row{display:flex;gap:8px}
+.row>*{min-width:0}
+.search{flex:1;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 10px;font-size:16px}
+select.sort{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px}
+.pref-filter{font-size:13px;color:var(--accent);display:flex;align-items:center;gap:8px}
+.pref-filter button{border:0;background:none;color:var(--muted);text-decoration:underline;padding:0}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;text-align:left;padding:0;display:flex;flex-direction:column}
+.card .pic{aspect-ratio:3/4;max-width:100%;position:relative;background:var(--label)}
+.card .pic img{width:100%;height:100%;object-fit:cover;display:block}
+.badge{position:absolute;top:8px;left:8px;font-size:10px;font-weight:700;letter-spacing:.06em;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:4px;padding:1px 6px}
+.badge.sample{left:auto;right:8px;background:var(--gold);color:var(--surface);border-color:var(--gold)}
+.card .meta{padding:9px 10px 11px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.card .name{font-weight:700;font-size:14px;line-height:1.35;overflow-wrap:anywhere}
+.card .sub{font-size:11.5px;color:var(--muted)}
+
+/* vertical label for entries without a photo */
+.label{position:absolute;inset:10px;border:1.5px solid var(--label-ink);color:var(--label-ink);display:flex;flex-direction:row-reverse;justify-content:center;align-items:center;gap:6px;padding:10px 6px}
+.label .v{writing-mode:vertical-rl;font-family:var(--f-display);font-size:26px;line-height:1.1;letter-spacing:.08em;max-height:100%;overflow:hidden}
+.label .g{writing-mode:vertical-rl;font-size:11px;letter-spacing:.2em;opacity:.8}
+.label .seal{position:absolute;bottom:8px;left:8px;width:26px;height:26px;border:1.5px solid var(--danger);color:var(--danger);font-size:9px;line-height:1.05;display:grid;place-items:center;text-align:center;border-radius:3px;font-weight:700}
+.label.cup{inset:18px 22px 14px;border-radius:4px 4px 14px 14px}
+
+.cups{display:inline-flex;gap:2px;vertical-align:middle}
+.cups svg{width:14px;height:12px}
+.cups .on{fill:var(--gold)}
+.cups .off{fill:none;stroke:var(--line);stroke-width:1.4}
+
+.empty{border:1.5px dashed var(--line);border-radius:var(--r);padding:20px;text-align:center;color:var(--muted);font-size:13px;margin-bottom:14px}
+.empty strong{display:block;color:var(--ink);font-size:15px;margin-bottom:4px}
+.btn{border:0;border-radius:8px;padding:10px 16px;font-weight:700;background:var(--accent);color:var(--surface)}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn.danger{background:var(--danger)}
+.btn:disabled{opacity:.55}
+
+/* form */
+form{display:flex;flex-direction:column;gap:18px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px 16px}
+h2{font-family:var(--f-display);font-weight:400;font-size:22px;margin:0 0 4px;text-wrap:balance}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.field>label,.field>.lbl{font-size:12px;font-weight:700;letter-spacing:.08em;color:var(--muted)}
+.field input[type=text],.field input[type=date],.field input[type=number],.field select,.field textarea{border:1px solid var(--line);background:var(--paper);border-radius:8px;padding:9px 10px;width:100%;font-size:16px}
+.field textarea{min-height:80px;resize:vertical}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.three{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{border:1px solid var(--line);background:var(--paper);border-radius:8px;padding:6px 10px;font-size:13px}
+.seg button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.seg button small{opacity:.75;font-size:10.5px;margin-left:3px}
+.rate{display:flex;gap:6px}
+.rate button{border:0;background:none;padding:2px}
+.rate svg{width:30px;height:26px}
+.scale{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;font-size:12px;color:var(--muted)}
+.scale input{width:100%;accent-color:var(--accent)}
+.photo-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.photo-prev{width:72px;height:96px;border-radius:6px;object-fit:cover;border:1px solid var(--line)}
+details summary{cursor:pointer;font-size:13px;font-weight:700;color:var(--muted)}
+details[open] summary{margin-bottom:10px}
+.actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+.err{color:var(--danger);font-size:13px}
+
+/* map */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:16px}
+.panel p.note{font-size:12.5px;color:var(--muted);margin:0 0 12px}
+.tilemap{display:grid;grid-template-columns:repeat(13,1fr);gap:3px;max-width:520px;margin:0 auto}
+.tile{aspect-ratio:1;max-width:100%;border:0;border-radius:4px;background:var(--paper);color:var(--muted);font-size:clamp(8px,2.3vw,11px);padding:0;display:grid;place-items:center;line-height:1}
+.tile.l1{background:var(--accent-soft);color:var(--ink)}
+.tile.l2{background:color-mix(in srgb,var(--accent) 55%,var(--accent-soft));color:var(--surface)}
+.tile.l3{background:var(--accent);color:var(--surface);font-weight:700}
+.legend{display:flex;gap:12px;justify-content:center;font-size:11px;color:var(--muted);margin-top:10px;flex-wrap:wrap}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+.flavor svg{width:100%;height:auto;display:block;max-width:440px;margin:0 auto}
+.flavor text{fill:var(--muted);font-size:11px;font-family:var(--f-body)}
+.flavor .ax{stroke:var(--line)}
+.flavor .dot{fill:var(--accent);fill-opacity:.75;stroke:var(--surface);stroke-width:1.5}
+.backup .actions{justify-content:flex-start}
+.backup .msg{font-size:13px;margin:10px 0 0}
+
+/* bottom nav */
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--line);
+  padding:6px max(16px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));
+  display:grid;grid-template-columns:1fr auto 1fr;align-items:center}
+nav.tabs button{background:none;border:0;padding:6px;font-size:11px;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:2px}
+nav.tabs button[aria-current="page"]{color:var(--ink);font-weight:700}
+nav.tabs svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.6}
+nav.tabs .add{background:var(--accent);color:var(--surface);border-radius:999px;padding:10px 22px;font-size:14px;font-weight:700;flex-direction:row;gap:6px;margin:0 10px}
+nav.tabs .add svg{width:18px;height:18px;stroke-width:2.2}
+
+/* sheet */
+.overlay{position:fixed;inset:0;z-index:30;background:rgba(10,16,22,.5);display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--surface);width:100%;max-width:560px;max-height:90%;overflow:auto;border-radius:16px 16px 0 0;
+  padding:18px max(18px,env(safe-area-inset-right,0px)) calc(20px + env(safe-area-inset-bottom,0px)) max(18px,env(safe-area-inset-left,0px))}
+.sheet .hero{display:grid;grid-template-columns:120px 1fr;gap:14px;margin-bottom:14px}
+.sheet .hero .pic{position:relative;aspect-ratio:3/4;background:var(--label);border-radius:8px;overflow:hidden}
+.sheet .hero img{width:100%;height:100%;object-fit:cover}
+.sheet .hero .label .v{font-size:20px}
+.sheet h3{font-family:var(--f-display);font-weight:400;font-size:24px;line-height:1.2;margin:0 0 4px;overflow-wrap:anywhere}
+dl.spec{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:0 0 14px;font-size:13.5px}
+dl.spec dt{color:var(--muted);font-size:12px}
+dl.spec dd{margin:0;font-variant-numeric:tabular-nums;min-width:0;overflow-wrap:anywhere}
+.memo{white-space:pre-wrap;background:var(--paper);border-radius:8px;padding:10px 12px;font-size:14px;margin-bottom:14px}
+.confirm{background:var(--paper);border-radius:8px;padding:12px;font-size:13px;display:flex;flex-direction:column;gap:10px}
+
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(86px + env(safe-area-inset-bottom,0px));z-index:40;background:var(--ink);color:var(--paper);padding:8px 16px;border-radius:999px;font-size:13px}
+@media (max-width:420px){.two{grid-template-columns:1fr}.brand{font-size:30px}}
+@media (prefers-reduced-motion:no-preference){.card{transition:transform .15s}.card:active{transform:scale(.98)}}
+</style>
+<!-- /app:head -->
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1 class="brand">さかづき帳<span class="beta">β</span><small>SAKAZUKI-CHO ・ 飲んだ一杯を、月日とともに。</small></h1>
+    <div class="save-state" id="saveState">読み込み中…</div>
+  </header>
+
+  <div id="notice"></div>
+
+  <section class="stats" aria-label="集計">
+    <div class="stat"><b id="sCount">0</b><span>記録</span></div>
+    <div class="stat"><b id="sBrand">0</b><span>銘柄</span></div>
+    <div class="stat"><b id="sPref">0</b><span>都道府県/47</span></div>
+    <div class="stat"><b id="sCup">0</b><span>ワンカップ</span></div>
+  </section>
+
+  <main id="view"></main>
+</div>
+
+<nav class="tabs" aria-label="画面切り替え">
+  <button id="tabList" data-view="list" aria-current="page">
+    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="9" rx="1"/><rect x="3" y="15" width="7" height="6" rx="1"/><rect x="14" y="15" width="7" height="6" rx="1"/></svg>コレクション</button>
+  <button id="tabAdd" class="add" data-view="form"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>記録する</button>
+  <button id="tabMap" data-view="map">
+    <svg viewBox="0 0 24 24"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg>制覇マップ</button>
+</nav>
+
+<script>
+(function(){
+"use strict";
+const PREFS=["北海道","青森","岩手","宮城","秋田","山形","福島","茨城","栃木","群馬","埼玉","千葉","東京","神奈川","新潟","富山","石川","福井","山梨","長野","岐阜","静岡","愛知","三重","滋賀","京都","大阪","兵庫","奈良","和歌山","鳥取","島根","岡山","広島","山口","徳島","香川","愛媛","高知","福岡","佐賀","長崎","熊本","大分","宮崎","鹿児島","沖縄"];
+// [col,row] on a 13x11 tile map
+const TILE={"北海道":[11,0],"青森":[11,2],"秋田":[10,3],"岩手":[11,3],"山形":[10,4],"宮城":[11,4],"石川":[7,5],"富山":[8,5],"新潟":[9,5],"福島":[10,5],
+"島根":[3,6],"鳥取":[4,6],"兵庫":[5,6],"京都":[6,6],"福井":[7,6],"岐阜":[8,6],"長野":[9,6],"群馬":[10,6],"栃木":[11,6],"茨城":[12,6],
+"佐賀":[0,7],"福岡":[1,7],"山口":[2,7],"広島":[3,7],"岡山":[4,7],"大阪":[5,7],"滋賀":[6,7],"三重":[7,7],"愛知":[8,7],"山梨":[9,7],"埼玉":[10,7],"東京":[11,7],"千葉":[12,7],
+"長崎":[0,8],"熊本":[1,8],"大分":[2,8],"愛媛":[3,8],"香川":[4,8],"和歌山":[5,8],"奈良":[6,8],"静岡":[8,8],"神奈川":[11,8],
+"鹿児島":[1,9],"宮崎":[2,9],"高知":[3,9],"徳島":[4,9],"沖縄":[0,10]};
+const SHORT={"北海道":"北海","神奈川":"神奈","和歌山":"和歌","鹿児島":"鹿児"};
+const TYPES=["ワンカップ","四合瓶","一升瓶","小瓶","お店で"];
+const GRADES=["普通酒","本醸造","特別本醸造","純米","特別純米","吟醸","純米吟醸","大吟醸","純米大吟醸","その他"];
+const TEMPS=[["雪冷え","5℃"],["花冷え","10℃"],["涼冷え","15℃"],["常温",""],["日向燗","30℃"],["人肌燗","35℃"],["ぬる燗","40℃"],["上燗","45℃"],["熱燗","50℃"],["飛び切り燗","55℃"]];
+const SWEET=["甘口","やや甘口","中口","やや辛口","辛口"], BODY=["淡麗","やや淡麗","中間","やや濃醇","濃醇"];
+const FIELDS=["type","name","brewery","pref","grade","date","place","rating","sweet","body","temp","photo","smv","polish","abv","price","memo","updatedAt"];
+const SAMPLES=[
+ {id:"s1",sample:true,name:"浦霞 禅",brewery:"佐浦",pref:"宮城",grade:"純米吟醸",type:"四合瓶",date:"2026-10-12",rating:5,sweet:1,body:-1,temp:"花冷え",place:"自宅",memo:"見本の記録です。最初の1杯を記録すると消えます。"},
+ {id:"s2",sample:true,name:"ワンカップ大関",brewery:"大関",pref:"兵庫",grade:"普通酒",type:"ワンカップ",date:"2026-10-05",rating:3,sweet:0,body:0,temp:"上燗",place:"駅のホーム",memo:""},
+ {id:"s3",sample:true,name:"出羽桜 桜花吟醸",brewery:"出羽桜酒造",pref:"山形",grade:"吟醸",type:"お店で",date:"2026-09-28",rating:4,sweet:-1,body:-1,temp:"雪冷え",place:"国分町の居酒屋",memo:""}
+];
+
+const S={entries:[],loaded:false,mode:"loading",view:"list",type:"all",q:"",sort:"date",pref:null,detail:null,confirm:false,draft:null,
+  syncError:null,lastCard:null,importing:null,backupMsg:"",hint:false};
+const IN_CLAUDE=!!(window.claude&&typeof window.claude.use==="function");
+let col=null, unsub=null, downloads=null;
+const LS_KEY="mycolle.entries.v1", HINT_KEY="sakazuki.hint.closed";
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const today=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
+const newId=()=>"c"+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+
+function cupsSvg(n){let h="";for(let i=1;i<=5;i++)h+=`<svg viewBox="0 0 14 12" aria-hidden="true"><path class="${i<=n?"on":"off"}" d="M1 1h12l-2.2 8.2A2 2 0 0 1 8.9 11H5.1a2 2 0 0 1-1.9-1.8z"/></svg>`;return `<span class="cups" role="img" aria-label="評価 ${n} / 5">${h}</span>`}
+function labelHtml(e){
+  const cup=e.type==="ワンカップ";
+  return `<div class="label${cup?" cup":""}"><span class="v">${esc(e.name||"無銘")}</span>${e.grade?`<span class="g">${esc(e.grade)}</span>`:""}${e.pref?`<span class="seal">${esc((SHORT[e.pref]||e.pref).slice(0,2))}</span>`:""}</div>`;
+}
+function picHtml(e){return e.photo?`<img src="${esc(e.photo)}" alt="${esc(e.name)}の写真">`:labelHtml(e)}
+
+/* ---------- storage: this device (IndexedDB, else localStorage) ---------- */
+function lsRead(){try{const v=JSON.parse(localStorage.getItem(LS_KEY)||"[]");return Array.isArray(v)?v:[]}catch(_){return[]}}
+const Local={
+  idb:null,
+  open(){return new Promise((res,rej)=>{if(!window.indexedDB)return rej(new Error("no idb"));
+    const r=indexedDB.open("sakazuki",1);r.onupgradeneeded=()=>r.result.createObjectStore("entries",{keyPath:"id"});
+    r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);r.onblocked=()=>rej(new Error("blocked"))})},
+  tx(mode,fn){return new Promise((res,rej)=>{let t;try{t=this.idb.transaction("entries",mode)}catch(e){rej(e);return}
+    const req=fn(t.objectStore("entries"));t.oncomplete=()=>res(req&&req.result);t.onerror=t.onabort=()=>rej(t.error)})},
+  async init(){
+    try{this.idb=await this.open()}catch(_){this.idb=null;return}
+    // carry over records kept by earlier versions in localStorage
+    const old=lsRead();
+    if(old.length){try{await this.tx("readwrite",s=>{old.forEach(e=>{if(e&&e.id)s.put(e)})});localStorage.removeItem(LS_KEY)}catch(_){}}
+  },
+  async all(){if(this.idb)return(await this.tx("readonly",s=>s.getAll()))||[];return lsRead()},
+  async put(e){
+    if(this.idb){await this.tx("readwrite",s=>s.put(e));return}
+    const list=lsRead().filter(x=>x.id!==e.id);list.push(e);localStorage.setItem(LS_KEY,JSON.stringify(list));
+  },
+  async del(id){
+    if(this.idb){await this.tx("readwrite",s=>s.delete(id));return}
+    localStorage.setItem(LS_KEY,JSON.stringify(lsRead().filter(x=>x.id!==id)));
+  }
+};
+
+/* ---------- storage: either backend ---------- */
+async function retry1(fn){try{return await fn()}catch(e){if(e&&e.code==="unavailable"){await wait(300+Math.random()*500);return fn()}throw e}}
+function strip(e){const o={};FIELDS.forEach(k=>{if(e[k]!==undefined)o[k]=e[k]});return o}
+async function persist(e){
+  if(S.mode==="db"){await retry1(()=>col.doc(e.id).set(strip(e)));return}
+  try{await Local.put(e)}catch(_){throw{code:"local"}}
+  const i=S.entries.findIndex(x=>x.id===e.id);if(i>=0)S.entries[i]=e;else S.entries.push(e);
+  refresh();
+}
+async function remove(id){
+  if(S.mode==="db"){await retry1(()=>col.doc(id).delete());return}
+  await Local.del(id);S.entries=S.entries.filter(x=>x.id!==id);refresh();
+}
+async function useLocal(){
+  await Local.init();
+  try{S.entries=await Local.all()}catch(_){S.entries=[]}
+  S.mode="local";S.loaded=true;refresh();
+  if(!IN_CLAUDE&&navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});
+}
+function subscribe(){
+  if(unsub){try{unsub()}catch(_){}}
+  S.syncError=null;renderChrome();
+  unsub=col.onSnapshot(snap=>{S.entries=snap.docs.map(d=>Object.assign({id:d.id},d.data()));S.loaded=true;S.syncError=null;refresh()},
+    err=>{unsub=null;S.syncError=(err&&err.code)||"unavailable";refresh()});
+}
+
+async function boot(){
+  render();
+  if(!IN_CLAUDE){setupPwa();await useLocal();return}
+  try{
+    const c=window.claude;
+    const [db,user,dl]=await Promise.all([c.use("db"),c.use("user"),c.use("downloads")]);
+    downloads=dl;
+    const uid=user?await user.id():null;
+    if(!db||!uid){await useLocal();return}
+    col=db.doc("data/users/"+uid+"/profile").collection("cups");
+    S.mode="db";
+    subscribe();
+  }catch(_){await useLocal()}
+}
+
+/* ---------- PWA ---------- */
+function setupPwa(){
+  if("serviceWorker" in navigator&&window.isSecureContext)navigator.serviceWorker.register("sw.js").catch(()=>{});
+  const ios=/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+  let closed=false;try{closed=localStorage.getItem(HINT_KEY)==="1"}catch(_){}
+  S.hint=ios&&navigator.standalone===false&&!closed;
+}
+
+/* ---------- derived ---------- */
+function shown(){
+  const real=S.entries;
+  let list=(real.length||!S.loaded)?real.slice():SAMPLES.slice();
+  if(S.type==="cup")list=list.filter(e=>e.type==="ワンカップ");
+  else if(S.type==="bottle")list=list.filter(e=>["四合瓶","一升瓶","小瓶"].includes(e.type));
+  else if(S.type==="shop")list=list.filter(e=>e.type==="お店で");
+  if(S.pref)list=list.filter(e=>e.pref===S.pref);
+  const q=S.q.trim().toLowerCase();
+  if(q)list=list.filter(e=>[e.name,e.brewery,e.pref,e.place,e.memo,e.grade].join(" ").toLowerCase().includes(q));
+  if(S.sort==="rating")list.sort((a,b)=>(b.rating||0)-(a.rating||0)||String(b.date).localeCompare(a.date));
+  else if(S.sort==="pref")list.sort((a,b)=>PREFS.indexOf(a.pref)-PREFS.indexOf(b.pref)||String(b.date).localeCompare(a.date));
+  else list.sort((a,b)=>String(b.date).localeCompare(a.date)||String(b.id).localeCompare(a.id));
+  return list;
+}
+
+/* ---------- render ---------- */
+// header, stats and notices: safe to redraw at any time
+function renderChrome(){
+  const E=S.entries;
+  $("#sCount").textContent=E.length;
+  $("#sBrand").textContent=new Set(E.map(e=>(e.name||"").trim()).filter(Boolean)).size;
+  $("#sPref").textContent=new Set(E.map(e=>e.pref).filter(Boolean)).size;
+  $("#sCup").textContent=E.filter(e=>e.type==="ワンカップ").length;
+  const st=$("#saveState");
+  st.textContent=S.syncError?"同期が切れています":S.mode==="db"?"アカウントに保存":S.mode==="local"?"この端末に保存":"読み込み中…";
+  st.classList.toggle("bad",!!S.syncError);
+  let n="";
+  if(S.syncError)n+=`<div class="notice bad" role="alert">${S.syncError==="revoked"?"この記録帳を開く権限が変わりました。ページを開き直してください。":`アカウントとの同期が切れました。記録は消えていません。<div class="actions"><button class="btn" id="resync">つなぎ直す</button></div>`}</div>`;
+  if(S.hint)n+=`<div class="notice"><span><b>ホーム画面に追加すると、アプリとして使えます。</b><br>Safari の共有ボタン（□↑）→「ホーム画面に追加」。Safari で付けた記録はアプリへ移らないので、先に追加してから記録してください。</span><div class="actions"><button class="btn ghost" id="hintClose">閉じる</button></div></div>`;
+  $("#notice").innerHTML=n;
+}
+// full redraw of the current view (navigation, filters)
+function render(){
+  renderChrome();
+  document.querySelectorAll("nav.tabs button").forEach(b=>{if(b.dataset.view===S.view)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")});
+  const v=$("#view");
+  if(S.view==="form"){v.innerHTML=formHtml();bindForm()}
+  else if(S.view==="map")v.innerHTML=mapHtml();
+  else v.innerHTML=listHtml();
+  renderSheet(true);
+}
+// records changed: redraw only what shows records, never the form or the search box
+function refresh(){
+  renderChrome();
+  if(S.view==="list")renderResults();
+  else if(S.view==="map")$("#view").innerHTML=mapHtml();
+  if(S.detail)renderSheet(false);
+}
+function renderResults(){const r=$("#results");if(r)r.innerHTML=resultsHtml()}
+
+function listHtml(){
+  const chip=(k,t)=>`<button class="chip" data-type="${k}" aria-pressed="${S.type===k}">${t}</button>`;
+  return `<div class="toolbar"><div class="chips">${chip("all","すべて")}${chip("cup","ワンカップ")}${chip("bottle","瓶")}${chip("shop","お店で")}</div>
+  <div class="row"><input class="search" id="q" type="search" placeholder="銘柄・蔵元・場所で検索" value="${esc(S.q)}">
+  <select class="sort" id="sort" aria-label="並び順"><option value="date"${S.sort==="date"?" selected":""}>新しい順</option><option value="rating"${S.sort==="rating"?" selected":""}>評価順</option><option value="pref"${S.sort==="pref"?" selected":""}>北から</option></select></div>
+  ${S.pref?`<div class="pref-filter">${esc(S.pref)}の記録 <button id="clearPref">解除</button></div>`:""}</div>
+  <div id="results">${resultsHtml()}</div>`;
+}
+function resultsHtml(){
+  if(!S.loaded)return S.syncError?`<p class="empty">記録を読み込めませんでした。上の「つなぎ直す」を押してください。</p>`:`<p class="empty">記録を読み込んでいます…</p>`;
+  const list=shown();
+  let h=S.entries.length?"":`<div class="empty"><strong>まだ記録がありません</strong>下の3枚は見本です。「記録する」から最初の1杯を残しましょう。</div>`;
+  if(!list.length)return h+`<p class="empty">条件に合う記録はありません。</p>`;
+  return h+`<div class="grid">`+list.map(e=>`<button class="card" data-id="${esc(e.id)}"><div class="pic">${picHtml(e)}<span class="badge">${esc(e.type||"")}</span>${e.sample?`<span class="badge sample">見本</span>`:""}</div>
+   <div class="meta"><span class="name">${esc(e.name||"無銘")}</span><span class="sub">${esc([e.pref,e.grade].filter(Boolean).join("・"))}</span><span class="sub">${esc((e.date||"").replace(/-/g,"."))}</span>${cupsSvg(e.rating||0)}</div></button>`).join("")+`</div>`;
+}
+
+function mapHtml(){
+  const E=S.entries;
+  const cnt={};E.forEach(e=>{if(e.pref)cnt[e.pref]=(cnt[e.pref]||0)+1});
+  const done=Object.keys(cnt).length;
+  let tiles="";
+  PREFS.forEach(p=>{const [c,r]=TILE[p],n=cnt[p]||0,l=n>=5?3:n>=2?2:n>=1?1:0;
+    tiles+=`<button class="tile${l?" l"+l:""}" style="grid-column:${c+1};grid-row:${r+1}" data-pref="${p}" aria-label="${p} ${n}件">${SHORT[p]||p}</button>`});
+  const pts=E.filter(e=>Number.isFinite(e.sweet)&&Number.isFinite(e.body));
+  const W=320,H=260,pad=34,sx=v=>pad+(v+2)/4*(W-2*pad),sy=v=>H-pad-(v+2)/4*(H-2*pad);
+  const jitter=(i)=>((i*37)%11-5)*1.2;
+  const dots=pts.map((e,i)=>`<circle class="dot" cx="${sx(e.sweet)+jitter(i)}" cy="${sy(e.body)+jitter(i+3)}" r="${4+(e.rating||3)}"><title>${esc(e.name)}</title></circle>`).join("");
+  return `<section class="panel"><h2>制覇マップ</h2><p class="note">${done?`47都道府県のうち ${done} 県の酒を記録。タイルを押すとその県の記録を表示します。`:"記録すると、飲んだ酒の都道府県が色づきます。"}</p>
+  <div class="tilemap">${tiles}</div>
+  <div class="legend"><span><i style="background:var(--accent-soft)"></i>1杯</span><span><i style="background:color-mix(in srgb,var(--accent) 55%,var(--accent-soft))"></i>2〜4杯</span><span><i style="background:var(--accent)"></i>5杯以上</span></div></section>
+  <section class="panel flavor"><h2>味わいマップ</h2><p class="note">${pts.length?"記録した味わいの分布です。円が大きいほど評価が高い酒です。":"記録時に甘辛・淡麗濃醇を選ぶと、ここに好みの傾向が現れます。"}</p>
+  <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="甘辛と淡麗濃醇の散布図">
+   <rect x="${pad}" y="${pad}" width="${W-2*pad}" height="${H-2*pad}" fill="none" class="ax"/>
+   <line class="ax" x1="${W/2}" y1="${pad}" x2="${W/2}" y2="${H-pad}"/><line class="ax" x1="${pad}" y1="${H/2}" x2="${W-pad}" y2="${H/2}"/>
+   <text x="${pad}" y="${H-pad+18}">甘口</text><text x="${W-pad}" y="${H-pad+18}" text-anchor="end">辛口</text>
+   <text x="${W/2}" y="${pad-10}" text-anchor="middle">濃醇</text><text x="${W/2}" y="${H-8}" text-anchor="middle">淡麗</text>
+   ${dots}</svg></section>
+  ${backupHtml()}`;
+}
+function backupHtml(){
+  const imp=S.importing;
+  return `<section class="panel backup"><h2>記録の書き出し・読み込み</h2>
+  <p class="note">記録をファイルに書き出して残せます。機種変更のときや、Claude 版とアプリ版のあいだで記録を移すときにも使えます。</p>
+  ${imp?`<div class="confirm">${imp.length}件の記録を読み込みます。同じ記録がすでにあれば、ファイルの内容で上書きします。<div class="actions"><button class="btn ghost" id="impNo">やめる</button><button class="btn" id="impYes">読み込む</button></div></div>`:
+  `<div class="actions"><button class="btn ghost" id="expBtn"${S.entries.length?"":" disabled"}>書き出す</button><label class="btn ghost" for="impFile" style="display:inline-block">読み込む</label><input id="impFile" type="file" accept=".json,application/json" hidden></div>`}
+  ${S.backupMsg?`<p class="msg" role="status">${esc(S.backupMsg)}</p>`:""}</section>`;
+}
+
+function formHtml(){
+  const d=S.draft;
+  const seg=(name,arr,val)=>`<div class="seg" data-seg="${name}">${arr.map(a=>{const k=Array.isArray(a)?a[0]:a;return `<button type="button" data-v="${esc(k)}" aria-pressed="${val===k}">${esc(k)}${Array.isArray(a)&&a[1]?`<small>${a[1]}</small>`:""}</button>`}).join("")}</div>`;
+  let rate="";for(let i=1;i<=5;i++)rate+=`<button type="button" data-r="${i}" aria-label="${i}"><svg viewBox="0 0 14 12"><path class="${i<=d.rating?"on":"off"}" d="M1 1h12l-2.2 8.2A2 2 0 0 1 8.9 11H5.1a2 2 0 0 1-1.9-1.8z" style="${i<=d.rating?"fill:var(--gold)":"fill:none;stroke:var(--muted);stroke-width:1"}"/></svg></button>`;
+  const has=v=>v!==""&&v!=null;
+  return `<form id="f" novalidate><div><h2>${d.id?"記録を直す":"今日の一杯を記録"}</h2></div>
+  <div class="field"><span class="lbl">種類</span>${seg("type",TYPES,d.type)}</div>
+  <div class="field"><label for="fName">銘柄</label><input id="fName" type="text" required maxlength="60" placeholder="例：浦霞 禅" value="${esc(d.name)}"></div>
+  <div class="two"><div class="field"><label for="fBrew">蔵元</label><input id="fBrew" type="text" maxlength="60" placeholder="例：佐浦" value="${esc(d.brewery)}"></div>
+   <div class="field"><label for="fPref">都道府県</label><select id="fPref"><option value="">選ぶ</option>${PREFS.map(p=>`<option${d.pref===p?" selected":""}>${p}</option>`).join("")}</select></div></div>
+  <div class="field"><span class="lbl">特定名称</span>${seg("grade",GRADES,d.grade)}</div>
+  <div class="two"><div class="field"><label for="fDate">飲んだ日</label><input id="fDate" type="date" value="${esc(d.date)}"></div>
+   <div class="field"><label for="fPlace">場所</label><input id="fPlace" type="text" maxlength="60" placeholder="自宅、店名など" value="${esc(d.place)}"></div></div>
+  <div class="field"><span class="lbl">評価</span><div class="rate" id="rate">${rate}</div></div>
+  <div class="field"><span class="lbl">味わい</span>
+   <div class="scale"><span>甘口</span><input id="fSweet" type="range" min="-2" max="2" step="1" value="${d.sweet}" aria-label="甘口から辛口"><span>辛口</span></div>
+   <div class="scale"><span>淡麗</span><input id="fBody" type="range" min="-2" max="2" step="1" value="${d.body}" aria-label="淡麗から濃醇"><span>濃醇</span></div></div>
+  <div class="field"><span class="lbl">温度</span>${seg("temp",TEMPS,d.temp)}</div>
+  <div class="field"><span class="lbl">写真</span><div class="photo-row">${d.photo?`<img class="photo-prev" src="${esc(d.photo)}" alt="選んだ写真">`:""}
+   <label class="btn ghost" for="fPhoto" style="display:inline-block">${d.photo?"写真を変える":"ラベルを撮る・選ぶ"}</label><input id="fPhoto" type="file" accept="image/*" hidden>
+   ${d.photo?`<button type="button" class="btn ghost" id="rmPhoto">外す</button>`:""}</div></div>
+  <details${has(d.smv)||has(d.polish)||has(d.abv)||has(d.price)?" open":""}><summary>ラベルの数値・価格（任意）</summary>
+   <div class="three"><div class="field"><label for="fSmv">日本酒度</label><input id="fSmv" type="number" inputmode="decimal" step="0.5" value="${esc(d.smv)}"></div>
+   <div class="field"><label for="fPolish">精米歩合 %</label><input id="fPolish" type="number" inputmode="numeric" min="1" max="100" value="${esc(d.polish)}"></div>
+   <div class="field"><label for="fAbv">度数 %</label><input id="fAbv" type="number" inputmode="decimal" step="0.1" value="${esc(d.abv)}"></div></div>
+   <div class="field" style="margin-top:10px"><label for="fPrice">価格（円）</label><input id="fPrice" type="number" inputmode="numeric" min="0" value="${esc(d.price)}"></div></details>
+  <div class="field"><label for="fMemo">メモ</label><textarea id="fMemo" maxlength="1000" placeholder="香り、合わせた料理、一緒に飲んだ人など">${esc(d.memo)}</textarea></div>
+  <p class="err" id="fErr" hidden></p>
+  <div class="actions"><button type="button" class="btn ghost" id="cancel">やめる</button><button type="submit" class="btn" id="save">${d.id?"保存する":"記録する"}</button></div></form>`;
+}
+function blankDraft(){return{id:null,type:"ワンカップ",name:"",brewery:"",pref:"",grade:"",date:today(),place:"",rating:3,sweet:0,body:0,temp:"",photo:"",smv:"",polish:"",abv:"",price:"",memo:""}}
+
+function readForm(){
+  if(!S.draft||!$("#f"))return;
+  const d=S.draft,v=id=>$(id).value;
+  Object.assign(d,{name:v("#fName").trim(),brewery:v("#fBrew").trim(),pref:v("#fPref"),date:v("#fDate")||today(),place:v("#fPlace").trim(),
+   sweet:+v("#fSweet"),body:+v("#fBody"),smv:v("#fSmv"),polish:v("#fPolish"),abv:v("#fAbv"),price:v("#fPrice"),memo:v("#fMemo")});
+}
+function saveErr(err){
+  const c=err&&err.code;
+  if(c==="quota_exceeded")return "保存容量がいっぱいです。古い記録の写真を外すか削除してください。";
+  if(c==="invalid_argument"||c==="transform_error")return "写真が大きすぎて保存できませんでした。写真を外すか、撮り直してください。";
+  if(c==="local")return "この端末に保存できませんでした。写真を外すと保存できる場合があります。";
+  return "保存できませんでした。通信を確かめて、もう一度押してください。";
+}
+function bindForm(){
+  const f=$("#f");
+  f.querySelectorAll("[data-seg]").forEach(g=>g.addEventListener("click",ev=>{const b=ev.target.closest("button");if(!b)return;readForm();const k=g.dataset.seg;S.draft[k]=S.draft[k]===b.dataset.v&&k!=="type"?"":b.dataset.v;render()}));
+  $("#rate").addEventListener("click",ev=>{const b=ev.target.closest("button");if(!b)return;readForm();S.draft.rating=+b.dataset.r;render()});
+  $("#fPhoto").addEventListener("change",async ev=>{const file=ev.target.files&&ev.target.files[0];if(!file)return;readForm();
+    try{S.draft.photo=await shrink(file)}catch(_){showErr("写真を読み込めませんでした。別の画像を選んでください。");return}render()});
+  const rm=$("#rmPhoto");if(rm)rm.addEventListener("click",()=>{readForm();S.draft.photo="";render()});
+  $("#cancel").addEventListener("click",()=>{S.draft=null;go("list")});
+  f.addEventListener("submit",async ev=>{ev.preventDefault();readForm();const d=S.draft;
+    if(!d.name){showErr("銘柄を入れてください。");$("#fName").focus();return}
+    const e=Object.assign({},d,{id:d.id||newId(),updatedAt:Date.now()});
+    $("#save").disabled=true;
+    try{await persist(e);const wasEdit=!!d.id;S.draft=null;S.pref=null;go("list");toast(wasEdit?"保存しました":"記録しました")}
+    catch(err){const b=$("#save");if(b)b.disabled=false;showErr(saveErr(err))}
+  });
+}
+function showErr(m){const p=$("#fErr");if(p){p.textContent=m;p.hidden=false}}
+function shrink(file){return new Promise((res,rej)=>{const url=URL.createObjectURL(file),img=new Image();
+  img.onload=()=>{let m=640,q=.8,out="";for(let t=0;t<4;t++){const s=Math.min(1,m/Math.max(img.width,img.height)),c=document.createElement("canvas");c.width=Math.round(img.width*s);c.height=Math.round(img.height*s);c.getContext("2d").drawImage(img,0,0,c.width,c.height);out=c.toDataURL("image/jpeg",q);if(out.length<180000)break;m*=.8;q-=.1}URL.revokeObjectURL(url);res(out)};
+  img.onerror=()=>{URL.revokeObjectURL(url);rej()};img.src=url})}
+
+/* ---------- backup ---------- */
+function sanitize(x){
+  if(!x||typeof x!=="object"||typeof x.name!=="string"||!x.name.trim())return null;
+  const str=(v,n)=>typeof v==="string"?v.slice(0,n):"", num=v=>v===""||v==null||!Number.isFinite(+v)?"":String(v);
+  const int=(v,lo,hi,dflt)=>Number.isInteger(+v)&&+v>=lo&&+v<=hi?+v:dflt;
+  return{id:typeof x.id==="string"&&/^[A-Za-z0-9_-]{1,40}$/.test(x.id)?x.id:newId(),
+    type:TYPES.includes(x.type)?x.type:"四合瓶",name:str(x.name,60).trim(),brewery:str(x.brewery,60),pref:PREFS.includes(x.pref)?x.pref:"",
+    grade:GRADES.includes(x.grade)?x.grade:"",date:/^\d{4}-\d{2}-\d{2}$/.test(x.date)?x.date:today(),place:str(x.place,60),
+    rating:int(x.rating,1,5,3),sweet:int(x.sweet,-2,2,0),body:int(x.body,-2,2,0),temp:TEMPS.some(t=>t[0]===x.temp)?x.temp:"",
+    photo:typeof x.photo==="string"&&/^data:image\/(jpeg|png|webp);base64,/.test(x.photo)&&x.photo.length<250000?x.photo:"",
+    smv:num(x.smv),polish:num(x.polish),abv:num(x.abv),price:num(x.price),memo:str(x.memo,1000),updatedAt:Number.isFinite(x.updatedAt)?x.updatedAt:Date.now()};
+}
+async function exportAll(){
+  const data=JSON.stringify({app:"sakazuki-cho",version:1,exportedAt:new Date().toISOString(),entries:S.entries.map(e=>Object.assign({id:e.id},strip(e)))});
+  const name="sakazuki-"+today().replace(/-/g,"")+".json";
+  S.backupMsg="";
+  try{
+    if(IN_CLAUDE){
+      if(!downloads){S.backupMsg="この画面からは書き出せません。";return}
+      await downloads.save({filename:name,data});S.backupMsg=S.entries.length+"件を書き出しました。";return;
+    }
+    const file=new File([data],name,{type:"application/json"});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:"さかづき帳の記録"});S.backupMsg="書き出しました。";return}
+    const a=document.createElement("a");a.href=URL.createObjectURL(file);a.download=name;document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(a.href),4000);S.backupMsg=S.entries.length+"件を書き出しました。";
+  }catch(err){
+    S.backupMsg=err&&(err.code==="declined"||err.name==="AbortError")?"書き出しをやめました。":"書き出せませんでした。";
+  }finally{if(S.view==="map")$("#view").innerHTML=mapHtml()}
+}
+async function readImport(file){
+  S.backupMsg="";
+  try{
+    const v=JSON.parse(await file.text());
+    const list=(Array.isArray(v)?v:v&&Array.isArray(v.entries)?v.entries:[]).map(sanitize).filter(Boolean);
+    if(!list.length)S.backupMsg="読み込める記録が見つかりませんでした。さかづき帳で書き出したファイルを選んでください。";
+    else S.importing=list;
+  }catch(_){S.backupMsg="ファイルを読めませんでした。さかづき帳で書き出したファイルを選んでください。"}
+  $("#view").innerHTML=mapHtml();
+}
+async function runImport(){
+  const list=S.importing;S.importing=null;let ok=0;
+  S.backupMsg="読み込んでいます…";$("#view").innerHTML=mapHtml();
+  for(const e of list){
+    try{if(S.mode==="db")await retry1(()=>col.doc(e.id).set(strip(e)));else{await Local.put(e);const i=S.entries.findIndex(x=>x.id===e.id);if(i>=0)S.entries[i]=e;else S.entries.push(e)}ok++}
+    catch(_){}
+  }
+  S.backupMsg=ok===list.length?ok+"件を読み込みました。":`${list.length}件のうち${ok}件を読み込みました。残りは保存できませんでした。`;
+  refresh();
+}
+
+/* ---------- detail sheet ---------- */
+function renderSheet(focus){
+  let o=$("#ov");if(o)o.remove();
+  if(!S.detail)return;
+  const all=S.entries.length?S.entries:SAMPLES, e=all.find(x=>x.id===S.detail);if(!e){closeSheet();return}
+  const tempC=(TEMPS.find(t=>t[0]===e.temp)||[])[1];
+  const rows=[["種類",e.type],["蔵元",e.brewery],["都道府県",e.pref],["特定名称",e.grade],["飲んだ日",(e.date||"").replace(/-/g,".")],["場所",e.place],
+   ["味わい",Number.isFinite(e.sweet)&&Number.isFinite(e.body)?SWEET[e.sweet+2]+"・"+BODY[e.body+2]:""],["温度",e.temp?e.temp+(tempC?"（"+tempC+"）":""):""],
+   ["日本酒度",e.smv!==""&&e.smv!=null?(+e.smv>0?"+":"")+e.smv:""],["精米歩合",e.polish?e.polish+"%":""],["度数",e.abv?e.abv+"%":""],["価格",e.price?Number(e.price).toLocaleString("ja-JP")+"円":""]].filter(r=>r[1]);
+  o=document.createElement("div");o.className="overlay";o.id="ov";
+  o.innerHTML=`<div class="sheet" role="dialog" aria-modal="true" aria-labelledby="dName"><div class="hero"><div class="pic">${picHtml(e)}</div>
+   <div><h3 id="dName">${esc(e.name)}</h3>${cupsSvg(e.rating||0)}${e.sample?`<p class="sub" style="font-size:12px;color:var(--muted)">見本の記録です</p>`:""}</div></div>
+   <dl class="spec">${rows.map(r=>`<dt>${r[0]}</dt><dd>${esc(r[1])}</dd>`).join("")}</dl>
+   ${e.memo?`<div class="memo">${esc(e.memo)}</div>`:""}
+   ${S.confirm?`<div class="confirm">「${esc(e.name)}」の記録を削除します。元に戻せません。<div class="actions"><button class="btn ghost" id="dNo">やめる</button><button class="btn danger" id="dYes">削除する</button></div></div>`:
+   `<div class="actions">${e.sample?"":`<button class="btn ghost" id="dDel">削除</button><button class="btn ghost" id="dEdit">直す</button><button class="btn ghost" id="dAgain">同じ酒をもう一杯</button>`}<button class="btn" id="dClose">閉じる</button></div>`}</div>`;
+  document.body.appendChild(o);
+  o.addEventListener("click",ev=>{if(ev.target===o)closeSheet()});
+  const on=(id,fn)=>{const b=o.querySelector(id);if(b)b.addEventListener("click",fn)};
+  on("#dClose",()=>closeSheet());
+  on("#dDel",()=>{S.confirm=true;renderSheet(true)});
+  on("#dNo",()=>{S.confirm=false;renderSheet(true)});
+  on("#dYes",async ev=>{ev.currentTarget.disabled=true;try{await remove(e.id);S.lastCard=null;closeSheet();toast("削除しました")}catch(_){toast("削除できませんでした");S.confirm=false;renderSheet(true)}});
+  on("#dEdit",()=>{S.draft=Object.assign(blankDraft(),e);closeSheet(true);go("form")});
+  on("#dAgain",()=>{S.draft=Object.assign(blankDraft(),e,{id:null,date:today(),memo:"",photo:e.photo||""});closeSheet(true);go("form")});
+  if(focus)(o.querySelector("#dClose")||o.querySelector("#dNo")).focus();
+}
+function closeSheet(leaving){
+  S.detail=null;S.confirm=false;const o=$("#ov");if(o)o.remove();
+  if(leaving!==true&&S.lastCard){const c=document.querySelector(`.card[data-id="${CSS.escape(S.lastCard)}"]`);if(c)c.focus()}
+}
+document.addEventListener("keydown",ev=>{if(ev.key==="Escape"&&S.detail)closeSheet()});
+
+/* ---------- nav & events ---------- */
+function go(v){if(v==="form"&&!S.draft)S.draft=blankDraft();S.view=v;render();window.scrollTo(0,0)}
+document.querySelectorAll("nav.tabs button").forEach(b=>b.addEventListener("click",()=>{
+  if(S.view==="form")readForm();                       // keep what was typed when leaving the form
+  if(b.dataset.view==="form"&&S.view!=="form"&&S.draft&&S.draft.id)S.draft=null; // an unfinished edit is not resumed as a new record
+  go(b.dataset.view)}));
+document.addEventListener("click",ev=>{
+  if(ev.target.id==="resync"){subscribe();return}
+  if(ev.target.id==="hintClose"){S.hint=false;try{localStorage.setItem(HINT_KEY,"1")}catch(_){}renderChrome()}
+});
+$("#view").addEventListener("click",ev=>{
+  const c=ev.target.closest(".card");if(c){S.detail=c.dataset.id;S.lastCard=c.dataset.id;S.confirm=false;renderSheet(true);return}
+  const t=ev.target.closest("[data-type]");if(t){S.type=t.dataset.type;document.querySelectorAll(".chip").forEach(x=>x.setAttribute("aria-pressed",x.dataset.type===S.type));renderResults();return}
+  const p=ev.target.closest(".tile");if(p){S.pref=p.dataset.pref;S.type="all";go("list");return}
+  const id=ev.target.id;
+  if(id==="clearPref"){S.pref=null;render()}
+  else if(id==="expBtn")exportAll();
+  else if(id==="impNo"){S.importing=null;$("#view").innerHTML=mapHtml()}
+  else if(id==="impYes")runImport();
+});
+// search: don't touch the box itself, and wait for Japanese input (IME) to be confirmed
+function onSearch(ev){if(ev.isComposing)return;S.q=ev.target.value;renderResults()}
+$("#view").addEventListener("input",ev=>{if(ev.target.id==="q")onSearch(ev)});
+$("#view").addEventListener("compositionend",ev=>{if(ev.target.id==="q")onSearch(ev)});
+$("#view").addEventListener("change",ev=>{
+  if(ev.target.id==="sort"){S.sort=ev.target.value;renderResults()}
+  else if(ev.target.id==="impFile"){const f=ev.target.files&&ev.target.files[0];if(f)readImport(f)}
+});
+let tt;function toast(m){let t=$(".toast");if(!t){t=document.createElement("div");t.className="toast";t.setAttribute("role","status");document.body.appendChild(t)}t.textContent=m;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>{t.hidden=true},2200)}
+
+boot();
+})();
+</script>
+</body>
+</html>
