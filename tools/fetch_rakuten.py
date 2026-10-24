@@ -50,44 +50,65 @@ def search(keyword):
         return json.load(r)
 
 
+
+def fetch_items(s, kw):
+    """1つの言葉で探して、条件に合う商品を最大 PER_SAKE 件返す。キーの問題なら None(以降は探さない)。"""
+    try:
+        data = search(kw)
+    except urllib.error.HTTPError as ex:
+        body = ex.read().decode("utf-8", "replace")[:200]
+        status["errors"].append(f'{s["id"]}「{kw}」: HTTP {ex.code} {body}')
+        time.sleep(2)
+        return None if ex.code in (401, 403) else []
+    except Exception as ex:  # 通信の失敗など
+        status["errors"].append(f'{s["id"]}「{kw}」: {ex}')
+        time.sleep(2)
+        return []
+    finally:
+        time.sleep(1.1)  # 楽天への負担を減らすため、1秒に1回まで
+    items = []
+    for it in data.get("Items") or data.get("items") or []:
+        it = it.get("Item", it) if isinstance(it, dict) else it
+        name = it.get("itemName", "")
+        if any(w in name for w in NG_WORDS):
+            continue
+        img = image_of(it)
+        url = it.get("affiliateUrl") or it.get("itemUrl")
+        if not img or not url:
+            continue
+        items.append({"name": name[:80], "price": it.get("itemPrice"), "url": url, "img": img, "shop": it.get("shopName", "")})
+        if len(items) >= PER_SAKE:
+            break
+    return items
+
+
 out = {}
 if not app_id or not access_key:
     status["errors"].append("RAKUTEN_APP_ID または RAKUTEN_ACCESS_KEY が設定されていません")
 else:
     for s in sakes:
-        kw = s.get("rakutenQuery") or s["name"]
-        try:
-            data = search(kw)
-        except urllib.error.HTTPError as ex:
-            body = ex.read().decode("utf-8", "replace")[:200]
-            status["errors"].append(f'{s["id"]}: HTTP {ex.code} {body}')
-            if ex.code in (401, 403):
-                break  # キーや許可の問題はどの銘柄でも同じなので、ここでやめる
-            time.sleep(2)
+        # 1文字の言葉は楽天の検索で受け付けられないので除く。見つからなければ、後ろの言葉を外しながら探し直す
+        words = [w for w in (s.get("rakutenQuery") or s["name"]).split() if len(w) >= 2]
+        if not words:
+            status["empty"].append(s["id"])
             continue
-        except Exception as ex:  # 通信の失敗など
-            status["errors"].append(f'{s["id"]}: {ex}')
-            time.sleep(2)
-            continue
-        items = []
-        for it in data.get("Items") or data.get("items") or []:
-            it = it.get("Item", it) if isinstance(it, dict) else it
-            name = it.get("itemName", "")
-            if any(w in name for w in NG_WORDS):
-                continue
-            img = image_of(it)
-            url = it.get("affiliateUrl") or it.get("itemUrl")
-            if not img or not url:
-                continue
-            items.append({"name": name[:80], "price": it.get("itemPrice"), "url": url, "img": img, "shop": it.get("shopName", "")})
-            if len(items) >= PER_SAKE:
+        # 最後に銘柄名1語まで縮めるときは、関係のない商品が出ないよう「日本酒」を足す
+        tries = [" ".join(words[:n]) for n in range(len(words), 1, -1)] + [words[0] + " 日本酒"]
+        items, stop = [], False
+        for kw in tries:
+            items = fetch_items(s, kw)
+            if items is None:
+                stop = True
                 break
+            if items:
+                break
+        if stop:
+            break
         if items:
             out[s["id"]] = items
             status["ok"] += 1
         else:
             status["empty"].append(s["id"])
-        time.sleep(1.1)  # 楽天への負担を減らすため、1秒に1回まで
 
 (ROOT / "data/rakuten.json").write_text(json.dumps(out, ensure_ascii=False), encoding="utf-8")
 (ROOT / "rakuten-status.json").write_text(json.dumps(status, ensure_ascii=False, indent=1), encoding="utf-8")
