@@ -4,6 +4,8 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  schedule:
+    - cron: "17 21 * * 0"  # 毎週月曜 6:17(日本時間)に楽天の商品情報を取り直す
 
 permissions:
   contents: read
@@ -22,6 +24,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Fetch Rakuten items
+        env:
+          RAKUTEN_APP_ID: ${{ secrets.RAKUTEN_APP_ID }}
+          RAKUTEN_ACCESS_KEY: ${{ secrets.RAKUTEN_ACCESS_KEY }}
+        run: python3 tools/fetch_rakuten.py
       - name: Build pages from data
         run: |
           python3 tools/build_kura.py

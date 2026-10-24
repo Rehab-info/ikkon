@@ -243,9 +243,22 @@
   function rakuten(url) {
     return 'https://hb.afl.rakuten.co.jp/hgc/' + RAKUTEN_AFF + '/?pc=' + encodeURIComponent(url) + '&m=' + encodeURIComponent(url);
   }
+  // data/rakuten.json は公開の仕組みが週1回つくる(楽天市場の商品写真・価格)。なければ検索ボタンだけ出す
+  var rakutenItems = {};
+  function itemCards(s) {
+    var list = rakutenItems[s.id];
+    if (!list || !list.length) return '';
+    return '<ul class="rk-items">' + list.map(function (it) {
+      return '<li><a href="' + esc(it.url) + '" target="_blank" rel="sponsored noopener">' +
+        '<img src="' + esc(it.img) + '" alt="" loading="lazy" referrerpolicy="no-referrer">' +
+        '<span class="rk-name">' + esc(it.name) + '</span>' +
+        (it.price ? '<b class="rk-price">' + Number(it.price).toLocaleString('ja-JP') + '円</b>' : '') +
+        '<span class="rk-shop">' + esc(it.shop || '') + '</span></a></li>';
+    }).join('') + '</ul>';
+  }
   function buyLinks(s) {
     var q = s.rakutenQuery || s.name;
-    return '<div class="buy-links"><a class="btn small" href="' + esc(rakuten('https://search.rakuten.co.jp/search/mall/' + encodeURIComponent(q) + '/')) +
+    return itemCards(s) + '<div class="buy-links"><a class="btn small" href="' + esc(rakuten('https://search.rakuten.co.jp/search/mall/' + encodeURIComponent(q) + '/')) +
       '" target="_blank" rel="sponsored noopener">楽天市場で探す</a><span class="pr">広告(楽天アフィリエイト)</span></div>';
   }
 
@@ -503,12 +516,16 @@
   }
 
   // レビューは読めなくても銘柄は表示する
+  var rakutenLoaded = fetch('data/rakuten.json')
+    .then(function (r) { return r.ok ? r.json() : {}; })
+    .then(function (d) { rakutenItems = d || {}; }, function () {});
   var reviewsLoaded = fetch('data/reviews.json')
     .then(function (r) { return r.ok ? r.json() : null; })
     .then(loadReviews, function () {});
   Promise.all([
     fetch('data/sakes.json').then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); }),
-    reviewsLoaded
+    reviewsLoaded,
+    rakutenLoaded
   ])
     .then(function (res) { return res[0]; })
     .then(init, function () {

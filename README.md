@@ -155,3 +155,5 @@ python3 tools/import_reviews.py ダウンロードした.csv
 - アフィリエイトIDは `assets/app.js` の `RAKUTEN_AFF` にあります。
 - 銘柄名で検索すると関係のない商品が多く出る場合は、`data/sakes.json` の銘柄に `"rakutenQuery": "浦霞 禅"` のように検索の言葉を足します。
 - すべてのページのフッターに、広告を利用している旨を表示しています(ステマ規制への対応)。消さないでください。
+- 商品写真・価格は、公開の仕組みが `tools/fetch_rakuten.py` で週1回(月曜の朝)と GitHub に上げたときに楽天市場から取り直し、詳細の「買い方」に最大3件出します。楽天のアプリIDとアクセスキーは、リポジトリの Settings → Secrets(`RAKUTEN_APP_ID`・`RAKUTEN_ACCESS_KEY`)に入っています。
+- 取れたかどうかは、公開後に `rakuten-status.json` を開くと確かめられます。商品の写真は楽天のサーバーのものをリンク付きで表示しているだけで、保存や加工はしていません。

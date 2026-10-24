@@ -488,3 +488,11 @@ body::after {
 .buy-links { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 10px; }
 .buy-links .btn { text-decoration: none; display: inline-flex; align-items: center; font-size: 14px; padding: 8px 18px; min-height: 40px; }
 .pr { font-size: 12px; color: var(--muted); }
+.rk-items { list-style: none; margin: 12px 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.rk-items a { display: grid; gap: 4px; align-content: start; text-decoration: none; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: var(--radius-in); padding: 8px; height: 100%; }
+.rk-items a:hover { border-color: var(--ai); }
+.rk-items img { width: 100%; aspect-ratio: 1; object-fit: contain; background: #fff; border-radius: 4px; max-width: 100%; }
+.rk-name { font-size: 12px; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.rk-price { font-size: 14px; color: var(--ai); font-variant-numeric: tabular-nums; }
+.rk-shop { font-size: 11px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 420px) { .rk-items { gap: 6px; } .rk-items a { padding: 6px; } }
