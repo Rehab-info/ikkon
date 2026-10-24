@@ -10,6 +10,7 @@ guide.html        飲み方ガイド(4タイプ・温度帯・料理・買い方
 data/sakes.json   銘柄データ(ここを編集して銘柄を追加)
 assets/style.css  デザイン
 assets/app.js     絞り込みとマップの処理
+assets/back.js    蔵旅から来た人に「蔵旅に戻る」の帯を出す処理
 kura.html         宮城の蔵(data/kura.json から自動生成)
 miyagi.html       宮城で飲める・買える店
 data/kura.json    宮城の蔵元24蔵のデータ

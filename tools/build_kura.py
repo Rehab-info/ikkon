@@ -93,6 +93,7 @@ page = f'''<!doctype html>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;700&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap">
 <link rel="stylesheet" href="assets/style.css?v={VERSION}">
+<script src="assets/back.js?v={VERSION}" defer></script>
 </head>
 <body>
 <header class="site-head">

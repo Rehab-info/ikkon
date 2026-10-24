@@ -491,3 +491,14 @@ body::after {
   .nav { gap: 2px; }
   .nav a { padding: 8px 5px; font-size: 12px; }
 }
+
+/* 蔵旅から来た人への「蔵旅に戻る」の帯(assets/back.js) */
+.kt-back { position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; pointer-events: none;
+  padding-bottom: env(safe-area-inset-bottom, 0px); }
+.kt-back .wrap { display: flex; justify-content: flex-start; padding-block: 12px; }
+.kt-back .wrap > * { pointer-events: auto; }
+.kt-back a { display: inline-flex; align-items: center; min-height: 44px; padding: 8px 16px 8px 18px; border-radius: 999px 0 0 999px;
+  background: var(--ai); color: var(--on-ai); text-decoration: none; font-weight: 700; font-size: 14.5px; box-shadow: 0 4px 14px rgb(0 0 0 / .22); }
+.kt-back button { min-width: 44px; min-height: 44px; border: 0; border-left: 1px solid rgb(255 255 255 / .3); border-radius: 0 999px 999px 0;
+  background: var(--ai); color: var(--on-ai); font-size: 18px; line-height: 1; cursor: pointer; box-shadow: 0 4px 14px rgb(0 0 0 / .22); }
+body.has-kt-back { padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)); }
