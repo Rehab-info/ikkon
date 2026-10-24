@@ -148,12 +148,15 @@ python3 tools/import_reviews.py ダウンロードした.csv
 - 記録はその端末の中に保存されます。機種変更のときは「制覇マップ」の下の「書き出す」でファイルに残し、新しい端末で「読み込む」を使います。
 - `sakazuki/index.html` を直したら、`sakazuki/sw.js` の `VERSION` の番号を上げてください(古い版が残らなくなります)。
 
-## 楽天アフィリエイト
+## 楽天アフィリエイト(いまは止めています)
 
-各銘柄の詳細の「買い方」に「楽天市場で探す」ボタンが出ます。銘柄名で楽天市場を検索したページへの、アフィリエイトID付きのリンクです。
+銘柄の詳細に「楽天市場で探す」ボタンと、楽天市場の商品写真・価格を出す仕組みがあります。いまは表示も、楽天からの取得も止めています。
 
-- アフィリエイトIDは `assets/app.js` の `RAKUTEN_AFF` にあります。
+再開するときは、次の3つを行います。
+
+1. `assets/app.js` の `RAKUTEN_ON` を `true` にする
+2. `.github/workflows/pages.yml` の「Fetch Rakuten items」の行の先頭の `# ` を外す(週1回取り直すなら `schedule` も足す)
+3. 各ページのフッターに「当サイトは楽天アフィリエイトなどの広告を利用しています。」の表示を戻す(ステマ規制への対応。`index.html`・`guide.html`・`miyagi.html`・`tools/build_kura.py`・`tools/build_columns.py`)
+
+- アフィリエイトIDは `assets/app.js` の `RAKUTEN_AFF` に、楽天のアプリIDとアクセスキーはリポジトリの Settings → Secrets(`RAKUTEN_APP_ID`・`RAKUTEN_ACCESS_KEY`)に残してあります。
 - 銘柄名で検索すると関係のない商品が多く出る場合は、`data/sakes.json` の銘柄に `"rakutenQuery": "浦霞 禅"` のように検索の言葉を足します。
-- すべてのページのフッターに、広告を利用している旨を表示しています(ステマ規制への対応)。消さないでください。
-- 商品写真・価格は、公開の仕組みが `tools/fetch_rakuten.py` で週1回(月曜の朝)と GitHub に上げたときに楽天市場から取り直し、詳細の「買い方」に最大3件出します。楽天のアプリIDとアクセスキーは、リポジトリの Settings → Secrets(`RAKUTEN_APP_ID`・`RAKUTEN_ACCESS_KEY`)に入っています。
-- 取れたかどうかは、公開後に `rakuten-status.json` を開くと確かめられます。商品の写真は楽天のサーバーのものをリンク付きで表示しているだけで、保存や加工はしていません。

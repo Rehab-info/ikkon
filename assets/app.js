@@ -239,6 +239,8 @@
 
   /* ---------- 楽天アフィリエイト ---------- */
   // 楽天市場の検索ページへのリンクを、アフィリエイトID付きのリンクに包む
+  // 楽天アフィリエイトを使うときは true にする(いまは止めている)
+  var RAKUTEN_ON = false;
   var RAKUTEN_AFF = '58c36830.1e80c147.58c36831.fb6bd4b1';
   function rakuten(url) {
     return 'https://hb.afl.rakuten.co.jp/hgc/' + RAKUTEN_AFF + '/?pc=' + encodeURIComponent(url) + '&m=' + encodeURIComponent(url);
@@ -257,6 +259,7 @@
     }).join('') + '</ul>';
   }
   function buyLinks(s) {
+    if (!RAKUTEN_ON) return '';
     var q = s.rakutenQuery || s.name;
     return itemCards(s) + '<div class="buy-links"><a class="btn small" href="' + esc(rakuten('https://search.rakuten.co.jp/search/mall/' + encodeURIComponent(q) + '/')) +
       '" target="_blank" rel="sponsored noopener">楽天市場で探す</a><span class="pr">広告(楽天アフィリエイト)</span></div>';
@@ -516,7 +519,7 @@
   }
 
   // レビューは読めなくても銘柄は表示する
-  var rakutenLoaded = fetch('data/rakuten.json')
+  var rakutenLoaded = !RAKUTEN_ON ? Promise.resolve() : fetch('data/rakuten.json')
     .then(function (r) { return r.ok ? r.json() : {}; })
     .then(function (d) { rakutenItems = d || {}; }, function () {});
   var reviewsLoaded = fetch('data/reviews.json')
