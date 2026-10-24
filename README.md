@@ -85,6 +85,8 @@ python3 -m http.server 8000
 python3 tools/build_kura.py
 ```
 
+姉妹サイト「蔵旅」に旅のしおりがある蔵には `"kuratabi": true` を付けてください。その蔵のカードに「蔵旅で旅のしおりを見る」のリンクが出ます(リンク先は `https://rehab-info.github.io/kuratabi/<蔵の id>.html`)。蔵旅でしおりを足したら、ここにも付けてください。
+
 ## デザインや動きを直したとき
 
 `assets/style.css` や `assets/app.js` を直したら、次を実行してください。各ページの `?v=` の番号がまとめて上がり、閲覧者のブラウザに古いファイルが残らなくなります(`kura.html` も作り直されます)。

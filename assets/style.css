@@ -483,3 +483,11 @@ body::after {
 .rv-none { margin: 0; font-size: 14px; color: var(--muted); }
 .rv-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; }
 .rv-note { font-size: 12px; color: var(--muted); margin: 6px 0 0; }
+
+/* メニューの文字が1字ずつ折り返さないように(狭い画面では項目ごと2段に) */
+.nav { flex-wrap: wrap; }
+.nav a { white-space: nowrap; }
+@media (max-width: 340px) {
+  .nav { gap: 2px; }
+  .nav a { padding: 8px 5px; font-size: 12px; }
+}

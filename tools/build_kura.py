@@ -16,6 +16,7 @@ VERSION = re.search(r"style\.css\?v=(\d+)", (ROOT / "index.html").read_text(enco
 AREAS = ["仙台・県央", "県南", "塩竈", "大崎・加美・遠田", "栗原・登米", "石巻・気仙沼"]
 # 地域の写真(images/ に置いたものだけ表示)
 AREA_IMG = {"仙台・県央": ("images/sendai.jpg", "仙台市の町並み"), "塩竈": ("images/matsushima-l.jpg", "塩竈の蔵からほど近い松島湾")}
+KURATABI = "https://rehab-info.github.io/kuratabi/"  # 姉妹サイト「蔵旅」の住所
 TOUR = {"yes": ("見学できる", "tour-yes"), "partial": ("一部見学", "tour-ask"), "ask": ("要相談", "tour-ask"), "no": ("見学不可", "tour-no")}
 e = html.escape
 
@@ -40,6 +41,9 @@ def card(k):
     if k.get("url"):
         links.append(f'<a href="{e(k["url"])}" target="_blank" rel="noopener">公式サイト</a>')
     links.append(f'<a href="https://miyagisake.jp/kuramoto/{e(k["id"])}/" target="_blank" rel="noopener">宮城県酒造組合の紹介</a>')
+    # 蔵旅に旅のしおりがある蔵(data/kura.json の "kuratabi": true)
+    if k.get("kuratabi"):
+        links.append(f'<a href="{KURATABI}{e(k["id"])}.html">蔵旅で旅のしおりを見る</a>')
     related = ""
     if k["sakes"]:
         items = "、".join(f'<a href="index.html#{e(s)}">{e(sakes[s]["name"])}</a>' for s in k["sakes"])
@@ -94,7 +98,7 @@ page = f'''<!doctype html>
 <header class="site-head">
   <div class="wrap">
     <a class="logo" href="index.html"><span class="mark" aria-hidden="true"></span><b>一献</b><small>日本酒案内</small></a>
-    <nav class="nav"><a href="index.html">銘柄</a><a href="guide.html">飲み方</a><a href="kura.html" aria-current="page">宮城の蔵</a><a href="miyagi.html">宮城の店</a><a href="column/index.html">コラム</a></nav>
+    <nav class="nav"><a href="index.html">銘柄</a><a href="guide.html">飲み方</a><a href="kura.html" aria-current="page">宮城の蔵</a><a href="miyagi.html">宮城の店</a><a href="column/index.html">コラム</a><a href="{KURATABI}">蔵旅</a></nav>
   </div>
 </header>
 
@@ -115,6 +119,7 @@ page = f'''<!doctype html>
       <nav class="jump" aria-label="地域">{jump}</nav>
       <div class="chips"><button type="button" class="chip" id="only-tour" aria-pressed="false">見学できる蔵だけ表示({n_yes}蔵)</button></div>
       <p class="notice">見学の受け入れや時期は変わることがあります。訪問前に必ず各蔵へ問い合わせてください。蔵の情報は<a href="https://miyagisake.jp/kuramoto/" target="_blank" rel="noopener">宮城県酒造組合</a>の蔵元紹介をもとに、2026年10月に確認しました。</p>
+      <p class="notice">蔵のまわりの見どころと一日の旅程は、姉妹サイト<a href="{KURATABI}">「蔵旅」の旅のしおり</a>で紹介しています。</p>
     </div>
   </section>
 

@@ -48,7 +48,8 @@ if errors:
 
 def nav(current):
     items = [("index", "../index.html", "銘柄"), ("guide", "../guide.html", "飲み方"), ("kura", "../kura.html", "宮城の蔵"),
-             ("miyagi", "../miyagi.html", "宮城の店"), ("column", "index.html", "コラム")]
+             ("miyagi", "../miyagi.html", "宮城の店"), ("column", "index.html", "コラム"),
+             ("kuratabi", "https://rehab-info.github.io/kuratabi/", "蔵旅")]
     cur = ' aria-current="page"'
     return "".join(f'<a href="{h}"{cur if k == current else ""}>{l}</a>' for k, h, l in items)
 

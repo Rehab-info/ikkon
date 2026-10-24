@@ -100,7 +100,8 @@
   "url": "http://www.zaoshuzo.com/",
   "sakes": [
    "zao"
-  ]
+  ],
+  "kuratabi": true
  },
  {
   "id": "saura",
@@ -117,7 +118,8 @@
   "url": "https://www.urakasumi.com/",
   "sakes": [
    "urakasumi"
-  ]
+  ],
+  "kuratabi": true
  },
  {
   "id": "abekan",
@@ -152,7 +154,8 @@
   "url": "https://ichinokura.co.jp/",
   "sakes": [
    "ichinokura"
-  ]
+  ],
+  "kuratabi": true
  },
  {
   "id": "niisawa",
