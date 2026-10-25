@@ -36,6 +36,7 @@ jobs:
         run: |
           python3 tools/build_kura.py
           python3 tools/build_columns.py
+          python3 tools/build_shared.py
           python3 tools/build_sitemap.py
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

@@ -18,7 +18,9 @@ data/columns.json コラム「呑助のこの一杯！」(連載と記事)のデ
 column/           コラムのページ(data/columns.json から自動生成)
 tools/build_columns.py  コラムのページを作り直すスクリプト
 sitemap.xml       検索エンジン向けのページ一覧(tools/build_sitemap.py が自動で作る)
-tools/site_meta.py  canonical・OGP(共有したときの表示)のタグを作る共通部品
+tools/site_meta.py  canonical・OGP(共有したときの表示)と「一献のなかま」を作る共通部品
+tools/build_shared.py  手で書いているページの共通部分(canonical・OGP・一献のなかま)を書き直すスクリプト
+data/sites.json   一献のなかま4サービスの住所(独自ドメインに移すときはここを直す)
 data/reviews.json 掲載するレビューとフォームの設定
 tools/import_reviews.py  フォームの回答からレビューを取り込むスクリプト
 images/           銘柄の写真(自分で撮影したもの・許可を得たもの)
@@ -149,6 +151,22 @@ python3 tools/import_reviews.py ダウンロードした.csv
 - iPhone では Safari で開き、共有ボタン →「ホーム画面に追加」でアプリとして使えます(電波がなくても開けます)。
 - 記録はその端末の中に保存されます。機種変更のときは「制覇マップ」の下の「書き出す」でファイルに残し、新しい端末で「読み込む」を使います。
 - `sakazuki/index.html` を直したら、`python3 tools/bump_version.py --sakazuki` を実行して、`sakazuki/sw.js` の `VERSION` の番号を上げてください(古い版が残らなくなります。端末に保存した記録は消えません)。
+
+## 一献のなかま(4サービスの住所)
+
+一献・蔵旅・さかづき帳・カップ酒図鑑の住所と紹介文は `data/sites.json` だけに書いています。同じ内容のファイルが蔵旅(Rehab-info/kuratabi)とカップ酒図鑑(Rehab-info/cupzukan)にもあります。
+
+- フッターの「一献のなかま」、宮城の蔵の「旅のしおり(蔵旅)」、カップ酒のコラムの「カップ酒図鑑」、銘柄の詳細の「飲んだらさかづき帳に記録」は、ここから作られます。
+- 手で書いているページ(`index.html`・`guide.html`・`miyagi.html`・`sakazuki/index.html`)の `<!-- shared:meta -->` と `<!-- shared:family -->` の間は、`tools/build_shared.py` が書き直します。手で直さないでください。
+- 蔵旅にしおりを足したら、3つのリポジトリの `kuratabiTrips` にも足します。
+
+### 独自ドメインに移すとき
+
+1. 3つのリポジトリの `data/sites.json` の `url` を新しい住所にそろえて書き換える(内容は3つとも同じにする)
+2. それぞれ main に反映する(公開の仕組みがページ・canonical・サイトマップを作り直す)
+3. 楽天アフィリエイトを再開するなら、`tools/fetch_rakuten.py` の `SITE` と楽天ウェブサービスのアプリの登録ドメインも新しい住所にする
+4. Search Console に新しい住所を登録し直し、サイトマップを送り直す
+5. さかづき帳の記録は端末の中に住所ごとに保存されるので、新しい住所へは自動では移りません。古い住所で「書き出す」→新しい住所で「読み込む」を案内します
 
 ## 検索エンジン・共有の設定
 

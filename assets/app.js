@@ -265,6 +265,12 @@
       '" target="_blank" rel="sponsored noopener">楽天市場で探す</a><span class="pr">広告(楽天アフィリエイト)</span></div>';
   }
 
+  // なかまのサイトの住所は、フッターの「一献のなかま」から読む(住所は data/sites.json だけに書く)
+  function siteUrl(key) {
+    var a = document.querySelector('.family a[data-site="' + key + '"]');
+    return a ? a.href : '';
+  }
+
   /* ---------- detail dialog ---------- */
   // 一覧などから開いたときは履歴に1件積み、スマホの「戻る」で詳細だけを閉じる。
   // fromHistory は #銘柄ID の直リンク・戻る・進むで開くとき(履歴は積まない)
@@ -301,7 +307,8 @@
         s.orgUrl ? '<a class="btn-ghost small inline" href="' + esc(s.orgUrl) + '" target="_blank" rel="noopener">蔵元の紹介(宮城県酒造組合)</a>' :
         '<a class="btn-ghost small inline" href="https://www.google.com/search?q=' + encodeURIComponent(s.brewery + ' ' + s.pref + ' 公式') + '" target="_blank" rel="noopener">蔵元を検索する</a>') +
       (s.kura ? '<a class="btn-ghost small inline" href="kura.html#' + esc(s.kura) + '">蔵の情報・見学</a>' : '') +
-      (s.pref === '宮城' ? '<a class="btn-ghost small inline" href="miyagi.html">宮城で飲める・買える店</a>' : '') + '</div>' +
+      (s.pref === '宮城' ? '<a class="btn-ghost small inline" href="miyagi.html">宮城で飲める・買える店</a>' : '') +
+      (siteUrl('sakazuki') ? '<a class="btn-ghost small inline" href="' + esc(siteUrl('sakazuki')) + '">飲んだらさかづき帳に記録</a>' : '') + '</div>' +
       '</div>';
     var dlg = $('detail');
     dlg.setAttribute('data-id', s.id);

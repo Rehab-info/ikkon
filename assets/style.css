@@ -499,3 +499,14 @@ body::after {
 
 /* hidden を付けたものは、display を指定した部品でも必ず隠す(宮城の蔵の「見学できる蔵だけ表示」などの絞り込みで使う) */
 [hidden] { display: none !important; }
+
+/* ---------- 一献のなかま(フッター) ---------- */
+.family { display: grid; gap: 8px; margin-top: 12px; padding-top: 14px; border-top: 1px dashed var(--line); }
+.family-h { font-size: 12px; letter-spacing: .12em; }
+.family a { display: flex; flex-direction: column; justify-content: center; min-height: 44px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); text-decoration: none; }
+.family a b { font-size: 14px; }
+.family a small { font-size: 12px; color: var(--muted); }
+@media (min-width: 721px) {
+  .family { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+  .family-h { grid-column: 1 / -1; }
+}

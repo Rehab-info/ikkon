@@ -11,7 +11,7 @@ import re
 import sys
 from pathlib import Path
 
-from site_meta import head_meta
+from site_meta import IKKON_FAMILY, URL, family, head_meta
 
 ROOT = Path(__file__).resolve().parent.parent
 SHOW_DRAFTS = "--drafts" in sys.argv
@@ -83,6 +83,7 @@ def shell(title, desc, body, path):
   <div class="wrap">
     <span>コラムの内容は書き手の感想です。味わいの感じ方には個人差があります。</span>
     <span>お酒は20歳になってから。飲酒運転は法律で禁止されています。</span>
+    {family(IKKON_FAMILY)}
   </div>
 </footer>
 </body>
@@ -119,6 +120,13 @@ def cup_card(x):
         <p>{e(x["text"])}</p>
         <div class="pair-meta">{e(x.get("by", ""))}{" ・ " + e(x["date"]) if x.get("date") else ""}</div>
       </article>'''
+
+
+def more_link(s):
+    """カップ酒の連載から、カップ酒図鑑へ(一本ずつの詳しい情報はあちら)。"""
+    if s["kind"] != "cup":
+        return ""
+    return f'      <p><a class="btn-ghost small inline" href="{e(URL["cupzukan"])}">カップ酒図鑑で宮城の一合を探す</a></p>\n'
 
 
 def call_box(s):
@@ -159,7 +167,7 @@ for s in data["series"]:
       <div class="pair-list">
 {cards}
       </div>
-{call_box(s)}
+{more_link(s)}{call_box(s)}
     </div>
   </section>'''
     (OUT / f'{s["id"]}.html').write_text(shell(f'一献 {s["title"]}', s["lead"], body, f'column/{s["id"]}.html'), encoding="utf-8")

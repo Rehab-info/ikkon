@@ -7,7 +7,7 @@ import html
 import re
 from pathlib import Path
 
-from site_meta import head_meta
+from site_meta import IKKON_FAMILY, TRIPS, URL, family, head_meta
 
 ROOT = Path(__file__).resolve().parent.parent
 kura = json.loads((ROOT / "data/kura.json").read_text(encoding="utf-8"))
@@ -42,6 +42,8 @@ def card(k):
     if k.get("url"):
         links.append(f'<a href="{e(k["url"])}" target="_blank" rel="noopener">公式サイト</a>')
     links.append(f'<a href="https://miyagisake.jp/kuramoto/{e(k["id"])}/" target="_blank" rel="noopener">宮城県酒造組合の紹介</a>')
+    if k["id"] in TRIPS:  # 蔵旅に旅のしおりがある蔵だけ
+        links.append(f'<a href="{e(URL["kuratabi"])}{e(k["id"])}.html">旅のしおり(蔵旅)</a>')
     related = ""
     if k["sakes"]:
         items = "、".join(f'<a href="index.html#{e(s)}">{e(sakes[s]["name"])}</a>' for s in k["sakes"])
@@ -127,6 +129,7 @@ page = f'''<!doctype html>
   <div class="wrap">
     <span>蔵へ車で行くときは、運転する人は試飲できません。</span>
     <span>お酒は20歳になってから。飲酒運転は法律で禁止されています。</span>
+    {family(IKKON_FAMILY)}
   </div>
 </footer>
 <script>
