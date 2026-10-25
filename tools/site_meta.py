@@ -4,13 +4,12 @@
 from html import escape
 
 SITE = "https://rehab-info.github.io/ikkon/"
-IMAGE = ("images/moon.jpg", 900, 900, "満月")
+# og:image は、作者・利用条件を確かめられた画像だけを使う(いまは未設定)
 
 
 def head_meta(title, desc, path):
     """path は SITE からの相対パス(トップは "")。"""
     e = lambda s: escape(str(s), quote=True)
-    src, w, h, alt = IMAGE
     return f'''<link rel="canonical" href="{SITE}{path}">
 <meta property="og:type" content="website">
 <meta property="og:title" content="{e(title)}">
@@ -18,9 +17,5 @@ def head_meta(title, desc, path):
 <meta property="og:url" content="{SITE}{path}">
 <meta property="og:site_name" content="一献">
 <meta property="og:locale" content="ja_JP">
-<meta property="og:image" content="{SITE}{src}">
-<meta property="og:image:width" content="{w}">
-<meta property="og:image:height" content="{h}">
-<meta property="og:image:alt" content="{e(alt)}">
 <meta name="twitter:card" content="summary">
 '''

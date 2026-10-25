@@ -152,7 +152,8 @@ python3 tools/import_reviews.py ダウンロードした.csv
 
 ## 検索エンジン・共有の設定
 
-- 各ページの `<head>` に canonical(正式なURL)と OGP(SNS で共有したときのタイトル・説明・画像)を書いています。`kura.html` とコラムは `tools/site_meta.py` から自動で入ります。手で書いているページ(`index.html`・`guide.html`・`miyagi.html`・`sakazuki/index.html`)を増やすときは、同じタグを書き写してください。
+- 各ページの `<head>` に canonical(正式なURL)と OGP(SNS で共有したときのタイトル・説明)を書いています。`kura.html` とコラムは `tools/site_meta.py` から自動で入ります。手で書いているページ(`index.html`・`guide.html`・`miyagi.html`・`sakazuki/index.html`)を増やすときは、同じタグを書き写してください。
+- 共有したときの画像(`og:image`)は、作者と利用条件を確かめられた画像だけに付けます。いまはどのページにも付けていません。
 - `sitemap.xml` は、各ページの canonical から `tools/build_sitemap.py` が作ります。公開の仕組みでも自動で作り直されます。canonical のないページがあると止まって知らせます。
 - Google Search Console の所有権確認ファイル(`google〜.html`)は、このフォルダの一番上に置けばそのまま公開されます(サイトマップには入りません)。
 - さかづき帳の記録は端末の中だけに保存され、URL にもページにも出ないので、検索エンジンに載ることはありません。
