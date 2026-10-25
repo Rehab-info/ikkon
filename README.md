@@ -17,6 +17,8 @@ tools/build_kura.py  kura.html を作り直すスクリプト
 data/columns.json コラム「呑助のこの一杯！」(連載と記事)のデータ
 column/           コラムのページ(data/columns.json から自動生成)
 tools/build_columns.py  コラムのページを作り直すスクリプト
+sitemap.xml       検索エンジン向けのページ一覧(tools/build_sitemap.py が自動で作る)
+tools/site_meta.py  canonical・OGP(共有したときの表示)のタグを作る共通部品
 data/reviews.json 掲載するレビューとフォームの設定
 tools/import_reviews.py  フォームの回答からレビューを取り込むスクリプト
 images/           銘柄の写真(自分で撮影したもの・許可を得たもの)
@@ -147,6 +149,13 @@ python3 tools/import_reviews.py ダウンロードした.csv
 - iPhone では Safari で開き、共有ボタン →「ホーム画面に追加」でアプリとして使えます(電波がなくても開けます)。
 - 記録はその端末の中に保存されます。機種変更のときは「制覇マップ」の下の「書き出す」でファイルに残し、新しい端末で「読み込む」を使います。
 - `sakazuki/index.html` を直したら、`python3 tools/bump_version.py --sakazuki` を実行して、`sakazuki/sw.js` の `VERSION` の番号を上げてください(古い版が残らなくなります。端末に保存した記録は消えません)。
+
+## 検索エンジン・共有の設定
+
+- 各ページの `<head>` に canonical(正式なURL)と OGP(SNS で共有したときのタイトル・説明・画像)を書いています。`kura.html` とコラムは `tools/site_meta.py` から自動で入ります。手で書いているページ(`index.html`・`guide.html`・`miyagi.html`・`sakazuki/index.html`)を増やすときは、同じタグを書き写してください。
+- `sitemap.xml` は、各ページの canonical から `tools/build_sitemap.py` が作ります。公開の仕組みでも自動で作り直されます。canonical のないページがあると止まって知らせます。
+- Google Search Console の所有権確認ファイル(`google〜.html`)は、このフォルダの一番上に置けばそのまま公開されます(サイトマップには入りません)。
+- さかづき帳の記録は端末の中だけに保存され、URL にもページにも出ないので、検索エンジンに載ることはありません。
 
 ## 楽天アフィリエイト(いまは止めています)
 

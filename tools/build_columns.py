@@ -11,6 +11,8 @@ import re
 import sys
 from pathlib import Path
 
+from site_meta import head_meta
+
 ROOT = Path(__file__).resolve().parent.parent
 SHOW_DRAFTS = "--drafts" in sys.argv
 data = json.loads((ROOT / "data/columns.json").read_text(encoding="utf-8"))
@@ -53,7 +55,7 @@ def nav(current):
     return "".join(f'<a href="{h}"{cur if k == current else ""}>{l}</a>' for k, h, l in items)
 
 
-def shell(title, desc, body):
+def shell(title, desc, body, path):
     return f'''<!doctype html>
 <html lang="ja">
 <head>
@@ -62,7 +64,7 @@ def shell(title, desc, body):
 <title>{e(title)}</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="description" content="{e(desc)}">
-<link rel="preconnect" href="https://fonts.googleapis.com">
+{head_meta(title, desc, path)}{'<meta name="robots" content="noindex">' + chr(10) if SHOW_DRAFTS else ""}<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;700&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap">
 <link rel="stylesheet" href="../assets/style.css?v={VERSION}">
@@ -160,7 +162,7 @@ for s in data["series"]:
 {call_box(s)}
     </div>
   </section>'''
-    (OUT / f'{s["id"]}.html').write_text(shell(f'一献 {s["title"]}', s["lead"], body), encoding="utf-8")
+    (OUT / f'{s["id"]}.html').write_text(shell(f'一献 {s["title"]}', s["lead"], body, f'column/{s["id"]}.html'), encoding="utf-8")
     n = len(items)
     series_cards.append(f'''      <a class="series-card" href="{e(s["id"])}.html">
         <small>{e(s["eyebrow"])}{f" ・ {n}本" if n else " ・ 準備中"}</small>
@@ -185,5 +187,5 @@ index_body = f'''  <section class="hero column-hero">
       </div>
     </div>
   </section>'''
-(OUT / "index.html").write_text(shell("一献 呑助のこの一杯！", "お酒好きのスタッフが、独断と偏見で「今」おすすめする店や旬の飲み方、イベントの感想をつづるコラム。", index_body), encoding="utf-8")
+(OUT / "index.html").write_text(shell("一献 呑助のこの一杯！", "お酒好きのスタッフが、独断と偏見で「今」おすすめする店や旬の飲み方、イベントの感想をつづるコラム。", index_body, "column/"), encoding="utf-8")
 print("column/", len(data["series"]), "series", "(drafts shown)" if SHOW_DRAFTS else "")

@@ -7,6 +7,8 @@ import html
 import re
 from pathlib import Path
 
+from site_meta import head_meta
+
 ROOT = Path(__file__).resolve().parent.parent
 kura = json.loads((ROOT / "data/kura.json").read_text(encoding="utf-8"))
 sakes = {s["id"]: s for s in json.loads((ROOT / "data/sakes.json").read_text(encoding="utf-8"))}
@@ -85,7 +87,7 @@ page = f'''<!doctype html>
 <title>一献 宮城の蔵</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="description" content="宮城県の酒蔵{len(kura)}蔵と、それぞれの地酒・見学情報。">
-<link rel="preconnect" href="https://fonts.googleapis.com">
+{head_meta("一献 宮城の蔵", f"宮城県の酒蔵{len(kura)}蔵と、それぞれの地酒・見学情報。", "kura.html")}<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;700&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap">
 <link rel="stylesheet" href="assets/style.css?v={VERSION}">
