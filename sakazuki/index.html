@@ -252,7 +252,7 @@ const SAMPLES=[
 ];
 
 const S={entries:[],loaded:false,mode:"loading",view:"list",type:"all",q:"",sort:"date",pref:null,detail:null,confirm:false,draft:null,
-  syncError:null,lastCard:null,importing:null,backupMsg:"",hint:false,slow:false};
+  syncError:null,lastCard:null,importing:null,backupMsg:"",hint:false,slow:false,handoff:null};
 const IN_CLAUDE=!!(window.claude&&typeof window.claude.use==="function");
 let col=null, unsub=null, downloads=null;
 const LS_KEY="mycolle.entries.v1", HINT_KEY="sakazuki.hint.closed";
@@ -331,7 +331,40 @@ function subscribe(){
     err=>{unsub=null;S.syncError=(err&&err.code)||"unavailable";refresh()});
 }
 
+/* ---------- 一献・カップ酒図鑑からの引き継ぎ(#add?…) ---------- */
+// 銘柄の公開情報だけを受け取り、新規記録の下書きに入れる。保存は「記録する」を押したときだけ。
+// 受け取るのは決まった項目だけで、形や長さが合わないものは使わない。読めないURLは無視して普段どおり開く
+const HANDOFF_FROM={ikkon:"一献",cupzukan:"カップ酒図鑑"};
+function readHandoff(){
+  const h=location.hash||"";
+  if(!/^#add(\?|$)/.test(h))return null;
+  try{history.replaceState(null,"",location.pathname+location.search)}catch(_){} // 再読み込み・戻る・進むで二度入れない
+  if(h.length>2000)return null;
+  let q;try{q=new URLSearchParams(h.slice(5))}catch(_){return null}
+  const txt=(k,n)=>{const v=q.get(k);return typeof v==="string"&&!v.includes("\ufffd")?v.normalize("NFC").replace(/[\u0000-\u001f\u007f-\u009f\u200b-\u200f\u202a-\u202e\u2066-\u2069]/g,"").trim().slice(0,n):""};
+  const pct=k=>{const v=txt(k,8).replace(/%$/,"");return /^\d{1,3}(\.\d)?$/.test(v)&&+v>=1&&+v<=100?v:""};
+  const from=txt("from",10),name=txt("name",60);
+  if(!Object.prototype.hasOwnProperty.call(HANDOFF_FROM,from)||!name)return null;
+  const pref=txt("pref",4),grade=txt("grade",30).replace(/[（(].*$/,"");
+  return{from,draft:Object.assign(blankDraft(),{
+    type:from==="cupzukan"&&txt("type",10)==="ワンカップ"?"ワンカップ":"",   // 一献からは容器を選ばずに開く
+    name,brewery:txt("brewery",60),pref:PREFS.includes(pref)?pref:"",grade:GRADES.includes(grade)?grade:"",
+    polish:pct("polish"),abv:pct("abv")})};
+}
+function handoffHtml(){
+  const h=S.handoff;if(!h||!S.draft||S.draft!==h.draft)return "";   // 引き継いだ下書きにだけ出す
+  return `<div class="notice" role="status"><span><b>${esc(HANDOFF_FROM[h.from])}から銘柄を入れました。</b><br>「記録する」を押すまで保存されません。</span>${h.ios?`<span>ホーム画面のさかづき帳をお使いの方は、そちらで記録してください。Safari で開いたこの画面で記録すると、ホーム画面のアプリとは別の場所に保存されます。</span><div class="actions"><button type="button" class="btn ghost" id="copyName">銘柄名をコピー</button></div>`:""}</div>`;
+}
+async function copyName(){
+  readForm();const v=S.draft&&S.draft.name||"";let ok=false;
+  try{await navigator.clipboard.writeText(v);ok=true}catch(_){
+    try{const t=document.createElement("textarea");t.value=v;t.setAttribute("readonly","");t.style.position="fixed";t.style.opacity="0";document.body.appendChild(t);t.select();ok=document.execCommand("copy");t.remove()}catch(_){}}
+  toast(ok?"銘柄名をコピーしました":"コピーできませんでした。銘柄名を長押ししてコピーしてください");
+}
+
 async function boot(){
+  const h=readHandoff();
+  if(h){S.draft=h.draft;S.view="form";S.handoff={from:h.from,draft:h.draft,ios:false}}
   render();
   if(!IN_CLAUDE){setupPwa();await useLocal();return}
   try{
@@ -352,6 +385,7 @@ function setupPwa(){
   const ios=/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
   let closed=false;try{closed=localStorage.getItem(HINT_KEY)==="1"}catch(_){}
   S.hint=ios&&navigator.standalone===false&&!closed;
+  if(S.handoff){S.handoff.ios=ios&&navigator.standalone===false;if(S.view==="form")render()}
 }
 
 /* ---------- derived ---------- */
@@ -460,7 +494,7 @@ function formHtml(){
   const seg=(name,arr,val,lab)=>`<div class="seg" data-seg="${name}">${arr.map(a=>{const k=Array.isArray(a)?a[0]:a;return `<button type="button" data-v="${esc(k)}" aria-pressed="${val===k}">${esc(lab?lab(k):k)}${Array.isArray(a)&&a[1]?`<small>${a[1]}</small>`:""}</button>`}).join("")}</div>`;
   let rate="";for(let i=1;i<=5;i++)rate+=`<button type="button" data-r="${i}" aria-label="${i}"><svg viewBox="0 0 14 12"><path class="${i<=d.rating?"on":"off"}" d="M1 1h12l-2.2 8.2A2 2 0 0 1 8.9 11H5.1a2 2 0 0 1-1.9-1.8z" style="${i<=d.rating?"fill:var(--gold)":"fill:none;stroke:var(--muted);stroke-width:1"}"/></svg></button>`;
   const has=v=>v!==""&&v!=null;
-  return `<form id="f" novalidate><div><h2>${d.id?"記録を直す":"今日の一杯を記録"}</h2></div>
+  return `<form id="f" novalidate><div><h2>${d.id?"記録を直す":"今日の一杯を記録"}</h2></div>${handoffHtml()}
   <div class="field"><span class="lbl">種類</span>${seg("type",TYPES,d.type,typeLabel)}</div>
   <div class="field"><label for="fName">銘柄</label><input id="fName" type="text" required maxlength="60" placeholder="例：浦霞 禅" value="${esc(d.name)}"></div>
   <div class="two"><div class="field"><label for="fBrew">蔵元</label><input id="fBrew" type="text" maxlength="60" placeholder="例：佐浦" value="${esc(d.brewery)}"></div>
@@ -508,12 +542,14 @@ function bindForm(){
   $("#fPhoto").addEventListener("change",async ev=>{const file=ev.target.files&&ev.target.files[0];if(!file)return;readForm();
     try{S.draft.photo=await shrink(file)}catch(_){showErr("写真を読み込めませんでした。別の画像を選んでください。");return}render()});
   const rm=$("#rmPhoto");if(rm)rm.addEventListener("click",()=>{readForm();S.draft.photo="";render()});
-  $("#cancel").addEventListener("click",()=>{S.draft=null;go("list")});
+  const cp=$("#copyName");if(cp)cp.addEventListener("click",copyName);
+  $("#cancel").addEventListener("click",()=>{S.draft=null;S.handoff=null;go("list")});
   f.addEventListener("submit",async ev=>{ev.preventDefault();readForm();const d=S.draft;
     if(!d.name){showErr("銘柄を入れてください。");$("#fName").focus();return}
+    if(!TYPES.includes(d.type)){showErr("種類を選んでください。");return}
     const e=Object.assign({},d,{id:d.id||newId(),updatedAt:Date.now()});
     $("#save").disabled=true;
-    try{await persist(e);const wasEdit=!!d.id;S.draft=null;S.pref=null;go("list");toast(wasEdit?"保存しました":"記録しました")}
+    try{await persist(e);const wasEdit=!!d.id;S.draft=null;S.handoff=null;S.pref=null;go("list");toast(wasEdit?"保存しました":"記録しました")}
     catch(err){const b=$("#save");if(b)b.disabled=false;showErr(saveErr(err))}
   });
 }

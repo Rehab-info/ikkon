@@ -157,6 +157,7 @@ python3 tools/import_reviews.py ダウンロードした.csv
 一献・蔵旅・さかづき帳・カップ酒図鑑の住所と紹介文は `data/sites.json` だけに書いています。同じ内容のファイルが蔵旅(Rehab-info/kuratabi)とカップ酒図鑑(Rehab-info/cupzukan)にもあります。
 
 - フッターの「一献のなかま」、宮城の蔵の「旅のしおり(蔵旅)」、カップ酒のコラムの「カップ酒図鑑」、銘柄の詳細の「飲んだらさかづき帳に記録」は、ここから作られます。
+- 「飲んだらさかづき帳に記録」とカップ酒図鑑の「さかづき帳に記録する」は、さかづき帳を `sakazuki/#add?from=…&name=…` の形で開き、銘柄の名前・蔵元・都道府県・特定名称(カップ酒図鑑からは種類「ワンカップ」・精米歩合・度数も)を入れた新規記録の下書きにします。保存は利用者が「記録する」を押したときだけで、既存の記録には触れません。受け取る項目と長さは `sakazuki/index.html` の `readHandoff` で決めていて、合わないURLは無視して普段どおり開きます。
 - 手で書いているページ(`index.html`・`guide.html`・`miyagi.html`・`sakazuki/index.html`)の `<!-- shared:meta -->` と `<!-- shared:family -->` の間は、`tools/build_shared.py` が書き直します。手で直さないでください。
 - 蔵旅にしおりを足したら、3つのリポジトリの `kuratabiTrips` にも足します。
 
