@@ -159,6 +159,7 @@ python3 tools/import_reviews.py ダウンロードした.csv
 - フッターの「一献のなかま」、宮城の蔵の「旅のしおり(蔵旅)」、カップ酒のコラムの「カップ酒図鑑」、銘柄の詳細の「飲んだらさかづき帳に記録」は、ここから作られます。
 - 手で書いているページ(`index.html`・`guide.html`・`miyagi.html`・`sakazuki/index.html`)の `<!-- shared:meta -->` と `<!-- shared:family -->` の間は、`tools/build_shared.py` が書き直します。手で直さないでください。
 - 蔵旅にしおりを足したら、3つのリポジトリの `kuratabiTrips` にも足します。
+- `data/sites.json` が3つのリポジトリで同じかは、`tools/check_sites.py` が確かめます。`data/sites.json` を変えるプルリクエスト・main への反映・毎週月曜に GitHub Actions(Check sites.json)で自動で動き、食い違いがあれば項目ごとに理由を表示します。サイトの公開とは別の仕組みなので、食い違っていても公開は止まりません。3つを同時に直すときは、3つのリポジトリで同じ名前のブランチを使うと、そのブランチどうしで比べます。
 
 ### 独自ドメインに移すとき
 
