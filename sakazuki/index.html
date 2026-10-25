@@ -252,10 +252,13 @@ const SAMPLES=[
 ];
 
 const S={entries:[],loaded:false,mode:"loading",view:"list",type:"all",q:"",sort:"date",pref:null,detail:null,confirm:false,draft:null,
-  syncError:null,lastCard:null,importing:null,backupMsg:"",hint:false};
+  syncError:null,lastCard:null,importing:null,backupMsg:"",hint:false,slow:false};
 const IN_CLAUDE=!!(window.claude&&typeof window.claude.use==="function");
 let col=null, unsub=null, downloads=null;
 const LS_KEY="mycolle.entries.v1", HINT_KEY="sakazuki.hint.closed";
+// 端末の保存領域(IndexedDB)の応答をこれだけ待っても読み込めないときは、状況を説明する。
+// ふだんは1秒もかからない。記録や写真が多い古い端末でも収まり、待たせすぎない長さにしている
+const LOCAL_WAIT=6000;
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const today=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
@@ -299,19 +302,26 @@ const Local={
 async function retry1(fn){try{return await fn()}catch(e){if(e&&e.code==="unavailable"){await wait(300+Math.random()*500);return fn()}throw e}}
 function strip(e){const o={};FIELDS.forEach(k=>{if(e[k]!==undefined)o[k]=e[k]});return o}
 async function persist(e){
+  if(S.mode==="loading")throw{code:"loading"};   // 読み込みが終わるまでは保存しない(別の保存先に書かない)
   if(S.mode==="db"){await retry1(()=>col.doc(e.id).set(strip(e)));return}
   try{await Local.put(e)}catch(_){throw{code:"local"}}
   const i=S.entries.findIndex(x=>x.id===e.id);if(i>=0)S.entries[i]=e;else S.entries.push(e);
   refresh();
 }
 async function remove(id){
+  if(S.mode==="loading")throw{code:"loading"};
   if(S.mode==="db"){await retry1(()=>col.doc(id).delete());return}
   await Local.del(id);S.entries=S.entries.filter(x=>x.id!==id);refresh();
 }
+let localStarted=false;
 async function useLocal(){
+  if(localStarted)return;localStarted=true;                // 二重に読み込まない
+  // 応答が遅いときは説明を出すだけで、ほかの保存先には切り替えない。遅れて応答したら、そのまま読み込む
+  const slow=setTimeout(()=>{if(!S.loaded){S.slow=true;refresh()}},LOCAL_WAIT);
   await Local.init();
   try{S.entries=await Local.all()}catch(_){S.entries=[]}
-  S.mode="local";S.loaded=true;refresh();
+  clearTimeout(slow);
+  S.slow=false;S.mode="local";S.loaded=true;refresh();
   if(!IN_CLAUDE&&navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});
 }
 function subscribe(){
@@ -369,10 +379,11 @@ function renderChrome(){
   $("#sPref").textContent=new Set(E.map(e=>e.pref).filter(Boolean)).size;
   $("#sCup").textContent=E.filter(e=>e.type==="ワンカップ").length;
   const st=$("#saveState");
-  st.textContent=S.syncError?"同期が切れています":S.mode==="db"?"アカウントに保存":S.mode==="local"?"この端末に保存":"読み込み中…";
-  st.classList.toggle("bad",!!S.syncError);
+  st.textContent=S.syncError?"同期が切れています":S.mode==="db"?"アカウントに保存":S.mode==="local"?"この端末に保存":S.slow?"応答を待っています":"読み込み中…";
+  st.classList.toggle("bad",!!S.syncError||S.slow);
   let n="";
   if(S.syncError)n+=`<div class="notice bad" role="alert">${S.syncError==="revoked"?"この記録帳を開く権限が変わりました。ページを開き直してください。":`アカウントとの同期が切れました。記録は消えていません。<div class="actions"><button class="btn" id="resync">つなぎ直す</button></div>`}</div>`;
+  if(S.slow)n+=`<div class="notice bad" role="alert"><span><b>記録の読み込みに時間がかかっています。</b><br>この端末の保存領域から、まだ応答がありません。記録や写真が多いと時間がかかることがあります。記録は消えていません。このまま待つか、再読み込みしてください。直らないときは、さかづき帳を開いているほかのタブやアプリを閉じてから、もう一度開いてください。</span><div class="actions"><button class="btn" id="reloadApp">再読み込みする</button></div></div>`;
   if(S.hint)n+=`<div class="notice"><span><b>ホーム画面に追加すると、アプリとして使えます。</b><br>Safari の共有ボタン（□↑）→「ホーム画面に追加」。Safari で付けた記録はアプリへ移らないので、先に追加してから記録してください。</span><div class="actions"><button class="btn ghost" id="hintClose">閉じる</button></div></div>`;
   $("#notice").innerHTML=n;
 }
@@ -404,7 +415,7 @@ function listHtml(){
   <div id="results">${resultsHtml()}</div>`;
 }
 function resultsHtml(){
-  if(!S.loaded)return S.syncError?`<p class="empty">記録を読み込めませんでした。上の「つなぎ直す」を押してください。</p>`:`<p class="empty">記録を読み込んでいます…</p>`;
+  if(!S.loaded)return S.syncError?`<p class="empty">記録を読み込めませんでした。上の「つなぎ直す」を押してください。</p>`:S.slow?`<p class="empty">記録の読み込みを待っています。上の案内をご覧ください。</p>`:`<p class="empty">記録を読み込んでいます…</p>`;
   const list=shown();
   let h=S.entries.length?"":`<div class="empty"><strong>まだ記録がありません</strong>下の3枚は見本です。「記録する」から最初の1杯を残しましょう。</div>`;
   if(!list.length)return h+`<p class="empty">条件に合う記録はありません。</p>`;
@@ -486,6 +497,7 @@ function saveErr(err){
   const c=err&&err.code;
   if(c==="quota_exceeded")return "保存容量がいっぱいです。古い記録の写真を外すか削除してください。";
   if(c==="invalid_argument"||c==="transform_error")return "写真が大きすぎて保存できませんでした。写真を外すか、撮り直してください。";
+  if(c==="loading")return "記録の読み込みが終わっていないため、まだ保存できません。読み込みが終わってから、もう一度押してください。";
   if(c==="local")return "この端末に保存できませんでした。写真を外すと保存できる場合があります。";
   return "保存できませんでした。通信を確かめて、もう一度押してください。";
 }
@@ -550,6 +562,7 @@ async function readImport(file){
   $("#view").innerHTML=mapHtml();
 }
 async function runImport(){
+  if(S.mode==="loading"){S.backupMsg="記録の読み込みが終わっていないため、まだ読み込めません。読み込みが終わってから、もう一度選んでください。";S.importing=null;$("#view").innerHTML=mapHtml();return}
   const list=S.importing;S.importing=null;let ok=0;
   S.backupMsg="読み込んでいます…";$("#view").innerHTML=mapHtml();
   for(const e of list){
@@ -601,6 +614,7 @@ document.querySelectorAll("nav.tabs button").forEach(b=>b.addEventListener("clic
   go(b.dataset.view)}));
 document.addEventListener("click",ev=>{
   if(ev.target.id==="resync"){subscribe();return}
+  if(ev.target.id==="reloadApp"){location.reload();return}
   if(ev.target.id==="hintClose"){S.hint=false;try{localStorage.setItem(HINT_KEY,"1")}catch(_){}renderChrome()}
 });
 $("#view").addEventListener("click",ev=>{
