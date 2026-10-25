@@ -552,6 +552,14 @@
     if (h) openDetail(h, true);
   }
 
+  // 診断の欄:読み込めなかったときは、理由と読み込み直すボタンを出す(読み込み中の案内は index.html に書いてある)
+  function quizFailed(msg) {
+    var box = $('quiz-result');
+    if (!box) return;
+    box.innerHTML = '<div class="empty">' + esc(msg) + '<br><button type="button" class="btn-ghost small" id="quiz-retry">もう一度読み込む</button></div>';
+    $('quiz-retry').addEventListener('click', function () { location.reload(); });
+  }
+
   // レビューは読めなくても銘柄は表示する
   var rakutenLoaded = !RAKUTEN_ON ? Promise.resolve() : fetch('data/rakuten.json')
     .then(function (r) { return r.ok ? r.json() : {}; })
@@ -567,9 +575,11 @@
     .then(function (res) { return res[0]; })
     .then(init, function () {
       $('list').innerHTML = '<div class="empty">銘柄データを読み込めませんでした。ページを再読み込みしてください。</div>';
+      quizFailed('銘柄データを読み込めませんでした。通信を確かめて、もう一度読み込んでください。');
     })
     .catch(function (e) {
       console.error(e);
       $('list').innerHTML = '<div class="empty">表示中にエラーが起きました。ページを再読み込みしてください。</div>';
+      quizFailed('表示中にエラーが起きました。もう一度読み込んでください。');
     });
 })();
