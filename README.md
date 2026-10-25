@@ -146,7 +146,7 @@ python3 tools/import_reviews.py ダウンロードした.csv
 
 - iPhone では Safari で開き、共有ボタン →「ホーム画面に追加」でアプリとして使えます(電波がなくても開けます)。
 - 記録はその端末の中に保存されます。機種変更のときは「制覇マップ」の下の「書き出す」でファイルに残し、新しい端末で「読み込む」を使います。
-- `sakazuki/index.html` を直したら、`sakazuki/sw.js` の `VERSION` の番号を上げてください(古い版が残らなくなります)。
+- `sakazuki/index.html` を直したら、`python3 tools/bump_version.py --sakazuki` を実行して、`sakazuki/sw.js` の `VERSION` の番号を上げてください(古い版が残らなくなります。端末に保存した記録は消えません)。
 
 ## 楽天アフィリエイト(いまは止めています)
 

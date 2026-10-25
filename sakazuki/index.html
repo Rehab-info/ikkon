@@ -194,7 +194,7 @@ dl.spec dd{margin:0;font-variant-numeric:tabular-nums;min-width:0;overflow-wrap:
     <div class="stat"><b id="sCount">0</b><span>記録</span></div>
     <div class="stat"><b id="sBrand">0</b><span>銘柄</span></div>
     <div class="stat"><b id="sPref">0</b><span>都道府県/47</span></div>
-    <div class="stat"><b id="sCup">0</b><span>ワンカップ</span></div>
+    <div class="stat"><b id="sCup">0</b><span>カップ酒</span></div>
   </section>
 
   <main id="view"></main>
@@ -220,6 +220,9 @@ const TILE={"北海道":[11,0],"青森":[11,2],"秋田":[10,3],"岩手":[11,3],"
 "鹿児島":[1,9],"宮崎":[2,9],"高知":[3,9],"徳島":[4,9],"沖縄":[0,10]};
 const SHORT={"北海道":"北海","神奈川":"神奈","和歌山":"和歌","鹿児島":"鹿児"};
 const TYPES=["ワンカップ","四合瓶","一升瓶","小瓶","お店で"];
+// 保存値は「ワンカップ」のまま(既存の記録・書き出したファイルとそろえる)。画面では一般名称の「カップ酒」と出す
+const TYPE_LABEL={"ワンカップ":"カップ酒"};
+function typeLabel(t){return TYPE_LABEL[t]||t||""}
 const GRADES=["普通酒","本醸造","特別本醸造","純米","特別純米","吟醸","純米吟醸","大吟醸","純米大吟醸","その他"];
 const TEMPS=[["雪冷え","5℃"],["花冷え","10℃"],["涼冷え","15℃"],["常温",""],["日向燗","30℃"],["人肌燗","35℃"],["ぬる燗","40℃"],["上燗","45℃"],["熱燗","50℃"],["飛び切り燗","55℃"]];
 const SWEET=["甘口","やや甘口","中口","やや辛口","辛口"], BODY=["淡麗","やや淡麗","中間","やや濃醇","濃醇"];
@@ -376,7 +379,7 @@ function renderResults(){const r=$("#results");if(r)r.innerHTML=resultsHtml()}
 
 function listHtml(){
   const chip=(k,t)=>`<button class="chip" data-type="${k}" aria-pressed="${S.type===k}">${t}</button>`;
-  return `<div class="toolbar"><div class="chips">${chip("all","すべて")}${chip("cup","ワンカップ")}${chip("bottle","瓶")}${chip("shop","お店で")}</div>
+  return `<div class="toolbar"><div class="chips">${chip("all","すべて")}${chip("cup","カップ酒")}${chip("bottle","瓶")}${chip("shop","お店で")}</div>
   <div class="row"><input class="search" id="q" type="search" placeholder="銘柄・蔵元・場所で検索" value="${esc(S.q)}">
   <select class="sort" id="sort" aria-label="並び順"><option value="date"${S.sort==="date"?" selected":""}>新しい順</option><option value="rating"${S.sort==="rating"?" selected":""}>評価順</option><option value="pref"${S.sort==="pref"?" selected":""}>北から</option></select></div>
   ${S.pref?`<div class="pref-filter">${esc(S.pref)}の記録 <button id="clearPref">解除</button></div>`:""}</div>
@@ -387,7 +390,7 @@ function resultsHtml(){
   const list=shown();
   let h=S.entries.length?"":`<div class="empty"><strong>まだ記録がありません</strong>下の3枚は見本です。「記録する」から最初の1杯を残しましょう。</div>`;
   if(!list.length)return h+`<p class="empty">条件に合う記録はありません。</p>`;
-  return h+`<div class="grid">`+list.map(e=>`<button class="card" data-id="${esc(e.id)}"><div class="pic">${picHtml(e)}<span class="badge">${esc(e.type||"")}</span>${e.sample?`<span class="badge sample">見本</span>`:""}</div>
+  return h+`<div class="grid">`+list.map(e=>`<button class="card" data-id="${esc(e.id)}"><div class="pic">${picHtml(e)}<span class="badge">${esc(typeLabel(e.type))}</span>${e.sample?`<span class="badge sample">見本</span>`:""}</div>
    <div class="meta"><span class="name">${esc(e.name||"無銘")}</span><span class="sub">${esc([e.pref,e.grade].filter(Boolean).join("・"))}</span><span class="sub">${esc((e.date||"").replace(/-/g,"."))}</span>${cupsSvg(e.rating||0)}</div></button>`).join("")+`</div>`;
 }
 
@@ -425,11 +428,11 @@ function backupHtml(){
 
 function formHtml(){
   const d=S.draft;
-  const seg=(name,arr,val)=>`<div class="seg" data-seg="${name}">${arr.map(a=>{const k=Array.isArray(a)?a[0]:a;return `<button type="button" data-v="${esc(k)}" aria-pressed="${val===k}">${esc(k)}${Array.isArray(a)&&a[1]?`<small>${a[1]}</small>`:""}</button>`}).join("")}</div>`;
+  const seg=(name,arr,val,lab)=>`<div class="seg" data-seg="${name}">${arr.map(a=>{const k=Array.isArray(a)?a[0]:a;return `<button type="button" data-v="${esc(k)}" aria-pressed="${val===k}">${esc(lab?lab(k):k)}${Array.isArray(a)&&a[1]?`<small>${a[1]}</small>`:""}</button>`}).join("")}</div>`;
   let rate="";for(let i=1;i<=5;i++)rate+=`<button type="button" data-r="${i}" aria-label="${i}"><svg viewBox="0 0 14 12"><path class="${i<=d.rating?"on":"off"}" d="M1 1h12l-2.2 8.2A2 2 0 0 1 8.9 11H5.1a2 2 0 0 1-1.9-1.8z" style="${i<=d.rating?"fill:var(--gold)":"fill:none;stroke:var(--muted);stroke-width:1"}"/></svg></button>`;
   const has=v=>v!==""&&v!=null;
   return `<form id="f" novalidate><div><h2>${d.id?"記録を直す":"今日の一杯を記録"}</h2></div>
-  <div class="field"><span class="lbl">種類</span>${seg("type",TYPES,d.type)}</div>
+  <div class="field"><span class="lbl">種類</span>${seg("type",TYPES,d.type,typeLabel)}</div>
   <div class="field"><label for="fName">銘柄</label><input id="fName" type="text" required maxlength="60" placeholder="例：浦霞 禅" value="${esc(d.name)}"></div>
   <div class="two"><div class="field"><label for="fBrew">蔵元</label><input id="fBrew" type="text" maxlength="60" placeholder="例：佐浦" value="${esc(d.brewery)}"></div>
    <div class="field"><label for="fPref">都道府県</label><select id="fPref"><option value="">選ぶ</option>${PREFS.map(p=>`<option${d.pref===p?" selected":""}>${p}</option>`).join("")}</select></div></div>
@@ -495,7 +498,7 @@ function sanitize(x){
   const str=(v,n)=>typeof v==="string"?v.slice(0,n):"", num=v=>v===""||v==null||!Number.isFinite(+v)?"":String(v);
   const int=(v,lo,hi,dflt)=>Number.isInteger(+v)&&+v>=lo&&+v<=hi?+v:dflt;
   return{id:typeof x.id==="string"&&/^[A-Za-z0-9_-]{1,40}$/.test(x.id)?x.id:newId(),
-    type:TYPES.includes(x.type)?x.type:"四合瓶",name:str(x.name,60).trim(),brewery:str(x.brewery,60),pref:PREFS.includes(x.pref)?x.pref:"",
+    type:TYPES.includes(x.type)?x.type:x.type==="カップ酒"?"ワンカップ":"四合瓶",name:str(x.name,60).trim(),brewery:str(x.brewery,60),pref:PREFS.includes(x.pref)?x.pref:"",
     grade:GRADES.includes(x.grade)?x.grade:"",date:/^\d{4}-\d{2}-\d{2}$/.test(x.date)?x.date:today(),place:str(x.place,60),
     rating:int(x.rating,1,5,3),sweet:int(x.sweet,-2,2,0),body:int(x.body,-2,2,0),temp:TEMPS.some(t=>t[0]===x.temp)?x.temp:"",
     photo:typeof x.photo==="string"&&/^data:image\/(jpeg|png|webp);base64,/.test(x.photo)&&x.photo.length<250000?x.photo:"",
@@ -545,7 +548,7 @@ function renderSheet(focus){
   if(!S.detail)return;
   const all=S.entries.length?S.entries:SAMPLES, e=all.find(x=>x.id===S.detail);if(!e){closeSheet();return}
   const tempC=(TEMPS.find(t=>t[0]===e.temp)||[])[1];
-  const rows=[["種類",e.type],["蔵元",e.brewery],["都道府県",e.pref],["特定名称",e.grade],["飲んだ日",(e.date||"").replace(/-/g,".")],["場所",e.place],
+  const rows=[["種類",typeLabel(e.type)],["蔵元",e.brewery],["都道府県",e.pref],["特定名称",e.grade],["飲んだ日",(e.date||"").replace(/-/g,".")],["場所",e.place],
    ["味わい",Number.isFinite(e.sweet)&&Number.isFinite(e.body)?SWEET[e.sweet+2]+"・"+BODY[e.body+2]:""],["温度",e.temp?e.temp+(tempC?"（"+tempC+"）":""):""],
    ["日本酒度",e.smv!==""&&e.smv!=null?(+e.smv>0?"+":"")+e.smv:""],["精米歩合",e.polish?e.polish+"%":""],["度数",e.abv?e.abv+"%":""],["価格",e.price?Number(e.price).toLocaleString("ja-JP")+"円":""]].filter(r=>r[1]);
   o=document.createElement("div");o.className="overlay";o.id="ov";

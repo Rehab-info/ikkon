@@ -266,8 +266,12 @@
   }
 
   /* ---------- detail dialog ---------- */
-  function openDetail(id) {
-    var s = sakes.filter(function (x) { return x.id === id; })[0];
+  // 一覧などから開いたときは履歴に1件積み、スマホの「戻る」で詳細だけを閉じる。
+  // fromHistory は #銘柄ID の直リンク・戻る・進むで開くとき(履歴は積まない)
+  var closingFromHistory = false;
+  function findSake(id) { return sakes.filter(function (x) { return x.id === id; })[0]; }
+  function openDetail(id, fromHistory) {
+    var s = findSake(id);
     if (!s) return;
     var t = TYPES[s.type];
     var temps = TEMPS.map(function (tp) {
@@ -300,6 +304,7 @@
       (s.pref === '宮城' ? '<a class="btn-ghost small inline" href="miyagi.html">宮城で飲める・買える店</a>' : '') + '</div>' +
       '</div>';
     var dlg = $('detail');
+    dlg.setAttribute('data-id', s.id);
     if (dlg.showModal) { if (!dlg.open) dlg.showModal(); } else dlg.setAttribute('open', '');
     $('d-close').addEventListener('click', function () { dlg.close(); });
     var more = dlg.querySelector('[data-more]');
@@ -307,7 +312,15 @@
       Array.prototype.forEach.call(dlg.querySelectorAll('.rv-list li[hidden]'), function (li) { li.hidden = false; });
       more.remove();
     });
-    try { history.replaceState(null, '', '#' + s.id); } catch (e) {}
+    if (!fromHistory && location.hash !== '#' + s.id) {
+      try { history.pushState({ detail: s.id }, '', '#' + s.id); } catch (e) {}
+    }
+  }
+  function closeDetailFromHistory() {
+    var dlg = $('detail');
+    if (!dlg.open) return;
+    closingFromHistory = true;
+    dlg.close();
   }
 
   /* ---------- みんなのレビュー(スタッフが確認したものだけを data/reviews.json に載せる) ---------- */
@@ -509,13 +522,27 @@
     });
     var dlg = $('detail');
     dlg.addEventListener('click', function (e) { if (e.target === dlg) dlg.close(); });
-    dlg.addEventListener('close', function () { try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {} });
+    dlg.addEventListener('close', function () {
+      if (closingFromHistory) { closingFromHistory = false; return; }
+      // 閉じるボタン・Esc・背景のタップ:自分で積んだ履歴なら戻して消す(進むで再表示できる)。
+      // 直リンクで開いたときは戻るとサイトを離れるので、URLの #銘柄ID だけを外す
+      try {
+        if (history.state && history.state.detail) history.back();
+        else history.replaceState(null, '', location.pathname + location.search);
+      } catch (e) {}
+    });
+    window.addEventListener('popstate', function () {
+      var h = (location.hash || '').slice(1);
+      if (h && findSake(h)) {
+        if (!(dlg.open && dlg.getAttribute('data-id') === h)) openDetail(h, true);
+      } else closeDetailFromHistory();
+    });
     drawMap();
     initQuiz();
     initParallax();
     update();
     var h = (location.hash || '').slice(1);
-    if (h) openDetail(h);
+    if (h) openDetail(h, true);
   }
 
   // レビューは読めなくても銘柄は表示する
