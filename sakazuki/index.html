@@ -10,6 +10,7 @@
 <meta name="apple-mobile-web-app-title" content="さかづき帳 by 一献">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="description" content="飲んだ日本酒を、月日とともに記録する帳面。">
+<!-- shared:meta -->
 <link rel="canonical" href="https://rehab-info.github.io/ikkon/sakazuki/">
 <meta property="og:type" content="website">
 <meta property="og:title" content="さかづき帳 by 一献">
@@ -18,6 +19,7 @@
 <meta property="og:site_name" content="さかづき帳 by 一献">
 <meta property="og:locale" content="ja_JP">
 <meta name="twitter:card" content="summary">
+<!-- /shared:meta -->
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" href="icon-192.png">
@@ -186,6 +188,13 @@ dl.spec dd{margin:0;font-variant-numeric:tabular-nums;min-width:0;overflow-wrap:
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(86px + env(safe-area-inset-bottom,0px));z-index:40;background:var(--ink);color:var(--paper);padding:8px 16px;border-radius:999px;font-size:13px}
 @media (max-width:420px){.two{grid-template-columns:1fr}.brand{font-size:30px}}
 @media (prefers-reduced-motion:no-preference){.card{transition:transform .15s}.card:active{transform:scale(.98)}}
+/* 一献のなかま(ほかのサイトは別のタブで開く) */
+.app-foot{margin-top:32px}
+.family{display:grid;gap:8px;padding-top:14px;border-top:1px dashed var(--line);font-size:13px;color:var(--muted)}
+.family-h{font-size:12px;letter-spacing:.12em}
+.family a{display:flex;flex-direction:column;justify-content:center;min-height:44px;padding:8px 12px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface);color:var(--ink);text-decoration:none}
+.family a b{font-size:14px}.family a small{font-size:12px;color:var(--muted)}
+@media (min-width:721px){.family{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}.family-h{grid-column:1/-1}}
 </style>
 <!-- /app:head -->
 </head>
@@ -206,6 +215,7 @@ dl.spec dd{margin:0;font-variant-numeric:tabular-nums;min-width:0;overflow-wrap:
   </section>
 
   <main id="view"></main>
+  <footer class="app-foot"><!-- shared:family --><nav class="family" aria-label="一献のなかま"><span class="family-h">一献のなかま</span><a href="https://rehab-info.github.io/ikkon/" data-site="ikkon" target="_blank" rel="noopener"><b>一献</b><small>全国の名酒を、味わい・料理・温度から探す</small></a><a href="https://rehab-info.github.io/cupzukan/" data-site="cupzukan" target="_blank" rel="noopener"><b>カップ酒図鑑</b><small>一合で出会う宮城と全国のカップ酒</small></a></nav><!-- /shared:family --></footer>
 </div>
 
 <nav class="tabs" aria-label="画面切り替え">
