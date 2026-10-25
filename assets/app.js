@@ -270,6 +270,12 @@
     var a = document.querySelector('.family a[data-site="' + key + '"]');
     return a ? a.href : '';
   }
+  // さかづき帳の新規記録を、この銘柄の名前・蔵元・都道府県・特定名称を入れた下書きで開く(保存は向こうで「記録する」を押したとき)。
+  // 容器は一献ではわからないので渡さない
+  function sakazukiAdd(s) {
+    var q = new URLSearchParams({ from: 'ikkon', name: s.name, brewery: s.brewery || '', pref: s.pref || '', grade: s.spec || '' });
+    return siteUrl('sakazuki') + '#add?' + q.toString();
+  }
 
   /* ---------- detail dialog ---------- */
   // 一覧などから開いたときは履歴に1件積み、スマホの「戻る」で詳細だけを閉じる。
@@ -308,7 +314,7 @@
         '<a class="btn-ghost small inline" href="https://www.google.com/search?q=' + encodeURIComponent(s.brewery + ' ' + s.pref + ' 公式') + '" target="_blank" rel="noopener">蔵元を検索する</a>') +
       (s.kura ? '<a class="btn-ghost small inline" href="kura.html#' + esc(s.kura) + '">蔵の情報・見学</a>' : '') +
       (s.pref === '宮城' ? '<a class="btn-ghost small inline" href="miyagi.html">宮城で飲める・買える店</a>' : '') +
-      (siteUrl('sakazuki') ? '<a class="btn-ghost small inline" href="' + esc(siteUrl('sakazuki')) + '">飲んだらさかづき帳に記録</a>' : '') + '</div>' +
+      (siteUrl('sakazuki') ? '<a class="btn-ghost small inline" href="' + esc(sakazukiAdd(s)) + '">飲んだらさかづき帳に記録</a>' : '') + '</div>' +
       '</div>';
     var dlg = $('detail');
     dlg.setAttribute('data-id', s.id);
