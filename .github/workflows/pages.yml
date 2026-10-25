@@ -30,9 +30,13 @@ jobs:
       #     RAKUTEN_ACCESS_KEY: ${{ secrets.RAKUTEN_ACCESS_KEY }}
       #   run: python3 tools/fetch_rakuten.py
       - name: Build pages from data
+        # tools/__pycache__ を作らない(公開するファイルに混ぜない)
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
         run: |
           python3 tools/build_kura.py
           python3 tools/build_columns.py
+          python3 tools/build_sitemap.py
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

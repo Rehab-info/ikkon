@@ -1,3 +1,6 @@
 # 公開の仕組みが毎回つくるファイル
 data/rakuten.json
 rakuten-status.json
+
+# Python が作るキャッシュ
+__pycache__/
