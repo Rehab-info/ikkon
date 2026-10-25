@@ -1,5 +1,5 @@
 // さかづき帳: オフラインでも開けるようにする。中身を直したら VERSION を上げる。
-const VERSION = "sakazuki-beta-8";
+const VERSION = "sakazuki-beta-9";
 const SHELL = ["./", "./index.html", "./manifest.webmanifest", "./icon-180.png", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", ev => {
@@ -8,7 +8,8 @@ self.addEventListener("install", ev => {
 
 self.addEventListener("activate", ev => {
   ev.waitUntil(caches.keys()
-    .then(keys => Promise.all(keys.filter(k => k !== VERSION).map(k => caches.delete(k))))
+    // 消すのはさかづき帳の古いキャッシュだけ(キャッシュは rehab-info.github.io 全体で共有なので、ほかのサイトのものには触れない)
+    .then(keys => Promise.all(keys.filter(k => k.startsWith("sakazuki-") && k !== VERSION).map(k => caches.delete(k))))
     .then(() => self.clients.claim()));
 });
 
