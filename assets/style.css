@@ -517,3 +517,12 @@ body::after {
 @media (max-width: 720px) {
   .hc-scene { max-width: 600px; }
 }
+
+/* Top artwork with the copy lettered in the picture: keep the HTML copy for screen readers and search, but don't show it twice. */
+.hc-lettered { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.hc-lettered .hc-scene { max-width: 400px; justify-self: end; }
+.hc-lettered .hc-tate { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; border: 0; }
+@media (max-width: 720px) {
+  .hc-lettered { grid-template-columns: 1fr; }
+  .hc-lettered .hc-scene { max-width: 520px; justify-self: center; }
+}
