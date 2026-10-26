@@ -510,3 +510,10 @@ body::after {
   .family { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
   .family-h { grid-column: 1 / -1; }
 }
+
+/* User-supplied artwork: show the complete scene and bottle labels. */
+.hc-scene { display: block; justify-self: center; width: 100%; max-width: 300px; height: auto; }
+.has-illustration img { object-fit: contain; }
+@media (max-width: 720px) {
+  .hc-scene { max-width: 600px; }
+}
