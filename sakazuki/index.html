@@ -184,6 +184,7 @@ dl.spec dt{color:var(--muted);font-size:12px}
 dl.spec dd{margin:0;font-variant-numeric:tabular-nums;min-width:0;overflow-wrap:anywhere}
 .memo{white-space:pre-wrap;background:var(--paper);border-radius:8px;padding:10px 12px;font-size:14px;margin-bottom:14px}
 .confirm{background:var(--paper);border-radius:8px;padding:12px;font-size:13px;display:flex;flex-direction:column;gap:10px}
+.confirm ul{margin:0;padding-left:1.3em}.confirm details{color:var(--muted)}.confirm .warn{color:var(--danger)}
 
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(86px + env(safe-area-inset-bottom,0px));z-index:40;background:var(--ink);color:var(--paper);padding:8px 16px;border-radius:999px;font-size:13px}
 @media (max-width:420px){.two{grid-template-columns:1fr}.brand{font-size:30px}}
@@ -252,7 +253,7 @@ const SAMPLES=[
 ];
 
 const S={entries:[],loaded:false,mode:"loading",view:"list",type:"all",q:"",sort:"date",pref:null,detail:null,confirm:false,draft:null,
-  syncError:null,lastCard:null,importing:null,backupMsg:"",hint:false,slow:false,handoff:null};
+  syncError:null,lastCard:null,importing:null,backupMsg:"",hint:false,slow:false,handoff:null,backupFp:""};
 const IN_CLAUDE=!!(window.claude&&typeof window.claude.use==="function");
 let col=null, unsub=null, downloads=null;
 const LS_KEY="mycolle.entries.v1", HINT_KEY="sakazuki.hint.closed";
@@ -293,6 +294,15 @@ const Local={
   async put(e){
     if(this.idb){await this.tx("readwrite",s=>s.put(e));return}
     const list=lsRead().filter(x=>x.id!==e.id);list.push(e);localStorage.setItem(LS_KEY,JSON.stringify(list));
+  },
+  // 確認したときと同じ記録のときだけ、まとめて書く。1件でも変わっていたら何も書かずに false を返す
+  putAllIf(writes){
+    if(!this.idb)return Promise.reject(new Error("no exclusive write on localStorage"));   // まとめて書くのは IndexedDB のときだけ
+    return new Promise((res,rej)=>{let t;try{t=this.idb.transaction("entries","readwrite")}catch(e){rej(e);return}
+      const st=t.objectStore("entries");let changed=false;
+      writes.forEach(w=>{const g=st.get(w.rec.id);g.onsuccess=()=>{if(changed)return;
+        if(fpRec(g.result)!==w.expect){changed=true;try{t.abort()}catch(_){}return}st.put(w.rec)}});
+      t.oncomplete=()=>res(true);t.onabort=()=>changed?res(false):rej(t.error||new Error("abort"))});
   },
   async del(id){
     if(this.idb){await this.tx("readwrite",s=>s.delete(id));return}
@@ -486,11 +496,24 @@ function backupHtml(){
   const imp=S.importing;
   return `<section class="panel backup"><h2>記録の書き出し・読み込み</h2>
   <p class="note">記録をファイルに書き出して残せます。機種変更のときや、Claude 版とアプリ版のあいだで記録を移すときにも使えます。</p>
-  ${imp?`<div class="confirm">${imp.length}件の記録を読み込みます。同じ記録がすでにあれば、ファイルの内容で上書きします。<div class="actions"><button class="btn ghost" id="impNo">やめる</button><button class="btn" id="impYes">読み込む</button></div></div>`:
+  ${imp?(imp.busy?"":importConfirmHtml(imp)):
   `<div class="actions"><button class="btn ghost" id="expBtn"${S.entries.length?"":" disabled"}>書き出す</button><label class="btn ghost" for="impFile" style="display:inline-block">読み込む</label><input id="impFile" type="file" accept=".json,application/json" hidden></div>`}
   ${S.backupMsg?`<p class="msg" role="status">${esc(S.backupMsg)}</p>`:""}</section>`;
 }
 
+function importConfirmHtml(imp){
+  // 書き出した内容が、判定したときの記録とも、いま画面にある記録とも同じときだけ「書き出し済み」
+  const P=imp.plan,backedUp=!!S.backupFp&&S.backupFp===imp.curFp&&imp.curFp===fpAll(S.entries);
+  const k=P.keepNewer.length+P.keepUnknown.length,warnBackup=S.entries.length&&!backedUp;
+  const row=(t,n)=>`<li>${t} ${n}件</li>`;
+  const names=[...P.update.map(w=>["更新",w.rec]),...P.keepNewer.map(e=>["端末の方が新しい",e]),...P.keepUnknown.map(e=>["日時を比べられない",e])];
+  return `<div class="confirm"><b>${P.total}件の記録が見つかりました。この端末の記録は消えません。</b>
+  <ul>${row("新しく追加",P.add.length)}${row("同じ内容(変更なし)",P.same.length)}${row("ファイルの方が新しく更新",P.update.length)}${P.kept?`<li>うち、空・欠けている項目や写真は端末の値を残す ${P.kept}件</li>`:""}
+  ${row("端末の方が新しいため端末を残す",P.keepNewer.length)}${row("日時を比べられないため端末を残す",P.keepUnknown.length)}${P.bad?row("読み込めない記録",P.bad):""}${P.photoDropped?`<li>写真が大きすぎて外れる新しい記録 ${P.photoDropped}件</li>`:""}</ul>
+  ${names.length?`<details><summary>更新する記録・端末を残す記録の名前</summary>${names.slice(0,20).map(([t,e])=>`${esc(e.name)}(${t})`).join("、")}${names.length>20?`ほか${names.length-20}件`:""}</details>`:""}
+  ${warnBackup?`<p class="warn"><b>読み込む前に、いまの記録を書き出して保存しておくことを強くおすすめします。</b></p>`:S.entries.length?`<p>いまの記録は書き出し済みです。</p>`:""}
+  <div class="actions"><button class="btn ghost" id="impNo">やめる</button>${S.entries.length?`<button class="btn${warnBackup?"":" ghost"}" id="impExp">先に書き出す</button>`:""}<button class="btn${warnBackup?" ghost":""}" id="impYes"${P.add.length+P.update.length?"":" disabled"}>読み込む</button></div></div>`;
+}
 function formHtml(){
   const d=S.draft;
   const seg=(name,arr,val,lab)=>`<div class="seg" data-seg="${name}">${arr.map(a=>{const k=Array.isArray(a)?a[0]:a;return `<button type="button" data-v="${esc(k)}" aria-pressed="${val===k}">${esc(lab?lab(k):k)}${Array.isArray(a)&&a[1]?`<small>${a[1]}</small>`:""}</button>`}).join("")}</div>`;
@@ -561,6 +584,7 @@ function shrink(file){return new Promise((res,rej)=>{const url=URL.createObjectU
   img.onerror=()=>{URL.revokeObjectURL(url);rej()};img.src=url})}
 
 /* ---------- backup ---------- */
+// 更新日時がないファイルの記録は、日時なしのまま(読み込んだ時刻を作らない)
 function sanitize(x){
   if(!x||typeof x!=="object"||typeof x.name!=="string"||!x.name.trim())return null;
   const str=(v,n)=>typeof v==="string"?v.slice(0,n):"", num=v=>v===""||v==null||!Number.isFinite(+v)?"":String(v);
@@ -570,44 +594,130 @@ function sanitize(x){
     grade:GRADES.includes(x.grade)?x.grade:"",date:/^\d{4}-\d{2}-\d{2}$/.test(x.date)?x.date:today(),place:str(x.place,60),
     rating:int(x.rating,1,5,3),sweet:int(x.sweet,-2,2,0),body:int(x.body,-2,2,0),temp:TEMPS.some(t=>t[0]===x.temp)?x.temp:"",
     photo:typeof x.photo==="string"&&/^data:image\/(jpeg|png|webp);base64,/.test(x.photo)&&x.photo.length<250000?x.photo:"",
-    smv:num(x.smv),polish:num(x.polish),abv:num(x.abv),price:num(x.price),memo:str(x.memo,1000),updatedAt:Number.isFinite(x.updatedAt)?x.updatedAt:Date.now()};
+    smv:num(x.smv),polish:num(x.polish),abv:num(x.abv),price:num(x.price),memo:str(x.memo,1000),updatedAt:Number.isFinite(x.updatedAt)?x.updatedAt:undefined};
 }
 async function exportAll(){
-  const data=JSON.stringify({app:"sakazuki-cho",version:1,exportedAt:new Date().toISOString(),entries:S.entries.map(e=>Object.assign({id:e.id},strip(e)))});
+  const snap=S.entries.slice();   // 書き出す記録。書き出せたら、この内容の指紋を「書き出し済み」の目印にする
+  const data=JSON.stringify({app:"sakazuki-cho",version:1,exportedAt:new Date().toISOString(),entries:snap.map(e=>Object.assign({id:e.id},strip(e)))});
   const name="sakazuki-"+today().replace(/-/g,"")+".json";
   S.backupMsg="";
   try{
     if(IN_CLAUDE){
       if(!downloads){S.backupMsg="この画面からは書き出せません。";return}
-      await downloads.save({filename:name,data});S.backupMsg=S.entries.length+"件を書き出しました。";return;
+      await downloads.save({filename:name,data});S.backupFp=fpAll(snap);S.backupMsg=S.entries.length+"件を書き出しました。";return;
     }
     const file=new File([data],name,{type:"application/json"});
-    if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:"さかづき帳の記録"});S.backupMsg="書き出しました。";return}
+    if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:"さかづき帳の記録"});S.backupFp=fpAll(snap);S.backupMsg="書き出しました。";return}
     const a=document.createElement("a");a.href=URL.createObjectURL(file);a.download=name;document.body.appendChild(a);a.click();a.remove();
-    setTimeout(()=>URL.revokeObjectURL(a.href),4000);S.backupMsg=S.entries.length+"件を書き出しました。";
+    setTimeout(()=>URL.revokeObjectURL(a.href),4000);S.backupFp=fpAll(snap);S.backupMsg=S.entries.length+"件を書き出しました。";
   }catch(err){
     S.backupMsg=err&&(err.code==="declined"||err.name==="AbortError")?"書き出しをやめました。":"書き出せませんでした。";
   }finally{if(S.view==="map")$("#view").innerHTML=mapHtml()}
 }
+/* ---------- 読み込み(インポート) ---------- */
+// 同じIDの記録は更新日時を比べ、ファイルの方がはっきり新しいときだけ更新する。比べられないときは端末側を残す(安全優先)。
+// 更新するときも、ファイル側が空・欠落・不正な項目と写真は端末側の値を残す。端末の記録を消すことはない。
+// 2分・1日は暫定値(端末どうしの時計のずれ、明らかにおかしい未来の時刻を「比べられない」とみなす幅)
+const IMPORT_SLACK=2*60*1000, IMPORT_FUTURE=24*60*60*1000;
+const fpRec=e=>e?JSON.stringify([e.id].concat(FIELDS.map(k=>e[k]===undefined?null:e[k]))):"";
+// 記録全体の指紋。書き出したあとに追加・編集・削除・読み込み・別タブでの変更があれば変わる(写真は長さと末尾で軽く比べる)
+const fpAll=list=>list.map(e=>JSON.stringify([e.id].concat(FIELDS.map(k=>k==="photo"?(e.photo?e.photo.length+":"+e.photo.slice(-64):""):e[k]===undefined?null:e[k])))).sort().join("\n");
+const isBlank=v=>v==null||(typeof v==="string"&&!v.trim());
+function fileHas(k,x){                        // ファイルの値がその項目として正しく、空でないか
+  const v=x[k];if(isBlank(v))return false;
+  switch(k){
+    case "type":return TYPES.includes(v)||v==="カップ酒";
+    case "pref":return PREFS.includes(v);
+    case "grade":return GRADES.includes(v);
+    case "date":return typeof v==="string"&&/^\d{4}-\d{2}-\d{2}$/.test(v)&&!isNaN(Date.parse(v))&&new Date(v).toISOString().slice(0,10)===v;  // 実在する日付だけ
+    case "rating":return Number.isInteger(+v)&&+v>=1&&+v<=5;
+    case "sweet":case "body":return Number.isInteger(+v)&&+v>=-2&&+v<=2;
+    case "temp":return TEMPS.some(t=>t[0]===v);
+    case "photo":return typeof v==="string"&&/^data:image\/(jpeg|png|webp);base64,/.test(v)&&v.length<250000;
+    case "smv":case "polish":case "abv":case "price":return Number.isFinite(+v);
+    default:return typeof v==="string";        // name・brewery・place・memo
+  }
+}
+const okTime=t=>Number.isFinite(t)&&t<=Date.now()+IMPORT_FUTURE;
+const sameContent=(a,b)=>FIELDS.every(k=>k==="updatedAt"||String(a[k]==null?"":a[k])===String(b[k]==null?"":b[k]));
+// 端末の記録に、ファイルの正しく空でない値だけを重ねたもの(空・欠落・不正な項目と写真は端末の値のまま)
+function mergeRec(cur,raw,rec){const m=Object.assign({},cur);let kept=false;
+  FIELDS.forEach(k=>{if(k==="updatedAt")return;if(fileHas(k,raw))m[k]=rec[k];else if(!isBlank(cur[k])&&String(cur[k])!==String(rec[k]))kept=true});
+  return{m,kept}}
+function planImport(src,current){
+  const byId=new Map(current.map(e=>[e.id,e])),seen=new Set();
+  const P={total:src.list.length+src.bad,add:[],same:[],update:[],keepNewer:[],keepUnknown:[],bad:src.bad,kept:0,photoDropped:0};
+  for(const {raw,rec} of src.list){
+    if(seen.has(rec.id)){P.bad++;continue}seen.add(rec.id);              // ファイルの中で同じIDが重なったら後のものは読まない
+    const cur=byId.get(rec.id);
+    if(!cur){P.add.push({rec,expect:""});if(!isBlank(raw.photo)&&!rec.photo)P.photoDropped++;continue}
+    const {m,kept}=mergeRec(cur,raw,rec);
+    if(sameContent(cur,m)){P.same.push(cur);continue}                      // 重ねても何も変わらない
+    const a=cur.updatedAt,b=raw.updatedAt;
+    if(!okTime(a)||!okTime(b)||Math.abs(a-b)<=IMPORT_SLACK){P.keepUnknown.push(cur);continue}
+    if(a>b){P.keepNewer.push(cur);continue}
+    m.updatedAt=b;if(kept)P.kept++;
+    P.update.push({rec:m,expect:fpRec(cur)});
+  }
+  return P;
+}
+async function currentRecords(){return S.mode==="db"?S.entries.slice():await Local.all()}
+async function prepareImport(src){
+  const cur=await currentRecords();if(S.mode!=="db")S.entries=cur;
+  S.importing={src,plan:planImport(src,cur),curFp:fpAll(cur)};
+}
+// localStorage に保存している環境(IndexedDB を使えない端末)では、別のタブとの書き込みの競合を防げないので読み込まない
+const IMPORT_LS_MSG="この端末では記録を一時的な保存方式で保存しているため、ほかのタブとの書き込みの競合を防げません。記録を守るため、この端末では読み込みを使えません。";
+const importBlockedLS=()=>S.mode==="local"&&!Local.idb;
 async function readImport(file){
-  S.backupMsg="";
+  S.backupMsg="";S.importing=null;
+  if(importBlockedLS()){S.backupMsg=IMPORT_LS_MSG;$("#view").innerHTML=mapHtml();return}
+  if(S.mode==="loading"){S.backupMsg="記録の読み込みが終わっていないため、まだ読み込めません。読み込みが終わってから、もう一度選んでください。";$("#view").innerHTML=mapHtml();return}
   try{
     const v=JSON.parse(await file.text());
-    const list=(Array.isArray(v)?v:v&&Array.isArray(v.entries)?v.entries:[]).map(sanitize).filter(Boolean);
-    if(!list.length)S.backupMsg="読み込める記録が見つかりませんでした。さかづき帳で書き出したファイルを選んでください。";
-    else S.importing=list;
+    const raw=Array.isArray(v)?v:v&&Array.isArray(v.entries)?v.entries:[];
+    const src={list:[],bad:0};
+    raw.forEach(x=>{const rec=sanitize(x);if(!rec){src.bad++;return}if(rec.updatedAt===undefined)delete rec.updatedAt;src.list.push({raw:x,rec})});
+    if(!src.list.length)S.backupMsg="読み込める記録が見つかりませんでした。さかづき帳で書き出したファイルを選んでください。";
+    else await prepareImport(src);
   }catch(_){S.backupMsg="ファイルを読めませんでした。さかづき帳で書き出したファイルを選んでください。"}
   $("#view").innerHTML=mapHtml();
 }
+async function applyImport(P){
+  const writes=P.add.concat(P.update);
+  if(!writes.length)return true;
+  if(S.mode==="db"){                                   // Claude 版:最新の記録と照らしてから書く
+    const now=new Map(S.entries.map(e=>[e.id,e]));
+    if(writes.some(w=>fpRec(now.get(w.rec.id))!==w.expect))return false;
+    for(const w of writes)await retry1(()=>col.doc(w.rec.id).set(strip(w.rec)));
+    return true;
+  }
+  return Local.putAllIf(writes);
+}
 async function runImport(){
   if(S.mode==="loading"){S.backupMsg="記録の読み込みが終わっていないため、まだ読み込めません。読み込みが終わってから、もう一度選んでください。";S.importing=null;$("#view").innerHTML=mapHtml();return}
-  const list=S.importing;S.importing=null;let ok=0;
+  if(!S.importing||S.importing.busy)return;              // 二度押しで二回書かない
+  if(importBlockedLS()){S.importing=null;S.backupMsg=IMPORT_LS_MSG;$("#view").innerHTML=mapHtml();return}
+  const {src,plan,curFp}=S.importing;S.importing.busy=true;
   S.backupMsg="読み込んでいます…";$("#view").innerHTML=mapHtml();
-  for(const e of list){
-    try{if(S.mode==="db")await retry1(()=>col.doc(e.id).set(strip(e)));else{await Local.put(e);const i=S.entries.findIndex(x=>x.id===e.id);if(i>=0)S.entries[i]=e;else S.entries.push(e)}ok++}
-    catch(_){}
+  let fresh;try{fresh=await currentRecords()}catch(_){fresh=null}
+  if(!fresh||fpAll(fresh)!==curFp){                        // 判定したあとに、どれか1件でも記録が変わっていたら判定し直す
+    try{await prepareImport(src)}catch(_){S.importing=null}
+    S.backupMsg="確認のあとで記録が変わったため、何も変えずに判定し直しました。内容を確かめて、もう一度「読み込む」を押してください。";
+    refresh();return;
   }
-  S.backupMsg=ok===list.length?ok+"件を読み込みました。":`${list.length}件のうち${ok}件を読み込みました。残りは保存できませんでした。`;
+  let ok;
+  try{ok=await applyImport(plan)}
+  catch(_){S.importing=null;S.backupMsg=S.mode==="db"?"読み込みの途中で保存できませんでした。通信を確かめて、もう一度読み込んでください。":"保存できませんでした。記録は何も変えていません。";refresh();return}
+  if(!ok){                                              // 確認のあとで記録が変わった:書かずに判定し直す
+    try{await prepareImport(src)}catch(_){S.importing=null}
+    S.backupMsg="確認のあとで記録が変わったため、何も変えずに判定し直しました。内容を確かめて、もう一度「読み込む」を押してください。";
+    refresh();return;
+  }
+  S.importing=null;
+  if(S.mode!=="db")S.entries=await currentRecords();
+  const k=plan.keepNewer.length+plan.keepUnknown.length;
+  S.backupMsg=`追加 ${plan.add.length}件・更新 ${plan.update.length}件。`+(k?`端末の記録を残したもの ${k}件。`:"")+(plan.same.length?`同じ内容 ${plan.same.length}件。`:"");
   refresh();
 }
 
@@ -664,6 +774,7 @@ $("#view").addEventListener("click",ev=>{
   else if(id==="expBtn")exportAll();
   else if(id==="impNo"){S.importing=null;$("#view").innerHTML=mapHtml()}
   else if(id==="impYes")runImport();
+  else if(id==="impExp")exportAll();
 });
 // search: don't touch the box itself, and wait for Japanese input (IME) to be confirmed
 function onSearch(ev){if(ev.isComposing)return;S.q=ev.target.value;renderResults()}
