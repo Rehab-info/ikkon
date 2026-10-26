@@ -242,6 +242,7 @@
  },
  {
   "id": "hakurakusei",
+  "illustration": "images/hakurakusei-illustration.webp",
   "name": "伯楽星 特別純米",
   "kana": "はくらくせい",
   "spec": "特別純米",
@@ -274,6 +275,7 @@
  },
  {
   "id": "urakasumi",
+  "illustration": "images/urakasumi-illustration.webp",
   "name": "浦霞 禅 純米吟醸",
   "kana": "うらかすみ",
   "spec": "純米吟醸",
@@ -305,6 +307,7 @@
  },
  {
   "id": "ichinokura",
+  "illustration": "images/ichinokura-illustration.webp",
   "name": "一ノ蔵 無鑑査本醸造 辛口",
   "kana": "いちのくら",
   "spec": "本醸造",
@@ -337,6 +340,7 @@
  },
  {
   "id": "hitakami",
+  "illustration": "images/hitakami-illustration.webp",
   "name": "日高見 超辛口純米",
   "kana": "ひたかみ",
   "spec": "純米",
@@ -371,6 +375,7 @@
  },
  {
   "id": "suminoe",
+  "illustration": "images/suminoe-illustration.webp",
   "name": "墨廼江 特別純米",
   "kana": "すみのえ",
   "spec": "特別純米",
@@ -403,6 +408,7 @@
  },
  {
   "id": "kenkonichi",
+  "illustration": "images/kenkonichi-illustration.webp",
   "name": "乾坤一 特別純米 辛口",
   "kana": "けんこんいち",
   "spec": "特別純米",
@@ -436,6 +442,7 @@
  },
  {
   "id": "wataya",
+  "illustration": "images/wataya-illustration.webp",
   "name": "綿屋 特別純米 幸之助院殿",
   "kana": "わたや",
   "spec": "特別純米",
@@ -469,6 +476,7 @@
  },
  {
   "id": "miyakanbai",
+  "illustration": "images/miyakanbai-illustration.webp",
   "name": "宮寒梅 純米大吟醸 三米八旨",
   "kana": "みやかんばい",
   "spec": "純米大吟醸",
@@ -500,6 +508,7 @@
  },
  {
   "id": "soutenden",
+  "illustration": "images/soutenden-illustration.webp",
   "name": "蒼天伝 特別純米",
   "kana": "そうてんでん",
   "spec": "特別純米",
@@ -533,6 +542,7 @@
  },
  {
   "id": "katsuyamaken",
+  "illustration": "images/katsuyamaken-illustration.webp",
   "name": "勝山 純米吟醸 献",
   "kana": "かつやま けん",
   "spec": "純米吟醸",
@@ -564,6 +574,7 @@
  },
  {
   "id": "tenjomugen",
+  "illustration": "images/tenjomugen-illustration.webp",
   "name": "天上夢幻 純米吟醸原酒 超辛口",
   "kana": "てんじょうむげん",
   "spec": "純米吟醸(原酒)",
@@ -659,6 +670,7 @@
  },
  {
   "id": "zao",
+  "illustration": "images/zao-illustration.webp",
   "name": "蔵王 特別純米 K",
   "kana": "ざおう",
   "spec": "特別純米",
@@ -721,6 +733,7 @@
  },
  {
   "id": "koganesawa",
+  "illustration": "images/koganesawa-illustration.webp",
   "name": "黄金澤 山廃純米",
   "kana": "こがねさわ",
   "spec": "純米(山廃)",
@@ -784,6 +797,7 @@
  },
  {
   "id": "sawanoizumi",
+  "illustration": "images/sawanoizumi-illustration.webp",
   "name": "澤乃泉 特別純米",
   "kana": "さわのいずみ",
   "spec": "特別純米",

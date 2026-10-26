@@ -150,6 +150,8 @@
   }
   function media(s, cls) {
     var ill = bottle(s);
+    if (s.illustration) return '<div class="' + cls + ' has-photo has-illustration"><img src="' + esc(s.illustration) + '" alt="' + esc(s.name.split(' ')[0]) + 'の銘柄イラスト（ラベルの仕様は商品名と異なる場合があります）" loading="lazy" decoding="async" ' +
+      'onerror="this.parentNode.classList.remove(\'has-photo\');this.remove()">' + ill + '</div>';
     if (!s.photo) return '<div class="' + cls + '">' + ill + '</div>';
     return '<div class="' + cls + ' has-photo"><img src="' + esc(s.photo) + '" alt="' + esc(s.name) + 'の写真" loading="lazy" ' +
       'onerror="this.parentNode.classList.remove(\'has-photo\');this.remove()">' + ill + '</div>';
