@@ -32,6 +32,7 @@
  },
  {
   "id": "aramasa6",
+  "illustration": "images/aramasa6-illustration.webp",
   "name": "新政 No.6 S-type",
   "kana": "あらまさ",
   "spec": "生酛・純米(生酒)",
@@ -62,6 +63,7 @@
  },
  {
   "id": "juyondai",
+  "illustration": "images/juyondai-illustration.webp",
   "name": "十四代 本丸",
   "kana": "じゅうよんだい",
   "spec": "特別本醸造",
@@ -212,6 +214,7 @@
  },
  {
   "id": "denshu",
+  "illustration": "images/denshu-illustration.webp",
   "name": "田酒 特別純米",
   "kana": "でんしゅ",
   "spec": "特別純米",
@@ -607,6 +610,7 @@
  },
  {
   "id": "yukinomatsushima",
+  "illustration": "images/yukinomatsushima-illustration.webp",
   "name": "雪の松島 本醸造 入魂超辛+20",
   "kana": "ゆきのまつしま",
   "spec": "本醸造",
@@ -638,6 +642,7 @@
  },
  {
   "id": "housen",
+  "illustration": "images/housen-illustration.webp",
   "name": "宝船浪の音 特別純米 蔵の華",
   "kana": "ほうせんなみのおと",
   "spec": "特別純米",
@@ -670,7 +675,7 @@
  },
  {
   "id": "zao",
-  "illustration": "images/zao-illustration.webp",
+  "illustration": "images/zao-illustration-v2.webp",
   "name": "蔵王 特別純米 K",
   "kana": "ざおう",
   "spec": "特別純米",
@@ -701,6 +706,7 @@
  },
  {
   "id": "manatsuru",
+  "illustration": "images/manatsuru-illustration.webp",
   "name": "真鶴 生酛特別純米",
   "kana": "まなつる",
   "spec": "特別純米(生酛)",
@@ -733,7 +739,7 @@
  },
  {
   "id": "koganesawa",
-  "illustration": "images/koganesawa-illustration.webp",
+  "illustration": "images/koganesawa-illustration-v2.webp",
   "name": "黄金澤 山廃純米",
   "kana": "こがねさわ",
   "spec": "純米(山廃)",
@@ -765,6 +771,7 @@
  },
  {
   "id": "kurikoma",
+  "illustration": "images/kurikoma-illustration.webp",
   "name": "栗駒山 特別純米",
   "kana": "くりこまやま",
   "spec": "特別純米",
@@ -797,7 +804,7 @@
  },
  {
   "id": "sawanoizumi",
-  "illustration": "images/sawanoizumi-illustration.webp",
+  "illustration": "images/sawanoizumi-illustration-v2.webp",
   "name": "澤乃泉 特別純米",
   "kana": "さわのいずみ",
   "spec": "特別純米",
@@ -830,6 +837,7 @@
  },
  {
   "id": "hiroki",
+  "illustration": "images/hiroki-illustration.webp",
   "name": "飛露喜 特別純米",
   "kana": "ひろき",
   "spec": "特別純米",
