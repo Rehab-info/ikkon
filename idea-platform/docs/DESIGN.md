@@ -1,8 +1,8 @@
-# 設計書 — IDEA PLATFORM（仮称）プロトタイプ
+# 設計書 — MIND BUY プロトタイプ
 
 > 中心理念：**肩書きではなく、アイデアを通じて人の可能性を発見する。**
 >
-> 本書はプロトタイプ実装前に作成した設計です。サービス名「IDEA PLATFORM」は仮称で、`src/config/brand.ts` の1か所で変更できます。
+> 本書はプロトタイプ実装前に作成した設計です。サービス名は「MIND BUY」です（当初は仮称「IDEA PLATFORM」）。表記は `src/config/brand.ts` の1か所で変更できます。
 
 ---
 
@@ -56,7 +56,7 @@
 
 ```
 src/
-├─ config/brand.ts          サービス名・タグライン・DB名（仮称の差し替え点）
+├─ config/brand.ts          サービス名・タグライン・DB名（サービス名の変更点）
 ├─ content/copy.ts          トップのコピー・FAQ・利用の流れ（編集しやすい文言集）
 ├─ types/index.ts           全データ型
 ├─ data/seed.ts             架空のデモデータ（利用者・創作者・アイデア・サンプルプロジェクト）

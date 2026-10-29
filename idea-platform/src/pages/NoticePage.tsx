@@ -11,7 +11,7 @@ export default function NoticePage() {
       <PageHeader
         eyebrow="ABOUT THIS PROTOTYPE"
         title="プロトタイプについて"
-        description={`${BRAND.name}（仮称）の主要な体験を確認するためのローカル・プロトタイプです。本番環境として公開・運用しないでください。`}
+        description={`${BRAND.name} の主要な体験を確認するためのローカル・プロトタイプです。本番環境として公開・運用しないでください。`}
       />
       <div className="mt-8 space-y-4">
         <Notice tone="demo" title="このプロトタイプで行われること・行われないこと">

@@ -49,7 +49,7 @@ h2{color:#14213d;font-size:17px;border-top:1px solid #e4e6ea;padding-top:20px;ma
 <p class="meta">カテゴリー：${escapeHtml(pkg.category)}／作成者：${escapeHtml(authorName)}</p>
 <section><h2>想定顧客</h2>${paragraphs(pkg.targetCustomers)}</section>
 ${sections}
-<p class="note">この文書は ${escapeHtml(BRAND.name)}（仮称）のプロトタイプで作成されました。記載の数値・調査結果は作成者による仮説を含みます。特許権などの権利を示すものではありません。</p>
+<p class="note">この文書は ${escapeHtml(BRAND.name)} のプロトタイプで作成されました。記載の数値・調査結果は作成者による仮説を含みます。特許権などの権利を示すものではありません。</p>
 </body>
 </html>`
 }

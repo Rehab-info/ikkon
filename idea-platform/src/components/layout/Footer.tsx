@@ -9,7 +9,7 @@ export function Footer() {
         <div className="md:col-span-2">
           <Logo />
           <p className="mt-4 max-w-sm text-sm text-muted">肩書きではなく、アイデアを通じて人の可能性を発見する。</p>
-          <p className="mt-4 text-xs text-muted">サービス名は仮称です。掲載している人物・アイデアはすべて架空のデモデータです。</p>
+          <p className="mt-4 text-xs text-muted">掲載している人物・アイデアはすべて架空のデモデータです。</p>
         </div>
         <nav aria-label="フッター：サービス" className="space-y-2 text-sm">
           <p className="font-medium text-ink">サービス</p>

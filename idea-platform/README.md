@@ -1,4 +1,4 @@
-# IDEA PLATFORM（仮称）— プロトタイプ
+# MIND BUY — プロトタイプ
 
 > **肩書きではなく、アイデアを通じて人の可能性を発見する。**
 
@@ -182,7 +182,7 @@ idea-platform/
 │   ├─ DESIGN.md          設計書（サイトマップ・フロー・構成・デザインシステム）
 │   └─ TEST_RESULTS.md    テスト結果
 ├─ src/
-│   ├─ config/brand.ts    サービス名（仮称）
+│   ├─ config/brand.ts    サービス名
 │   ├─ content/           トップのコピー・FAQ・購入条件・本番未対応事項
 │   ├─ types/             データモデル
 │   ├─ data/seed.ts       デモデータ
