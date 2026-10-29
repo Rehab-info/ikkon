@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
-import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, MemoryRouter, Route, Routes } from 'react-router-dom'
 import { Layout } from './components/layout/Layout'
 import { Button } from './components/ui/Button'
 import { ErrorState, Loading } from './components/ui/States'
@@ -20,6 +20,9 @@ const AdminPage = lazy(() => import('./pages/AdminPage'))
 const NoticePage = lazy(() => import('./pages/NoticePage'))
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'))
 const IipPage = lazy(() => import('./pages/IipPage'))
+
+// 共有用のデモページ（Artifact）ではURLを使えないため、画面遷移をメモリ上で管理する
+const Router = import.meta.env.VITE_MEMORY_ROUTER === '1' ? MemoryRouter : BrowserRouter
 
 type BootState = { status: 'loading' } | { status: 'ready' } | { status: 'error'; message: string }
 
@@ -51,7 +54,7 @@ export default function App() {
   return (
     <ToastProvider>
       <DemoUserProvider>
-        <BrowserRouter>
+        <Router>
           <Suspense fallback={<Loading />}>
             <Routes>
               <Route element={<Layout />}>
@@ -70,7 +73,7 @@ export default function App() {
               </Route>
             </Routes>
           </Suspense>
-        </BrowserRouter>
+        </Router>
       </DemoUserProvider>
     </ToastProvider>
   )
