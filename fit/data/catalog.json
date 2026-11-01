@@ -1,0 +1,54 @@
+{
+  "_readme": "季節を問わない定番アイテム。season は aw=秋冬 ss=春夏 all=通年。tags は「避けたいもの」との照合に使う(skirt short tight oversize pattern volume)。",
+  "items": [
+    { "id": "chester", "name": "チェスターコート", "cat": "outer", "g": "u", "good": ["I","H","X","Y","O"], "bad": [], "tastes": ["classic","minimal","mode"], "occ": ["work","date","formal","off"], "season": "aw", "tip": "前を開けて着ると縦のラインがすっと通る" },
+    { "id": "balmacaan", "name": "ステンカラーコート", "cat": "outer", "g": "u", "good": ["Y","A","O","I","X","H"], "bad": [], "tastes": ["minimal","classic","casual"], "occ": ["work","off"], "season": "aw", "tip": "体型を選ばない万能コート。ひざ丈前後が使いやすい" },
+    { "id": "shortdown", "name": "ショート丈ダウンジャケット", "cat": "outer", "g": "u", "good": ["I","A","X"], "bad": ["O"], "tastes": ["casual","street","outdoor"], "occ": ["off"], "season": "aw", "tip": "腰より上の丈で重心が上がり、脚が長く見える", "tags": ["short"] },
+    { "id": "tailored", "name": "テーラードジャケット", "cat": "outer", "g": "u", "good": ["H","O","A","Y","X"], "bad": [], "tastes": ["classic","minimal"], "occ": ["work","date","formal"], "season": "all", "tip": "肩と身幅の合ったものを。ボタンを留めないと縦長に" },
+    { "id": "nocollar", "name": "ノーカラージャケット", "cat": "outer", "g": "f", "good": ["A","X","I","H"], "bad": [], "tastes": ["feminine","minimal","classic"], "occ": ["work","date"], "season": "all", "tip": "首元がすっきりして上品。短め丈でスタイルアップ" },
+    { "id": "ma1", "name": "MA-1 ブルゾン", "cat": "outer", "g": "u", "good": ["I","A","H"], "bad": ["O"], "tastes": ["casual","street"], "occ": ["off"], "season": "aw", "tip": "上半身にボリュームを足して下半身を細く見せる", "tags": ["short","volume"] },
+    { "id": "denimjk", "name": "デニムジャケット", "cat": "outer", "g": "u", "good": ["I","A","H","X"], "bad": ["O"], "tastes": ["casual","vintage"], "occ": ["off"], "season": "all", "tip": "腰丈で軽快に。きれいめボトムとも合う", "tags": ["short"] },
+    { "id": "longcardi", "name": "ロングカーディガン", "cat": "outer", "g": "u", "good": ["O","H","Y"], "bad": [], "tastes": ["minimal","feminine","casual"], "occ": ["off","work"], "season": "all", "tip": "前を開けてはおると縦のIラインがつくれる" },
+    { "id": "mountain", "name": "マウンテンパーカー", "cat": "outer", "g": "u", "good": ["I","H","A"], "bad": [], "tastes": ["outdoor","casual","street"], "occ": ["off"], "season": "all", "tip": "ハリのある素材で体の線を拾わない" },
+
+    { "id": "vknit", "name": "ハイゲージ Vネックニット", "cat": "tops", "g": "u", "good": ["O","Y","H","X"], "bad": [], "tastes": ["classic","minimal","feminine"], "occ": ["work","date","off"], "season": "aw", "tip": "Vの開きが首元をすっきり見せ、縦のラインをつくる" },
+    { "id": "turtle", "name": "タートルネックニット", "cat": "tops", "g": "u", "good": ["I","A","X","H"], "bad": ["O"], "tastes": ["classic","minimal","mode"], "occ": ["work","off","date"], "season": "aw", "tip": "首元に厚みが出て、細身の上半身に存在感を足す" },
+    { "id": "lowgauge", "name": "ローゲージニット", "cat": "tops", "g": "u", "good": ["I","A"], "bad": ["Y","O"], "tastes": ["casual","vintage","feminine"], "occ": ["off","date"], "season": "aw", "tip": "編み地の立体感で上半身にボリュームを", "tags": ["volume"] },
+    { "id": "oxford", "name": "オックスフォードシャツ", "cat": "tops", "g": "u", "good": ["Y","A","O","I","X","H"], "bad": [], "tastes": ["classic","casual"], "occ": ["work","off"], "season": "all", "tip": "どんな体型にもなじむ定番。ボタンを1つ開けて抜け感を" },
+    { "id": "broad", "name": "白のブロードシャツ", "cat": "tops", "g": "u", "good": ["Y","A","O","I","X","H"], "bad": [], "tastes": ["classic","minimal"], "occ": ["work","formal","date"], "season": "all", "tip": "顔まわりを明るく、きちんと見せる" },
+    { "id": "bigshirt", "name": "オーバーサイズシャツ", "cat": "tops", "g": "u", "good": ["I","A","H"], "bad": [], "tastes": ["street","casual","mode"], "occ": ["off"], "season": "all", "tip": "ゆとりで体に厚みを足す。袖をまくって手首を見せると軽い", "tags": ["oversize"] },
+    { "id": "tee", "name": "無地クルーネック T シャツ", "cat": "tops", "g": "u", "good": ["Y","I","H","X"], "bad": [], "tastes": ["casual","minimal","street"], "occ": ["off"], "season": "ss", "tip": "肩に合うサイズを。厚手の生地なら体の線を拾わない" },
+    { "id": "sweat", "name": "スウェット", "cat": "tops", "g": "u", "good": ["I","A","H"], "bad": ["O"], "tastes": ["casual","street"], "occ": ["off"], "season": "aw", "tip": "裾のリブで上半身にふくらみをつくる" },
+    { "id": "blouse", "name": "とろみ素材のブラウス", "cat": "tops", "g": "f", "good": ["O","Y","H","X"], "bad": [], "tastes": ["feminine","classic"], "occ": ["work","date"], "season": "all", "tip": "落ち感のある生地が体の線を拾わずやわらかく見せる" },
+    { "id": "poloknit", "name": "ポロニット", "cat": "tops", "g": "m", "good": ["Y","H","O","X"], "bad": [], "tastes": ["classic","minimal"], "occ": ["work","off","date"], "season": "all", "tip": "襟の開きで首元に縦の抜けをつくる" },
+
+    { "id": "slacks", "name": "センタープレスのストレートスラックス", "cat": "bottoms", "g": "u", "good": ["Y","A","O","I","X","H"], "bad": [], "tastes": ["classic","minimal","mode"], "occ": ["work","formal","date","off"], "season": "all", "tip": "中央の折り目が脚をまっすぐ長く見せる" },
+    { "id": "tapered", "name": "テーパードパンツ", "cat": "bottoms", "g": "u", "good": ["Y","O","H"], "bad": [], "tastes": ["minimal","casual","classic"], "occ": ["work","off"], "season": "all", "tip": "腰はゆとり、裾に向かって細く。脚がすっきり見える" },
+    { "id": "wide", "name": "ワイドパンツ", "cat": "bottoms", "g": "u", "good": ["A","I","X","Y"], "bad": [], "tastes": ["mode","street","minimal","casual"], "occ": ["off","work"], "season": "all", "tip": "落ち感のある素材なら腰まわりの線をきれいに流す" },
+    { "id": "straightdenim", "name": "ストレートデニム", "cat": "bottoms", "g": "u", "good": ["I","H","Y","X"], "bad": [], "tastes": ["casual","vintage"], "occ": ["off"], "season": "all", "tip": "濃いめの色ほど引き締まって見える" },
+    { "id": "slimdenim", "name": "スリムデニム", "cat": "bottoms", "g": "u", "good": ["I","X"], "bad": ["A","O"], "tastes": ["casual","street"], "occ": ["off"], "season": "all", "tip": "細身の脚ならIラインを強調できる", "tags": ["tight"] },
+    { "id": "chino", "name": "チノパン", "cat": "bottoms", "g": "u", "good": ["Y","A","O","I","X","H"], "bad": [], "tastes": ["casual","classic"], "occ": ["off","work"], "season": "all", "tip": "ほどよいゆとりの定番。くるぶしが見える丈で軽く" },
+    { "id": "jogger", "name": "ジョガーパンツ", "cat": "bottoms", "g": "u", "good": ["I","Y","H"], "bad": ["A","O"], "tastes": ["street","outdoor","casual"], "occ": ["off"], "season": "all", "tip": "裾が締まって足首まわりがすっきり" },
+    { "id": "aline", "name": "Aラインのミディスカート", "cat": "bottoms", "g": "f", "good": ["A","H","X","O"], "bad": [], "tastes": ["feminine","classic"], "occ": ["work","date","off"], "season": "all", "tip": "腰から裾に広がり、腰まわりを自然にカバー", "tags": ["skirt"] },
+    { "id": "tightskirt", "name": "ひざ丈のタイトスカート", "cat": "bottoms", "g": "f", "good": ["I","X","Y"], "bad": ["A"], "tastes": ["feminine","classic","mode"], "occ": ["work","date"], "season": "all", "tip": "腰の位置が高く見え、メリハリが出る", "tags": ["skirt","tight"] },
+    { "id": "pleats", "name": "プリーツスカート", "cat": "bottoms", "g": "f", "good": ["I","Y","H","X"], "bad": [], "tastes": ["feminine","classic"], "occ": ["date","work","off"], "season": "all", "tip": "縦のひだが揺れて軽やか。下半身に動きを足す", "tags": ["skirt"] },
+
+    { "id": "wrapdress", "name": "ラップワンピース", "cat": "onepiece", "g": "f", "good": ["X","O","H","Y"], "bad": [], "tastes": ["feminine","classic"], "occ": ["date","work"], "season": "all", "tip": "胸元のVと腰の結び目でメリハリをつくる" },
+    { "id": "knitdress", "name": "Iラインのニットワンピース", "cat": "onepiece", "g": "f", "good": ["I","X"], "bad": ["O","A"], "tastes": ["minimal","feminine"], "occ": ["date","off"], "season": "aw", "tip": "縦長シルエットで細さと長さを生かす", "tags": ["tight"] },
+    { "id": "shirtdress", "name": "シャツワンピース", "cat": "onepiece", "g": "f", "good": ["H","A","I","O"], "bad": [], "tastes": ["casual","minimal"], "occ": ["off","work"], "season": "all", "tip": "前を開けてはおればロングアウター代わりにも" },
+
+    { "id": "loafer", "name": "レザーローファー", "cat": "shoes", "g": "u", "good": ["Y","A","O","I","X","H"], "bad": [], "tastes": ["classic","minimal","vintage"], "occ": ["work","off","date"], "season": "all", "tip": "きれいめにもカジュアルにも振れる万能靴" },
+    { "id": "sneaker", "name": "白スニーカー", "cat": "shoes", "g": "u", "good": ["Y","A","O","I","X","H"], "bad": [], "tastes": ["casual","minimal","street"], "occ": ["off"], "season": "all", "tip": "足元を軽く明るく見せる" },
+    { "id": "boots", "name": "ショートブーツ", "cat": "shoes", "g": "u", "good": ["A","I","H","X"], "bad": [], "tastes": ["classic","mode","casual","vintage"], "occ": ["off","date"], "season": "aw", "tip": "足元に重さを置くとワイドパンツやスカートが安定する" },
+    { "id": "pumps", "name": "ポインテッドパンプス", "cat": "shoes", "g": "f", "good": ["Y","A","O","I","X","H"], "bad": [], "tastes": ["feminine","classic","mode"], "occ": ["work","date","formal"], "season": "all", "tip": "つま先のとがりが脚を長く見せる" },
+    { "id": "straighttip", "name": "ストレートチップの革靴", "cat": "shoes", "g": "m", "good": ["Y","A","O","I","X","H"], "bad": [], "tastes": ["classic"], "occ": ["work","formal"], "season": "all", "tip": "きちんとした場の基本の一足" },
+    { "id": "trekking", "name": "トレッキングシューズ", "cat": "shoes", "g": "u", "good": ["I","H","Y","A"], "bad": [], "tastes": ["outdoor","street"], "occ": ["off"], "season": "all", "tip": "ボリュームのある靴で全体の重心を下げる" },
+
+    { "id": "belt", "name": "細めのベルト", "cat": "acc", "g": "u", "good": ["X","A","H"], "bad": ["O"], "tastes": ["classic","feminine","minimal"], "occ": ["work","date","off","formal"], "season": "all", "tip": "ウエスト位置をはっきりさせ、脚を長く見せる" },
+    { "id": "stole", "name": "縦長に垂らすストール", "cat": "acc", "g": "u", "good": ["O","Y","H"], "bad": [], "tastes": ["minimal","classic","feminine"], "occ": ["off","work","date"], "season": "aw", "tip": "首から縦に垂らして細長いラインをつくる" },
+    { "id": "necklace", "name": "ロングネックレス", "cat": "acc", "g": "f", "good": ["O","Y","H"], "bad": [], "tastes": ["feminine","minimal"], "occ": ["date","work","off"], "season": "all", "tip": "胸元に縦のアクセントをつくる" },
+    { "id": "cap", "name": "キャップ", "cat": "acc", "g": "u", "good": ["Y","A","O","I","X","H"], "bad": [], "tastes": ["street","casual","outdoor"], "occ": ["off"], "season": "all", "tip": "視線を上に集めて全体を軽く見せる" },
+    { "id": "tote", "name": "レザートートバッグ", "cat": "acc", "g": "u", "good": ["Y","A","O","I","X","H"], "bad": [], "tastes": ["classic","minimal"], "occ": ["work","formal"], "season": "all", "tip": "きちんと感を足す。体に対して大きすぎないサイズを" },
+    { "id": "shoulder", "name": "小さめのショルダーバッグ", "cat": "acc", "g": "u", "good": ["Y","A","O","I","X","H"], "bad": [], "tastes": ["casual","street","feminine","mode"], "occ": ["off","date"], "season": "all", "tip": "高めの位置で持つと重心が上がる" }
+  ]
+}

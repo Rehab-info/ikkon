@@ -1,0 +1,49 @@
+{
+  "_readme": "季節ごとの流行データ。新しい季節を seasons の先頭に足すと、その期間に自動で切り替わります。period は YYYY-MM(両端を含む)。items の cat は outer/tops/bottoms/onepiece/shoes/acc、g は m=男性 f=女性 u=どちらも、good/bad は似合いやすい・避けたい体型(Y A O I X H)。",
+  "seasons": [
+    {
+      "id": "2026AW",
+      "label": "2026-27 秋冬",
+      "season": "aw",
+      "period": ["2026-09", "2027-02"],
+      "summary": "端正なテーラードを土台にした「クラシック」と「エレガンス」。そこにレースやファー、コーデュロイなど質感の違う要素を混ぜる“ミックス感”と、毎日着られる実用性がポイント。",
+      "keywords": [
+        { "name": "クラシック回帰", "desc": "テーラードジャケットを軸にしたトラッドの再解釈" },
+        { "name": "エレガンス", "desc": "落ち感・光沢・きちんと感のある大人の装い" },
+        { "name": "モダン・ノスタルジア", "desc": "ダッフル、ナポレオン、ボヘミアンなど懐かしさの更新" },
+        { "name": "ミックス", "desc": "テーラード × レース/ファー/レザーなど異素材の掛け合わせ" },
+        { "name": "着やすさ・実用性", "desc": "カーゴ、太畝コーデュロイなど日常で頼れる服" }
+      ],
+      "colors": [
+        { "name": "バーガンディ", "hex": "#6E1E2B" },
+        { "name": "レッド", "hex": "#B3262E" },
+        { "name": "フォレストグリーン", "hex": "#2F4F3A" },
+        { "name": "ブラウン", "hex": "#6B4A32" },
+        { "name": "グレー", "hex": "#8A8A8A" }
+      ],
+      "items": [
+        { "id": "t_tailored", "name": "クラシックなテーラードジャケット", "cat": "outer", "g": "u", "good": ["H","O","A","Y","X"], "bad": [], "tastes": ["classic","minimal","mode"], "occ": ["work","date","formal","off"], "tip": "今季の主役。肩が合うジャストサイズを選ぶと一気に今っぽく" },
+        { "id": "t_napoleon", "name": "ナポレオンジャケット", "cat": "outer", "g": "u", "good": ["I","A","X"], "bad": ["Y","O"], "tastes": ["mode","vintage","classic"], "occ": ["off","date"], "tip": "胸元の装飾で上半身に華やかさが出る" },
+        { "id": "t_duffle", "name": "ダッフルコート", "cat": "outer", "g": "u", "good": ["I","A","X","H"], "bad": ["O"], "tastes": ["classic","vintage","casual"], "occ": ["off","date"], "tip": "懐かしさのある定番が今季らしい。ショート丈ならより軽やか" },
+        { "id": "t_cape", "name": "ケープコート", "cat": "outer", "g": "u", "good": ["A","I","X"], "bad": ["Y"], "tastes": ["mode","classic","feminine"], "occ": ["off","date"], "tip": "肩から落ちる形が腰まわりをふんわり隠す" },
+        { "id": "t_leather", "name": "レザージャケット", "cat": "outer", "g": "u", "good": ["I","A","H","X"], "bad": [], "tastes": ["mode","street","vintage"], "occ": ["off","date"], "tip": "きれいめの服に1枚はおる“ミックス”で今季らしく" },
+        { "id": "t_shaggy", "name": "シャギーニット", "cat": "tops", "g": "u", "good": ["I","A"], "bad": ["Y","O"], "tastes": ["casual","vintage","feminine"], "occ": ["off","date"], "tip": "毛足の立体感で上半身に厚みとやわらかさを足す", "tags": ["volume"] },
+        { "id": "t_cleric", "name": "クレリックシャツ", "cat": "tops", "g": "u", "good": ["Y","A","O","I","X","H"], "bad": [], "tastes": ["classic","minimal"], "occ": ["work","off","date"], "tip": "白襟が顔まわりを明るく見せる、今季のトラッド" },
+        { "id": "t_peplum", "name": "ペプラムトップス", "cat": "tops", "g": "f", "good": ["I","H","A"], "bad": ["O"], "tastes": ["feminine","classic"], "occ": ["date","work"], "tip": "ウエストに切り替えをつくってメリハリを演出" },
+        { "id": "t_lace", "name": "レースブラウス", "cat": "tops", "g": "f", "good": ["I","H","X","A"], "bad": [], "tastes": ["feminine","vintage"], "occ": ["date","work"], "tip": "ジャケットやニットの下から見せるとミックス感が出る" },
+        { "id": "t_doublewaist", "name": "ダブルウエストパンツ", "cat": "bottoms", "g": "u", "good": ["I","H","Y"], "bad": ["O"], "tastes": ["mode","street"], "occ": ["off"], "tip": "ウエストの重ねデザインで腰まわりにアクセント" },
+        { "id": "t_cord", "name": "太畝コーデュロイパンツ", "cat": "bottoms", "g": "u", "good": ["I","Y","H"], "bad": ["A"], "tastes": ["vintage","casual"], "occ": ["off"], "tip": "畝の立体感が脚に厚みを足す。上半身がしっかりした人のバランス取りにも", "tags": ["volume"] },
+        { "id": "t_cargo", "name": "カーゴパンツ", "cat": "bottoms", "g": "u", "good": ["I","Y","H"], "bad": ["A"], "tastes": ["street","outdoor","casual"], "occ": ["off"], "tip": "ポケットのボリュームで下半身に重心をつくる" },
+        { "id": "t_boho", "name": "ボヘミアン調ロングスカート", "cat": "bottoms", "g": "f", "good": ["I","Y","X","H"], "bad": [], "tastes": ["feminine","vintage"], "occ": ["off","date"], "tip": "揺れる裾で下半身にボリュームを足す", "tags": ["skirt"] },
+        { "id": "t_herringbone", "name": "ヘリンボーンのセットアップ", "cat": "outer", "g": "u", "good": ["H","Y","O","I"], "bad": [], "tastes": ["classic","minimal"], "occ": ["work","formal","date"], "tip": "上下同じ柄で縦長に。今季の注目素材" },
+        { "id": "t_fur", "name": "フェイクファーのマフラー/襟", "cat": "acc", "g": "u", "good": ["I","A","X","H"], "bad": ["Y"], "tastes": ["feminine","mode","vintage"], "occ": ["off","date"], "tip": "顔まわりに視線を集め、きれいめ服に“ミックス”を足す" },
+        { "id": "t_loosesocks", "name": "ルーズソックス", "cat": "acc", "g": "u", "good": ["I","Y","H"], "bad": ["A"], "tastes": ["street","casual"], "occ": ["off"], "tip": "ローファーと合わせて足元に遊びを", "ageMax": 35 }
+      ],
+      "sources": [
+        { "title": "WWDJAPAN 2026-27年秋冬 リアルトレンド特集", "url": "https://www.wwdjapan.com/articles/2379810" },
+        { "title": "FASHIONSNAP 26AW ウィメンズトレンド", "url": "https://www.fashionsnap.com/article/26aw-womens-trend/" },
+        { "title": "FASHIONSNAP 26AW メンズトレンド", "url": "https://www.fashionsnap.com/article/menstrend-26aw-detail/" }
+      ]
+    }
+  ]
+}

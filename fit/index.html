@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FIT NOTE — 体型と流行から選ぶコーデ</title>
+<meta name="description" content="インボディの測定データと年齢・性別・好みから、今季の流行に合わせて体型にマッチするコーディネートを提案します。データはブラウザの中だけで処理され、送信されません。">
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="./">FIT NOTE</a>
+  <span class="season-badge" id="seasonBadge"></span>
+</header>
+
+<main id="app">
+  <!-- 進み具合 -->
+  <ol class="steps" id="steps" aria-label="入力の進み具合">
+    <li><button type="button" data-goto="1"><span>1</span>からだ</button></li>
+    <li><button type="button" data-goto="2"><span>2</span>あなた</button></li>
+    <li><button type="button" data-goto="3"><span>3</span>好み</button></li>
+    <li><button type="button" data-goto="4"><span>✓</span>提案</button></li>
+  </ol>
+
+  <!-- STEP 1 からだのデータ -->
+  <section class="panel" data-step="1">
+    <h1>インボディのデータを読み込む</h1>
+    <p class="lead">測定結果の CSV を置くだけ。手で入力することもできます。</p>
+
+    <label class="dropzone" id="dropzone">
+      <input type="file" id="fileInput" accept=".csv,.txt,.tsv,.json,text/csv,application/json" hidden>
+      <span class="dz-icon" aria-hidden="true">⇪</span>
+      <span class="dz-main">ここに CSV をドロップ</span>
+      <span class="dz-sub">またはタップしてファイルを選ぶ</span>
+    </label>
+    <div class="quick">
+      <button type="button" class="btn ghost" id="sampleBtn">サンプルで試す</button>
+      <button type="button" class="btn ghost" id="manualBtn">手で入力する</button>
+    </div>
+    <p class="note" id="loadMsg" role="status"></p>
+
+    <div class="row-select" id="rowSelectWrap" hidden>
+      <label for="rowSelect">使う測定日</label>
+      <select id="rowSelect"></select>
+    </div>
+
+    <form id="bodyForm" class="body-form" hidden autocomplete="off">
+      <div class="grid">
+        <label class="field req"><span>身長</span><input type="number" step="0.1" name="height" inputmode="decimal" required><em>cm</em></label>
+        <label class="field req"><span>体重</span><input type="number" step="0.1" name="weight" inputmode="decimal" required><em>kg</em></label>
+        <label class="field"><span>体脂肪率</span><input type="number" step="0.1" name="pbf" inputmode="decimal"><em>%</em></label>
+        <label class="field"><span>骨格筋量</span><input type="number" step="0.1" name="smm" inputmode="decimal"><em>kg</em></label>
+        <label class="field"><span>ウエストヒップ比</span><input type="number" step="0.01" name="whr" inputmode="decimal"><em></em></label>
+        <label class="field"><span>内臓脂肪レベル</span><input type="number" step="1" name="vfl" inputmode="numeric"><em></em></label>
+      </div>
+      <details class="more" id="segDetails">
+        <summary>部位別のデータ(あると精度が上がります)</summary>
+        <p class="hint">筋肉量(除脂肪量)</p>
+        <div class="grid five">
+          <label class="field"><span>右腕</span><input type="number" step="0.01" name="lean_ra"><em>kg</em></label>
+          <label class="field"><span>左腕</span><input type="number" step="0.01" name="lean_la"><em>kg</em></label>
+          <label class="field"><span>体幹</span><input type="number" step="0.01" name="lean_tr"><em>kg</em></label>
+          <label class="field"><span>右脚</span><input type="number" step="0.01" name="lean_rl"><em>kg</em></label>
+          <label class="field"><span>左脚</span><input type="number" step="0.01" name="lean_ll"><em>kg</em></label>
+        </div>
+        <p class="hint">体脂肪量</p>
+        <div class="grid five">
+          <label class="field"><span>右腕</span><input type="number" step="0.01" name="fat_ra"><em>kg</em></label>
+          <label class="field"><span>左腕</span><input type="number" step="0.01" name="fat_la"><em>kg</em></label>
+          <label class="field"><span>体幹</span><input type="number" step="0.01" name="fat_tr"><em>kg</em></label>
+          <label class="field"><span>右脚</span><input type="number" step="0.01" name="fat_rl"><em>kg</em></label>
+          <label class="field"><span>左脚</span><input type="number" step="0.01" name="fat_ll"><em>kg</em></label>
+        </div>
+      </details>
+    </form>
+
+    <p class="privacy">🔒 データはこの端末のブラウザの中だけで計算し、どこにも送信・保存しません。</p>
+    <div class="nav"><span></span><button type="button" class="btn primary" data-next>次へ</button></div>
+  </section>
+
+  <!-- STEP 2 あなたについて -->
+  <section class="panel" data-step="2" hidden>
+    <h1>あなたについて</h1>
+    <div class="block">
+      <p class="label">年齢</p>
+      <div class="stepper">
+        <button type="button" class="btn round" data-age="-1" aria-label="1歳減らす">−</button>
+        <input type="number" id="age" min="10" max="99" value="30" inputmode="numeric" aria-label="年齢">
+        <span>歳</span>
+        <button type="button" class="btn round" data-age="1" aria-label="1歳増やす">＋</button>
+      </div>
+    </div>
+    <div class="block">
+      <p class="label">提案してほしい服</p>
+      <div class="chips single" id="genderChips">
+        <button type="button" class="chip" data-v="f">レディース</button>
+        <button type="button" class="chip" data-v="m">メンズ</button>
+        <button type="button" class="chip" data-v="x">こだわらない</button>
+      </div>
+    </div>
+    <div class="nav"><button type="button" class="btn ghost" data-prev>戻る</button><button type="button" class="btn primary" data-next>次へ</button></div>
+  </section>
+
+  <!-- STEP 3 好み -->
+  <section class="panel" data-step="3" hidden>
+    <h1>好みを教えてください</h1>
+    <div class="block">
+      <p class="label">好きなテイスト <small>3つまで</small></p>
+      <div class="chips" id="tasteChips" data-max="3">
+        <button type="button" class="chip" data-v="minimal">ミニマル</button>
+        <button type="button" class="chip" data-v="classic">きれいめ・クラシック</button>
+        <button type="button" class="chip" data-v="casual">カジュアル</button>
+        <button type="button" class="chip" data-v="street">ストリート</button>
+        <button type="button" class="chip" data-v="mode">モード</button>
+        <button type="button" class="chip" data-v="feminine">フェミニン</button>
+        <button type="button" class="chip" data-v="outdoor">アウトドア</button>
+        <button type="button" class="chip" data-v="vintage">ヴィンテージ・古着</button>
+      </div>
+    </div>
+    <div class="block">
+      <p class="label">よく着る色</p>
+      <div class="chips single swatches" id="colorChips">
+        <button type="button" class="chip" data-v="mono"><i style="--a:#1f1f1f;--b:#f4f4f2"></i>モノトーン</button>
+        <button type="button" class="chip" data-v="earth"><i style="--a:#6b4a32;--b:#d8c3a5"></i>アース</button>
+        <button type="button" class="chip" data-v="navy"><i style="--a:#1f2d4d;--b:#a9c3dc"></i>ネイビー・ブルー</button>
+        <button type="button" class="chip" data-v="soft"><i style="--a:#c8bfe0;--b:#efcfd2"></i>やわらかい色</button>
+        <button type="button" class="chip" data-v="vivid"><i style="--a:#c0392b;--b:#1f4fa8"></i>はっきりした色</button>
+        <button type="button" class="chip" data-v="any"><i style="--a:#6E1E2B;--b:#2F4F3A"></i>おまかせ</button>
+      </div>
+    </div>
+    <div class="block">
+      <p class="label">着ていく場面 <small>いくつでも</small></p>
+      <div class="chips" id="occChips">
+        <button type="button" class="chip" data-v="work">仕事</button>
+        <button type="button" class="chip" data-v="off">休日</button>
+        <button type="button" class="chip" data-v="date">デート・食事</button>
+        <button type="button" class="chip" data-v="formal">式・きちんとした場</button>
+      </div>
+    </div>
+    <div class="block">
+      <p class="label">避けたいもの</p>
+      <div class="chips" id="avoidChips">
+        <button type="button" class="chip" data-v="skirt">スカート</button>
+        <button type="button" class="chip" data-v="tight">体に沿う服</button>
+        <button type="button" class="chip" data-v="short">短い丈</button>
+        <button type="button" class="chip" data-v="oversize">オーバーサイズ</button>
+        <button type="button" class="chip" data-v="volume">もこもこ素材</button>
+      </div>
+    </div>
+    <div class="block">
+      <p class="label">流行の取り入れ方</p>
+      <input type="range" id="trendLevel" min="1" max="5" value="3" step="1" aria-label="流行の取り入れ度">
+      <div class="range-labels"><span>定番中心</span><span>ほどよく</span><span>流行どまんなか</span></div>
+    </div>
+    <div class="nav"><button type="button" class="btn ghost" data-prev>戻る</button><button type="button" class="btn primary" id="goResult">提案を見る</button></div>
+  </section>
+
+  <!-- 結果 -->
+  <section class="panel result" data-step="4" hidden>
+    <div id="result"></div>
+    <div class="nav result-nav">
+      <button type="button" class="btn ghost" data-goto="3">好みを変える</button>
+      <button type="button" class="btn ghost" id="printBtn">印刷・PDF で保存</button>
+      <button type="button" class="btn ghost" id="restartBtn">最初から</button>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <p>体型の判定はインボディの数値から推定した目安です。医療的な診断ではありません。</p>
+  <p id="sourceList"></p>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>
