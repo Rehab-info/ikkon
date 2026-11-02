@@ -364,7 +364,105 @@ function moodIcon(v) {
 const KEY = "nenrin-diary.v1";
 let S;
 function load() { try { const raw = localStorage.getItem(KEY); return raw ? JSON.parse(raw) : null; } catch (e) { return null; } }
-function persist() { try { localStorage.setItem(KEY, JSON.stringify(S)); return true; } catch (e) { return false; } }
+function persist() { let ok = true; try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { ok = false; } Sync.schedule(); return ok || Sync.on; }
+const ent = d => { const e = S.entries[d]; return e && !e.deleted ? e : null; };
+
+/* ============ 同期(claude.ai の自分専用の保存場所) ============
+   日記は data/users/<自分のid>/ に月ごとの文書として置く。ほかの人(共有した相手を含む)からは読めない。
+   ここが使えない場所(GitHub Pages など)では、この端末のブラウザにだけ保存する。 */
+const Sync = {
+  on: false, ready: false, db: null, base: "", last: {}, lastMeta: "", timer: 0, busy: false, again: false, note: "この端末のブラウザに保存",
+  monthsOf() {
+    const M = {};
+    for (const e of Object.values(S.entries)) { if (e.sample) continue; (M[e.date.slice(0, 7)] = M[e.date.slice(0, 7)] || {})[e.date] = e; }
+    return M;
+  },
+  metaOf() { return JSON.stringify({ nodes: S.map.nodes.map(({ _w, _h, ...n }) => n), seq: S.map.seq, theme: S.prefs.theme, lock: S.prefs.lock || null, samplesOff: !!S.prefs.samplesOff }); },
+  schedule() { if (!this.ready) return; clearTimeout(this.timer); this.timer = setTimeout(() => this.flush(), 1200); },
+  async flush() {
+    if (!this.ready) return;
+    if (this.busy) { this.again = true; return; }
+    this.busy = true;
+    try {
+      const M = this.monthsOf();
+      const keys = new Set([...Object.keys(M), ...Object.keys(this.last)]);
+      for (const ym of keys) {
+        const body = M[ym] ? JSON.stringify(M[ym]) : null;
+        if (body === (this.last[ym] ?? null)) continue;
+        const ref = this.db.doc(`${this.base}/m-${ym}`);
+        if (body) await ref.set({ entries: M[ym] }); else await ref.delete();
+        if (body) this.last[ym] = body; else delete this.last[ym];
+      }
+      const meta = this.metaOf();
+      if (meta !== this.lastMeta) { await this.db.doc(`${this.base}/meta`).set({ ...JSON.parse(meta), updated: Date.now() }); this.lastMeta = meta; }
+      this.setNote("端末をまたいで保存済み");
+    } catch (e) {
+      this.setNote(e && e.code === "quota_exceeded" ? "保存場所がいっぱいです。書き出してから古い日記を整理してください" : "同期できませんでした。この端末には保存しています");
+    } finally { this.busy = false; if (this.again) { this.again = false; this.schedule(); } }
+  },
+  setNote(t) { this.note = t; const el = $("#syncnote"); if (el) el.textContent = t; },
+  // 届いた文書を手元とまぜる。同じ日付は新しく書いたほうを残す
+  apply(snap) {
+    let changed = false;
+    const localM = this.monthsOf();
+    let metaDoc = null; const seen = new Set();
+    for (const d of snap.docs) {
+      if (d.id === "meta") { metaDoc = d.data(); continue; }
+      if (!d.id.startsWith("m-")) continue;
+      const ym = d.id.slice(2); seen.add(ym);
+      const remote = (d.data() || {}).entries || {};
+      const pending = localM[ym] && JSON.stringify(localM[ym]) !== (this.last[ym] ?? null);
+      for (const [date, r] of Object.entries(remote)) {
+        const l = S.entries[date];
+        if (!l || l.sample || (r.updated || 0) > (l.updated || 0)) { if (JSON.stringify(l) !== JSON.stringify(r)) { S.entries[date] = { ...r }; changed = true; } }
+      }
+      if (!pending) this.last[ym] = JSON.stringify(remote);
+    }
+    if (this.ready) for (const ym of Object.keys(this.last)) if (!seen.has(ym)) delete this.last[ym];
+    if (metaDoc) {
+      const pendingMeta = this.lastMeta && this.metaOf() !== this.lastMeta;
+      if (!pendingMeta || !this.ready) {
+        const { updated, nodes, seq, theme, lock, samplesOff } = metaDoc;
+        const before = this.metaOf();
+        if (nodes && nodes.length) S.map = { nodes: nodes.map(n => ({ ...n })), seq: seq || nodes.length, view: S.map.view || { x: 0, y: 0, k: 1 } };
+        if (theme) S.prefs.theme = theme;
+        S.prefs.lock = lock || null; S.prefs.samplesOff = !!samplesOff;
+        if (this.metaOf() !== before) changed = true;
+        this.lastMeta = JSON.stringify({ nodes: (nodes || []).map(({ _w, _h, ...n }) => n), seq, theme, lock: lock || null, samplesOff: !!samplesOff });
+      }
+    }
+    // 本物の日記があるなら、サンプルは見せない
+    const hasReal = Object.values(S.entries).some(e => !e.sample && !e.deleted);
+    if (hasReal || S.prefs.samplesOff) for (const [k, e] of Object.entries(S.entries)) if (e.sample) { delete S.entries[k]; changed = true; }
+    return changed;
+  },
+  async start() {
+    if (!window.claude || !window.claude.use) return;
+    try {
+      const [db, user] = await Promise.all([claude.use("db"), claude.use("user")]);
+      if (!db || !user) return;
+      const uid = await user.id(); if (!uid) return;
+      this.db = db; this.base = `data/users/${uid}`; this.on = true;
+      this.setNote("同期先につないでいます…");
+      const slow = setTimeout(() => { if (!this.ready) this.setNote("同期先につながりません。この端末には保存しています"); }, 10000);
+      db.collection(this.base).onSnapshot(snap => {
+        if (snap.metadata.fromCache && !this.ready) { if (this.apply(snap)) refresh(); return; }
+        const first = !this.ready;
+        const changed = this.apply(snap);
+        if (first) { clearTimeout(slow); this.ready = true; try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} this.flush(); }
+        if (changed) { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} applyTheme(); refresh(); }
+      }, err => { clearTimeout(slow); this.ready = false; this.setNote("同期が止まりました。この端末には保存しています"); });
+    } catch (e) { /* 使えない場所ではこの端末だけに保存 */ }
+  }
+};
+// 書いている最中は画面を描きなおさない
+let refreshLater = false;
+function refresh() {
+  const a = document.activeElement;
+  if (a && /^(INPUT|TEXTAREA)$/.test(a.tagName) || $(".lockscreen")) { refreshLater = true; return; }
+  refreshLater = false; const y = scrollY; renderCurrent(); scrollTo(0, y);
+}
+document.addEventListener("focusout", () => setTimeout(() => { if (refreshLater) refresh(); }, 50));
 function toast(msg) { const t = $("#toast"); t.textContent = msg; t.classList.add("on"); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove("on"), 1800); }
 
 /* ============ サンプル ============ */
@@ -423,11 +521,11 @@ function seedMap() {
 }
 
 /* ============ 集計 ============ */
-const list = () => Object.values(S.entries).sort((a, b) => a.date < b.date ? -1 : 1);
+const list = () => Object.values(S.entries).filter(e => !e.deleted).sort((a, b) => a.date < b.date ? -1 : 1);
 const chars = e => ((e.title || "") + (e.body || "")).replace(/\s/g, "").length;
 const hasSample = () => list().some(e => e.sample);
 function streaks() {
-  const set = new Set(Object.keys(S.entries));
+  const set = new Set(list().map(e => e.date));
   let cur = 0; let d = new Date();
   if (!set.has(iso(d))) d = addDays(d, -1);
   while (set.has(iso(d))) { cur++; d = addDays(d, -1); }
@@ -542,7 +640,8 @@ function hideTip() { $("#tip").classList.remove("on"); }
 
 /* ============ 画面の切り替え ============ */
 const VIEWS = { write: viewWrite, log: viewLog, map: viewMap, growth: viewGrowth, prefs: viewPrefs };
-let curDate = today();
+let curDate = today(), curView = "write";
+function renderCurrent() { const el = $("#view"); el.innerHTML = ""; VIEWS[curView](el); }
 function route() {
   let h = (location.hash || "#write").slice(1);
   let v = h;
@@ -550,17 +649,19 @@ function route() {
   if (m) { v = "write"; curDate = m[1]; } else if (h === "write") curDate = today();
   if (!VIEWS[v]) v = "write";
   $$(".nav a").forEach(a => a.dataset.v === v ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current"));
-  const go = () => { hideTip(); const el = $("#view"); el.innerHTML = ""; VIEWS[v](el); window.scrollTo(0, 0); };
+  curView = v;
+  const go = () => { hideTip(); renderCurrent(); window.scrollTo(0, 0); };
   document.startViewTransition && !reduced ? document.startViewTransition(go) : go();
 }
 function sampleBanner() {
   if (!hasSample()) return "";
-  return `<div class="banner"><span>いま並んでいるのは、使い方を見るためのサンプルの日記です。あなたの日記はこのブラウザの中にだけ保存されます。</span><button class="btn sm" data-act="clear-sample">サンプルを消して始める</button></div>`;
+  return `<div class="banner"><span>いま並んでいるのは、使い方を見るためのサンプルの日記です。あなたの日記は、あなただけが読める場所に保存されます。</span><button class="btn sm" data-act="clear-sample">サンプルを消して始める</button></div>`;
 }
 document.addEventListener("click", ev => {
   const b = ev.target.closest("[data-act='clear-sample']"); if (!b) return;
   for (const [k, e] of Object.entries(S.entries)) if (e.sample) delete S.entries[k];
   S.map = { nodes: [{ id: "n0", text: "わたし", parent: null, x: 0, y: 0 }], seq: 1, view: { x: 0, y: 0, k: 1 } };
+  S.prefs.samplesOff = true;
   persist(); toast("サンプルを消しました。今日から書きはじめましょう"); route();
 });
 
@@ -568,7 +669,7 @@ document.addEventListener("click", ev => {
 const PROMPTS = ["今日うれしかったこと", "小さな前進", "心が動いた瞬間", "ありがとうと言いたい人", "明日たのしみなこと"];
 function viewWrite(root) {
   const date = curDate, d = parse(date);
-  const e = S.entries[date] || { date, title: "", body: "", mood: 0, tags: [], wins: [], gratitude: "" };
+  const e = ent(date) || { date, title: "", body: "", mood: 0, tags: [], wins: [], gratitude: "" };
   const isToday = date === today();
   const hr = new Date().getHours();
   const greet = isToday ? (hr < 5 ? "夜ふかしの一行も、ちゃんと年輪になります。" : hr < 11 ? "おはようございます。今日も、いい一日になりますように。" : hr < 17 ? "ここまでの今日に、いいことはありましたか。" : "今日もおつかれさま。よかったことから書いてみましょう。") : "過ぎた日を書き足しています。";
@@ -615,10 +716,10 @@ function viewWrite(root) {
   grow();
   let t;
   const commit = () => {
-    const cur = S.entries[date] || { date, tags: [], wins: [] };
+    const cur = ent(date) || { date, tags: [], wins: [] };
     const next = { ...cur, date, title: $("#title").value, body: ta.value, gratitude: $("#grat").value, mood: e.mood, tags: e.tags, wins: e.wins, sample: false, updated: Date.now() };
     const empty = !next.title.trim() && !next.body.trim() && !next.gratitude.trim() && !next.mood && !next.wins.length && !next.tags.length;
-    if (empty) delete S.entries[date]; else S.entries[date] = next;
+    if (empty) { if (S.entries[date]) S.entries[date] = { date, deleted: true, updated: Date.now() }; } else S.entries[date] = next;
     const ok = persist();
     $("#cc").textContent = fmt(chars(next));
     const sv = $("#saved"); sv.querySelector("span").textContent = ok ? "保存しました" : "保存できません(ブラウザの設定を確認)";
@@ -648,7 +749,7 @@ function viewWrite(root) {
   $("#pick").addEventListener("change", ev => { const v = ev.target.value; if (v) location.hash = v === today() ? "write" : "day-" + v; });
   // あの日のわたし
   const ago = [[7, "1週間前"], [30, "1か月前"], [90, "3か月前"], [365, "1年前"]];
-  const found = ago.map(([n, l]) => { for (let k = 0; k < 4; k++) { const x = S.entries[iso(addDays(d, -n - k))]; if (x) return { l, x }; } return null; }).filter(Boolean);
+  const found = ago.map(([n, l]) => { for (let k = 0; k < 4; k++) { const x = ent(iso(addDays(d, -n - k))); if (x) return { l, x }; } return null; }).filter(Boolean);
   $("#past").innerHTML = found.length ? found.map(({ l, x }) => `<a href="#day-${x.date}"><span class="label">${l} · ${x.date.replace(/-/g, ".")}</span><b>${esc(x.title || "無題")}</b><p>${esc(x.body)}</p></a>`).join("") : `<p class="note">書きつづけると、ここに過去の自分が現れます。</p>`;
 }
 
@@ -907,7 +1008,7 @@ function heatmap(svg) {
   for (let i = 0; i < cols * 7; i++) {
     const d = addDays(start, i); if (d > end) break;
     const c = Math.floor(i / 7), r = i % 7;
-    const e = S.entries[iso(d)]; const n = e ? chars(e) : 0;
+    const e = ent(iso(d)); const n = e ? chars(e) : 0;
     if (r === 0 && d.getMonth() !== lastM) { lastM = d.getMonth(); out += `<text x="${left + c * (cell + gap)}" y="12">${d.getMonth() + 1}月</text>`; }
     out += `<rect x="${left + c * (cell + gap)}" y="${top + r * (cell + gap)}" width="${cell}" height="${cell}" rx="3" fill="var(--h${lvl(n)})" data-d="${iso(d)}" data-n="${n}"/>`;
   }
@@ -924,7 +1025,7 @@ function moodChart(svg) {
   const pts = [];
   for (let i = days - 1; i >= 0; i--) {
     const d = addDays(end, -i); let s = 0, n = 0;
-    for (let k = 0; k < 7; k++) { const e = S.entries[iso(addDays(d, -k))]; if (e && e.mood) { s += e.mood; n++; } }
+    for (let k = 0; k < 7; k++) { const e = ent(iso(addDays(d, -k))); if (e && e.mood) { s += e.mood; n++; } }
     pts.push({ d, v: n ? s / n : null });
   }
   const x = i => l + i / (days - 1) * (W - l - r), y = v => t + (5 - v) / 4 * (H - t - b);
@@ -988,32 +1089,39 @@ async function sha(s) { const b = await crypto.subtle.digest("SHA-256", new Text
 function viewPrefs(root) {
   const th = S.prefs.theme || "system";
   root.innerHTML = `<section class="view">
-    <header class="v-head"><div><span class="label">Preferences</span><h1>設定</h1><p>日記はこの端末のブラウザの中にだけ保存され、どこにも送られません。</p></div></header>
+    <header class="v-head"><div><span class="label">Preferences</span><h1>設定</h1><p>日記は、あなただけが読める場所に保存されます。いまの保存先:<b id="syncnote" style="font-weight:500">${esc(Sync.note)}</b></p></div></header>
     <div class="prefs">
       <div class="pref"><h3>見た目</h3><p>ふだんは朝の光のような明るい色。夜に書くときだけ暗くもできます。</p><div class="seg" role="group" aria-label="テーマ">${[["light", "明るい"], ["system", "端末に合わせる"], ["dark", "夜"]].map(([v, l]) => `<button data-th="${v}" aria-pressed="${th === v}">${l}</button>`).join("")}</div></div>
-      <div class="pref"><h3>合言葉で鍵をかける</h3><p>開くときに合言葉を聞きます。家族と同じ端末を使うときの目隠しです(暗号化ではありません)。</p>
+      <div class="pref"><h3>合言葉で鍵をかける</h3><p>開くときに合言葉を聞きます。同じ端末をほかの人が使うときの目隠しです(暗号化ではありません)。</p>
         <form class="row" id="lockf"><input type="password" id="pw" placeholder="${S.prefs.lock ? "新しい合言葉" : "合言葉"}" autocomplete="new-password" aria-label="合言葉"><button class="btn sm" type="submit">${S.prefs.lock ? "変える" : "鍵をかける"}</button>${S.prefs.lock ? `<button class="btn sm" type="button" id="unlockb">鍵を外す</button>` : ""}</form></div>
-      <div class="pref"><h3>書き出す</h3><p>ブラウザのデータを消すと日記も消えます。ときどき書き出して、手元に保管してください。</p>
+      <div class="pref"><h3>書き出す</h3><p>念のため、ときどき書き出して手元に保管しておくと安心です。</p>
         <div class="row"><button class="btn sm solid" id="exp">ファイルに書き出す</button><button class="btn sm" id="cpy">テキストをコピー</button></div><p class="note" id="expn"></p></div>
       <div class="pref"><h3>読み込む</h3><p>書き出したファイルから戻します。同じ日付の日記は、ファイルの内容で上書きされます。</p>
         <div class="row"><label class="btn sm"><input type="file" id="imp" accept="application/json,.json" hidden>ファイルを選ぶ</label></div>
         <textarea id="impt" placeholder="または、書き出したテキストをここに貼りつけて" aria-label="読み込むテキスト"></textarea><button class="btn sm" id="impb" style="align-self:flex-start">貼りつけた内容を読み込む</button></div>
-      <div class="pref"><h3>すべて消す</h3><p>日記とマインドマップをこの端末から消します。元に戻せません。</p><div id="wipe"><button class="btn sm danger" id="wipe1">すべて消す…</button></div></div>
+      <div class="pref"><h3>すべて消す</h3><p>日記とマインドマップを消します(同期している端末からも消えます)。元に戻せません。</p><div id="wipe"><button class="btn sm danger" id="wipe1">すべて消す…</button></div></div>
     </div></section>`;
   $$("[data-th]").forEach(b => b.onclick = () => { S.prefs.theme = b.dataset.th; persist(); applyTheme(); $$("[data-th]").forEach(x => x.setAttribute("aria-pressed", x === b)); });
   $("#lockf").onsubmit = async ev => { ev.preventDefault(); const v = $("#pw").value; if (v.length < 4) { toast("合言葉は4文字以上にしてください"); return; } try { S.prefs.lock = await sha(v); persist(); toast("鍵をかけました。次に開くときから聞かれます"); route(); } catch (e) { toast("このブラウザでは鍵をかけられません"); } };
   $("#unlockb") && ($("#unlockb").onclick = () => { S.prefs.lock = null; persist(); toast("鍵を外しました"); route(); });
-  const dump = () => JSON.stringify({ app: "nenrin-diary", exported: new Date().toISOString(), entries: S.entries, map: { nodes: S.map.nodes.map(({ _w, _h, ...n }) => n), seq: S.map.seq } }, null, 1);
-  $("#exp").onclick = () => {
-    const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([dump()], { type: "application/json" }));
-    a.download = `nenrin-${today()}.json`; document.body.appendChild(a); a.click(); a.remove();
+  const dump = () => JSON.stringify({ app: "nenrin-diary", exported: new Date().toISOString(), entries: Object.fromEntries(list().filter(e => !e.sample).map(e => [e.date, e])), map: { nodes: S.map.nodes.map(({ _w, _h, ...n }) => n), seq: S.map.seq } }, null, 1);
+  $("#exp").onclick = async () => {
+    const name = `nenrin-${today()}.json`, data = dump();
+    const dl = window.claude && window.claude.use ? await claude.use("downloads") : null;
+    if (dl) {
+      try { await dl.save({ filename: name, data }); toast("書き出しました"); }
+      catch (e) { if (e && e.code !== "declined") $("#expn").textContent = "ここでは書き出せませんでした。「テキストをコピー」を使って、メモなどに保存してください。"; }
+      return;
+    }
+    const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([data], { type: "application/json" }));
+    a.download = name; document.body.appendChild(a); a.click(); a.remove();
     $("#expn").textContent = "ダウンロードが始まらないときは「テキストをコピー」を使って、メモ帳などに保存してください。";
   };
   $("#cpy").onclick = () => { const s = dump(); navigator.clipboard.writeText(s).then(() => toast("コピーしました"), () => { $("#impt").value = s; $("#impt").select(); toast("下の欄に出しました。選んでコピーしてください"); }); };
   const ingest = txt => {
     try {
       const d = JSON.parse(txt); if (!d.entries) throw 0;
-      Object.assign(S.entries, d.entries); if (d.map && d.map.nodes && d.map.nodes.length) S.map = { ...d.map, view: { x: 0, y: 0, k: 1 } };
+      for (const [k, v] of Object.entries(d.entries)) S.entries[k] = { ...v, sample: false, updated: Math.max(v.updated || 0, Date.now()) }; S.prefs.samplesOff = true; if (d.map && d.map.nodes && d.map.nodes.length) S.map = { ...d.map, view: { x: 0, y: 0, k: 1 } };
       persist(); toast(`${Object.keys(d.entries).length} 日分を読み込みました`);
     } catch (e) { toast("読み込めませんでした。年輪日記から書き出したファイルか確かめてください"); }
   };
@@ -1022,7 +1130,7 @@ function viewPrefs(root) {
   $("#wipe1").onclick = () => {
     $("#wipe").innerHTML = `<div class="confirm"><span>本当に消しますか?</span><button class="btn sm danger" id="wipe2">消す</button><button class="btn sm" id="wipe0">やめる</button></div>`;
     $("#wipe0").onclick = () => route();
-    $("#wipe2").onclick = () => { S = { v: 1, entries: {}, map: { nodes: [{ id: "n0", text: "わたし", parent: null, x: 0, y: 0 }], seq: 1, view: { x: 0, y: 0, k: 1 } }, prefs: { theme: S.prefs.theme, lock: null } }; persist(); toast("すべて消しました"); location.hash = "write"; route(); };
+    $("#wipe2").onclick = () => { const now = Date.now(); const gone = Object.fromEntries(Object.keys(S.entries).map(k => [k, { date: k, deleted: true, updated: now }])); S = { v: 1, entries: gone, map: { nodes: [{ id: "n0", text: "わたし", parent: null, x: 0, y: 0 }], seq: 1, view: { x: 0, y: 0, k: 1 } }, prefs: { theme: S.prefs.theme, lock: null, bright: true, samplesOff: true } }; persist(); toast("すべて消しました"); location.hash = "write"; route(); };
   };
 }
 function applyTheme() { const t = S.prefs.theme; if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; else delete document.documentElement.dataset.theme; }
@@ -1034,11 +1142,12 @@ function boot() {
   if (!S.prefs.bright) { S.prefs.theme = "light"; S.prefs.bright = true; }
   S.map = S.map && S.map.nodes && S.map.nodes.length ? S.map : seedMap();
   persist(); applyTheme();
+  Sync.start();
   if (S.prefs.lock && crypto.subtle) {
     const lk = document.createElement("div"); lk.className = "lockscreen";
     lk.innerHTML = `<form><svg width="56" height="56" viewBox="0 0 32 32" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="16" cy="16" r="14"/><circle cx="16.4" cy="15.6" r="9"/><circle cx="16.6" cy="15.3" r="4"/></g></svg><h2>年輪日記</h2><input type="password" id="lpw" placeholder="合言葉" aria-label="合言葉" autocomplete="current-password"><span class="err" id="lerr"></span><button class="btn solid" type="submit">ひらく</button></form>`;
     document.body.appendChild(lk); $("#lpw").focus();
-    $("form", lk).onsubmit = async ev => { ev.preventDefault(); if (await sha($("#lpw").value) === S.prefs.lock) { lk.remove(); route(); } else { $("#lerr").textContent = "合言葉がちがいます"; $("#lpw").select(); } };
+    $("form", lk).onsubmit = async ev => { ev.preventDefault(); if (await sha($("#lpw").value) === S.prefs.lock) { lk.remove(); route(); if (refreshLater) refresh(); } else { $("#lerr").textContent = "合言葉がちがいます"; $("#lpw").select(); } };
     return;
   }
   route();
