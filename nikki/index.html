@@ -7,29 +7,29 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="robots" content="noindex, nofollow">
 <meta name="description" content="自分だけの日記。書いた日が年輪になり、考えがマインドマップに育つ。">
-<meta name="theme-color" content="#E6EAE2" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0D1310" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#CFD0D0" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#131212" media="(prefers-color-scheme: dark)">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,400;1,500&family=DM+Mono:wght@400;500&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Zen+Old+Mincho:wght@500;700;900&display=swap">
 <style>
-/* Layout: 左に縦書きの柱(スマホでは下のタブ)、右に一枚の紙。年輪(木口)をモチーフに、苔と木地の色で組む */
+/* Layout: 左に縦書きの柱(スマホでは下のタブ)、右に一枚の紙。年輪(木口)をモチーフに、素材見本の色(コーラル・真鍮・トラバーチン・黒い木目)で組む */
 :root{
-  --bg:#E6EAE2;        /* 苔むす和紙 */
-  --paper:#F4F6F1;     /* 書く紙 */
-  --ink:#18201B;       /* 墨 */
-  --ink-2:#4A564E;
-  --muted:#6F7B73;
-  --line:rgba(24,32,27,.12);
-  --line-2:rgba(24,32,27,.22);
-  --moss:#3D6A46;      /* 苔 — アクセント */
-  --moss-soft:rgba(61,106,70,.12);
-  --wood:#9C6A36;      /* 木地 — 年輪 */
-  --wood-2:#C9A06E;
-  --heart:#E9DCC6;     /* 心材 */
-  --h0:#D7DDD3;--h1:#B7D0B1;--h2:#88B585;--h3:#5A965C;--h4:#3A7240;--h5:#214D28;
-  --m1:#56698A;--m2:#8B97AA;--m3:#A4A69E;--m4:#D2AE6E;--m5:#BF7F25;
-  --shadow:0 1px 0 rgba(255,255,255,.6) inset,0 24px 60px -30px rgba(30,45,35,.35);
+  --bg:#CFD0D0;        /* 灰色の台紙 */
+  --paper:#F0EDE8;     /* トラバーチン */
+  --ink:#1B1A19;       /* 黒い木目 */
+  --ink-2:#4B4744;
+  --muted:#6E6966;
+  --line:rgba(27,26,25,.12);
+  --line-2:rgba(27,26,25,.22);
+  --moss:#C9573F;      /* コーラル — アクセント */
+  --moss-soft:rgba(201,87,63,.12);
+  --wood:#A87B32;      /* 真鍮 — 年輪 */
+  --wood-2:#C9A35E;
+  --heart:#E8DDCD;     /* トラバーチンの心材 */
+  --h0:#DCDCDB;--h1:#F2CABD;--h2:#E8A08B;--h3:#D9735B;--h4:#B44F3C;--h5:#76302B;
+  --m1:#5D6670;--m2:#8E9397;--m3:#B4AAA1;--m4:#E49A85;--m5:#C44D36;
+  --shadow:0 1px 0 rgba(255,255,255,.6) inset,0 24px 60px -30px rgba(40,30,25,.35);
   --f-display:"Zen Old Mincho","Hiragino Mincho ProN","Yu Mincho",serif;
   --f-body:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",system-ui,sans-serif;
   --f-num:"Cormorant Garamond","Times New Roman",serif;
@@ -38,21 +38,21 @@
   color-scheme:light;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#0D1310;--paper:#141B17;--ink:#E2E9E1;--ink-2:#B6C1B8;--muted:#86948A;
-  --line:rgba(226,233,225,.10);--line-2:rgba(226,233,225,.2);
-  --moss:#93C795;--moss-soft:rgba(147,199,149,.12);--wood:#D6A36B;--wood-2:#8A6238;--heart:#3A2E22;
-  --h0:#1B2520;--h1:#22442A;--h2:#2C6436;--h3:#3E8747;--h4:#62AC66;--h5:#A0D79E;
-  --m1:#7C93BC;--m2:#7E8899;--m3:#7D8279;--m4:#C8A066;--m5:#E3A447;
-  --shadow:0 1px 0 rgba(255,255,255,.03) inset,0 30px 70px -30px rgba(0,0,0,.7);
+  --bg:#131212;--paper:#1D1B1A;--ink:#ECE6DF;--ink-2:#BDB4AC;--muted:#8F8780;
+  --line:rgba(236,230,223,.10);--line-2:rgba(236,230,223,.2);
+  --moss:#EE8A70;--moss-soft:rgba(238,138,112,.13);--wood:#D3A657;--wood-2:#7D5E2C;--heart:#3A302A;
+  --h0:#262322;--h1:#4A2721;--h2:#7A3527;--h3:#AF4B34;--h4:#DF7559;--h5:#F5B3A0;
+  --m1:#8A94A0;--m2:#6F7377;--m3:#8C847C;--m4:#E39A85;--m5:#F27756;
+  --shadow:0 1px 0 rgba(255,255,255,.03) inset,0 30px 70px -30px rgba(0,0,0,.75);
   color-scheme:dark;
 }}
 :root[data-theme="dark"]{
-  --bg:#0D1310;--paper:#141B17;--ink:#E2E9E1;--ink-2:#B6C1B8;--muted:#86948A;
-  --line:rgba(226,233,225,.10);--line-2:rgba(226,233,225,.2);
-  --moss:#93C795;--moss-soft:rgba(147,199,149,.12);--wood:#D6A36B;--wood-2:#8A6238;--heart:#3A2E22;
-  --h0:#1B2520;--h1:#22442A;--h2:#2C6436;--h3:#3E8747;--h4:#62AC66;--h5:#A0D79E;
-  --m1:#7C93BC;--m2:#7E8899;--m3:#7D8279;--m4:#C8A066;--m5:#E3A447;
-  --shadow:0 1px 0 rgba(255,255,255,.03) inset,0 30px 70px -30px rgba(0,0,0,.7);
+  --bg:#131212;--paper:#1D1B1A;--ink:#ECE6DF;--ink-2:#BDB4AC;--muted:#8F8780;
+  --line:rgba(236,230,223,.10);--line-2:rgba(236,230,223,.2);
+  --moss:#EE8A70;--moss-soft:rgba(238,138,112,.13);--wood:#D3A657;--wood-2:#7D5E2C;--heart:#3A302A;
+  --h0:#262322;--h1:#4A2721;--h2:#7A3527;--h3:#AF4B34;--h4:#DF7559;--h5:#F5B3A0;
+  --m1:#8A94A0;--m2:#6F7377;--m3:#8C847C;--m4:#E39A85;--m5:#F27756;
+  --shadow:0 1px 0 rgba(255,255,255,.03) inset,0 30px 70px -30px rgba(0,0,0,.75);
   color-scheme:dark;
 }
 *{box-sizing:border-box}
@@ -89,7 +89,7 @@ h1,h2,h3{font-family:var(--f-display);font-weight:700;text-wrap:balance;margin:0
 .btn:active{transform:scale(.97)}
 .btn.solid{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 .btn.solid:hover{background:var(--moss);border-color:var(--moss)}
-.btn.danger{color:#B4483A;border-color:rgba(180,72,58,.4)}
+.btn.danger{color:#9E2F3A;border-color:rgba(158,47,58,.4)}
 .btn.sm{padding:6px 12px;font-size:12px}
 .icon-btn{width:36px;height:36px;display:grid;place-items:center;border-radius:50%;border:1px solid var(--line-2);background:transparent}
 .icon-btn:hover{border-color:var(--moss);color:var(--moss)}
@@ -986,7 +986,7 @@ function viewPrefs(root) {
   root.innerHTML = `<section class="view">
     <header class="v-head"><div><span class="label">Preferences</span><h1>設定</h1><p>日記はこの端末のブラウザの中にだけ保存され、どこにも送られません。</p></div></header>
     <div class="prefs">
-      <div class="pref"><h3>見た目</h3><p>昼は和紙、夜は森の色で表示します。</p><div class="seg" role="group" aria-label="テーマ">${[["system", "端末に合わせる"], ["light", "昼"], ["dark", "夜"]].map(([v, l]) => `<button data-th="${v}" aria-pressed="${th === v}">${l}</button>`).join("")}</div></div>
+      <div class="pref"><h3>見た目</h3><p>昼は灰色の台紙とトラバーチン、夜は黒い木目の色で表示します。</p><div class="seg" role="group" aria-label="テーマ">${[["system", "端末に合わせる"], ["light", "昼"], ["dark", "夜"]].map(([v, l]) => `<button data-th="${v}" aria-pressed="${th === v}">${l}</button>`).join("")}</div></div>
       <div class="pref"><h3>合言葉で鍵をかける</h3><p>開くときに合言葉を聞きます。家族と同じ端末を使うときの目隠しです(暗号化ではありません)。</p>
         <form class="row" id="lockf"><input type="password" id="pw" placeholder="${S.prefs.lock ? "新しい合言葉" : "合言葉"}" autocomplete="new-password" aria-label="合言葉"><button class="btn sm" type="submit">${S.prefs.lock ? "変える" : "鍵をかける"}</button>${S.prefs.lock ? `<button class="btn sm" type="button" id="unlockb">鍵を外す</button>` : ""}</form></div>
       <div class="pref"><h3>書き出す</h3><p>ブラウザのデータを消すと日記も消えます。ときどき書き出して、手元に保管してください。</p>
