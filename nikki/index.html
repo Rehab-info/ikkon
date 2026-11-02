@@ -7,7 +7,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="robots" content="noindex, nofollow">
 <meta name="description" content="自分だけの日記。書いた日が年輪になり、考えがマインドマップに育つ。">
-<meta name="theme-color" content="#CFD0D0" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#FBF7F4" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#131212" media="(prefers-color-scheme: dark)">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,21 +15,23 @@
 <style>
 /* Layout: 左に縦書きの柱(スマホでは下のタブ)、右に一枚の紙。年輪(木口)をモチーフに、素材見本の色(コーラル・真鍮・トラバーチン・黒い木目)で組む */
 :root{
-  --bg:#CFD0D0;        /* 灰色の台紙 */
-  --paper:#F0EDE8;     /* トラバーチン */
-  --ink:#1B1A19;       /* 黒い木目 */
-  --ink-2:#4B4744;
-  --muted:#6E6966;
-  --line:rgba(27,26,25,.12);
-  --line-2:rgba(27,26,25,.22);
-  --moss:#C9573F;      /* コーラル — アクセント */
-  --moss-soft:rgba(201,87,63,.12);
-  --wood:#A87B32;      /* 真鍮 — 年輪 */
-  --wood-2:#C9A35E;
-  --heart:#E8DDCD;     /* トラバーチンの心材 */
-  --h0:#DCDCDB;--h1:#F2CABD;--h2:#E8A08B;--h3:#D9735B;--h4:#B44F3C;--h5:#76302B;
-  --m1:#5D6670;--m2:#8E9397;--m3:#B4AAA1;--m4:#E49A85;--m5:#C44D36;
-  --shadow:0 1px 0 rgba(255,255,255,.6) inset,0 24px 60px -30px rgba(40,30,25,.35);
+  --bg:#FBF7F4;        /* 朝の光 */
+  --paper:#FFFFFF;     /* 白いトラバーチン */
+  --ink:#2B2523;
+  --ink-2:#5A504C;
+  --muted:#8A7F7A;
+  --line:rgba(43,37,35,.09);
+  --line-2:rgba(43,37,35,.17);
+  --moss:#E5603F;      /* コーラル — アクセント */
+  --moss-soft:rgba(229,96,63,.11);
+  --wood:#C29240;      /* 真鍮 — 年輪 */
+  --wood-2:#E2BE7A;
+  --heart:#F7EBDD;     /* 心材 */
+  --glow-1:rgba(255,186,150,.45);
+  --glow-2:rgba(255,222,150,.40);
+  --h0:#F1EAE5;--h1:#FCD6C8;--h2:#F8AE95;--h3:#EE8364;--h4:#D9603F;--h5:#A9432F;
+  --m1:#7F8C9B;--m2:#A9AFB5;--m3:#D3C6BA;--m4:#F5AA8F;--m5:#EC6646;
+  --shadow:0 1px 0 rgba(255,255,255,.9) inset,0 24px 60px -32px rgba(200,110,80,.35);
   --f-display:"Zen Old Mincho","Hiragino Mincho ProN","Yu Mincho",serif;
   --f-body:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",system-ui,sans-serif;
   --f-num:"Cormorant Garamond","Times New Roman",serif;
@@ -41,6 +43,7 @@
   --bg:#131212;--paper:#1D1B1A;--ink:#ECE6DF;--ink-2:#BDB4AC;--muted:#8F8780;
   --line:rgba(236,230,223,.10);--line-2:rgba(236,230,223,.2);
   --moss:#EE8A70;--moss-soft:rgba(238,138,112,.13);--wood:#D3A657;--wood-2:#7D5E2C;--heart:#3A302A;
+  --glow-1:rgba(238,138,112,.10);--glow-2:rgba(211,166,87,.07);
   --h0:#262322;--h1:#4A2721;--h2:#7A3527;--h3:#AF4B34;--h4:#DF7559;--h5:#F5B3A0;
   --m1:#8A94A0;--m2:#6F7377;--m3:#8C847C;--m4:#E39A85;--m5:#F27756;
   --shadow:0 1px 0 rgba(255,255,255,.03) inset,0 30px 70px -30px rgba(0,0,0,.75);
@@ -50,6 +53,7 @@
   --bg:#131212;--paper:#1D1B1A;--ink:#ECE6DF;--ink-2:#BDB4AC;--muted:#8F8780;
   --line:rgba(236,230,223,.10);--line-2:rgba(236,230,223,.2);
   --moss:#EE8A70;--moss-soft:rgba(238,138,112,.13);--wood:#D3A657;--wood-2:#7D5E2C;--heart:#3A302A;
+  --glow-1:rgba(238,138,112,.10);--glow-2:rgba(211,166,87,.07);
   --h0:#262322;--h1:#4A2721;--h2:#7A3527;--h3:#AF4B34;--h4:#DF7559;--h5:#F5B3A0;
   --m1:#8A94A0;--m2:#6F7377;--m3:#8C847C;--m4:#E39A85;--m5:#F27756;
   --shadow:0 1px 0 rgba(255,255,255,.03) inset,0 30px 70px -30px rgba(0,0,0,.75);
@@ -57,8 +61,8 @@
 }
 *{box-sizing:border-box}
 html,body{height:100%}
-body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.8 var(--f-body);-webkit-font-smoothing:antialiased;overflow-x:hidden}
-body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:100;opacity:.35;mix-blend-mode:multiply;
+body{margin:0;background:radial-gradient(900px 520px at 85% -8%,var(--glow-1),transparent 70%),radial-gradient(800px 480px at 8% 0%,var(--glow-2),transparent 70%),var(--bg);background-attachment:fixed;color:var(--ink);font:400 15px/1.8 var(--f-body);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:100;opacity:.18;mix-blend-mode:multiply;
   background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .1  0 0 0 0 .12  0 0 0 0 .1  0 0 0 .09 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
 button,input,textarea,select{font:inherit;color:inherit}
 button{cursor:pointer}
@@ -405,7 +409,7 @@ function seed() {
     for (let k = 0; k < wn; k++) { const w = pick(winsPool); if (!wins.includes(w)) wins.push(w); }
     entries[iso(d)] = { date: iso(d), title: pick(main.t), body: [...new Set(paras)].filter(Boolean).join("\n\n"), mood, tags, wins, gratitude: pick(grats), sample: true, updated: d.getTime() };
   }
-  return { v: 1, entries, map: seedMap(), prefs: { theme: "system", lock: null } };
+  return { v: 1, entries, map: seedMap(), prefs: { theme: "light", lock: null, bright: true } };
 }
 function seedMap() {
   const N = []; let id = 0;
@@ -561,13 +565,13 @@ document.addEventListener("click", ev => {
 });
 
 /* ============ 書く ============ */
-const PROMPTS = ["今日の小さな前進は?", "心が動いた瞬間", "明日の自分へ", "うまくいかなかったことと、その理由", "ありがとうと言いたい人"];
+const PROMPTS = ["今日うれしかったこと", "小さな前進", "心が動いた瞬間", "ありがとうと言いたい人", "明日たのしみなこと"];
 function viewWrite(root) {
   const date = curDate, d = parse(date);
   const e = S.entries[date] || { date, title: "", body: "", mood: 0, tags: [], wins: [], gratitude: "" };
   const isToday = date === today();
   const hr = new Date().getHours();
-  const greet = isToday ? (hr < 5 ? "夜更けの一行も、立派な年輪になります。" : hr < 11 ? "おはようございます。今日はどんな一日にしますか。" : hr < 17 ? "一日の途中で、少し立ち止まってみましょう。" : "おつかれさまでした。今日をそっと書きとめましょう。") : "過ぎた日を書き足しています。";
+  const greet = isToday ? (hr < 5 ? "夜ふかしの一行も、ちゃんと年輪になります。" : hr < 11 ? "おはようございます。今日も、いい一日になりますように。" : hr < 17 ? "ここまでの今日に、いいことはありましたか。" : "今日もおつかれさま。よかったことから書いてみましょう。") : "過ぎた日を書き足しています。";
   const T = totals();
   const allTags = [...new Set(list().flatMap(x => x.tags || []))];
   root.innerHTML = `<section class="view">
@@ -986,7 +990,7 @@ function viewPrefs(root) {
   root.innerHTML = `<section class="view">
     <header class="v-head"><div><span class="label">Preferences</span><h1>設定</h1><p>日記はこの端末のブラウザの中にだけ保存され、どこにも送られません。</p></div></header>
     <div class="prefs">
-      <div class="pref"><h3>見た目</h3><p>昼は灰色の台紙とトラバーチン、夜は黒い木目の色で表示します。</p><div class="seg" role="group" aria-label="テーマ">${[["system", "端末に合わせる"], ["light", "昼"], ["dark", "夜"]].map(([v, l]) => `<button data-th="${v}" aria-pressed="${th === v}">${l}</button>`).join("")}</div></div>
+      <div class="pref"><h3>見た目</h3><p>ふだんは朝の光のような明るい色。夜に書くときだけ暗くもできます。</p><div class="seg" role="group" aria-label="テーマ">${[["light", "明るい"], ["system", "端末に合わせる"], ["dark", "夜"]].map(([v, l]) => `<button data-th="${v}" aria-pressed="${th === v}">${l}</button>`).join("")}</div></div>
       <div class="pref"><h3>合言葉で鍵をかける</h3><p>開くときに合言葉を聞きます。家族と同じ端末を使うときの目隠しです(暗号化ではありません)。</p>
         <form class="row" id="lockf"><input type="password" id="pw" placeholder="${S.prefs.lock ? "新しい合言葉" : "合言葉"}" autocomplete="new-password" aria-label="合言葉"><button class="btn sm" type="submit">${S.prefs.lock ? "変える" : "鍵をかける"}</button>${S.prefs.lock ? `<button class="btn sm" type="button" id="unlockb">鍵を外す</button>` : ""}</form></div>
       <div class="pref"><h3>書き出す</h3><p>ブラウザのデータを消すと日記も消えます。ときどき書き出して、手元に保管してください。</p>
@@ -1026,7 +1030,8 @@ function applyTheme() { const t = S.prefs.theme; if (t === "light" || t === "dar
 /* ============ はじまり ============ */
 function boot() {
   S = load() || seed();
-  S.prefs = S.prefs || { theme: "system", lock: null };
+  S.prefs = S.prefs || { theme: "light", lock: null };
+  if (!S.prefs.bright) { S.prefs.theme = "light"; S.prefs.bright = true; }
   S.map = S.map && S.map.nodes && S.map.nodes.length ? S.map : seedMap();
   persist(); applyTheme();
   if (S.prefs.lock && crypto.subtle) {
