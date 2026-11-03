@@ -23,7 +23,6 @@ tools/build_shared.py  手で書いているページの共通部分(canonical�
 data/sites.json   一献のなかま4サービスの住所(独自ドメインに移すときはここを直す)
 data/reviews.json 掲載するレビューとフォームの設定
 tools/import_reviews.py  フォームの回答からレビューを取り込むスクリプト
-nikki/index.html  年輪日記(自分専用の日記。データはブラウザの中だけ。検索には載せない)
 images/           銘柄の写真(自分で撮影したもの・許可を得たもの)
 .nojekyll         GitHub Pages の Jekyll 処理を無効化
 ```
