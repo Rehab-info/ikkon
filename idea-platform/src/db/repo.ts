@@ -260,7 +260,7 @@ export async function updatePackage(id: string, patch: Partial<Omit<IdeaPackage,
 export function validatePackageForSubmission(pkg: IdeaPackage): string[] {
   const errors: string[] = []
   if (pkg.title.trim().length < 4) errors.push('タイトルを4文字以上で入力してください。')
-  if (pkg.catchcopy.trim().length < 10) errors.push('一文紹介を10文字以上で入力してください。')
+  if (pkg.catchcopy.trim().length < 10) errors.push('公開用の紹介文を10文字以上で入力してください。')
   if (!pkg.targetCustomers.trim()) errors.push('想定顧客を入力してください。')
   const required: Array<keyof IdeaPackage['sections']> = ['overview', 'customerProblem', 'proposal', 'risks', 'validationPlan']
   for (const key of required) {

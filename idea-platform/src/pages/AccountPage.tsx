@@ -17,6 +17,7 @@ import { logActivity, replyConnection, withdrawConnection } from '../db/repo'
 import { seedDemoData } from '../db/seed'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { useLiveData } from '../hooks/useLiveData'
+import { toPublicPreview } from '../lib/ideaAccess'
 import { dateStamp, downloadJson } from '../lib/download'
 import { formatDateTime, formatYen } from '../lib/format'
 import { CONNECTION_STATUS_META, REVIEW_STATUS_META, ROLE_LABEL } from '../lib/labels'
@@ -102,7 +103,7 @@ function SavedTab({ user }: { user: User }) {
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
       {data.ideas.map((i) => (
-        <IdeaCard key={i.id} idea={i} creator={data.creators.find((c) => c.id === i.creatorId)} />
+        <IdeaCard key={i.id} idea={toPublicPreview(i)} creator={data.creators.find((c) => c.id === i.creatorId)} />
       ))}
     </div>
   )

@@ -9,7 +9,7 @@ test('IIPを作成・プレビューし、審査申請 → 運営が承認する
 
   const isMobile = (page.viewportSize()?.width ?? 1000) < 1024
   await page.getByLabel(/^タイトル/).fill('通院付き添いの交代制シェア')
-  await page.getByLabel(/一文紹介/).fill('通院の待ち時間だけを、近所の人と交代で見守る仕組み。')
+  await page.getByLabel(/公開用の紹介文/).fill('通院の待ち時間だけを、近所の人と交代で見守る仕組み。')
   await page.getByLabel(/想定顧客/).fill('通院の付き添いが必要な家族、地域の支援団体')
   await page.getByLabel(/アイデア概要/).fill('通院の付き添いのうち、待ち時間の見守りだけを交代できるようにする仕組みの構想です。')
   await page.getByLabel(/提案内容/).fill('待ち時間の見守りを、事前に登録した近所の人と交代できるようにします。')

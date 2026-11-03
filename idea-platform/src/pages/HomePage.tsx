@@ -10,6 +10,7 @@ import { BRAND_MESSAGE, CONNECTION_STEPS, FAQ, FLOW_STEPS, HERO, PATHS } from '.
 import { db } from '../db/database'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { useLiveData } from '../hooks/useLiveData'
+import { toPublicPreview } from '../lib/ideaAccess'
 import { CONSULTATION_META } from '../lib/labels'
 
 function SectionHeading({ eyebrow, title, lead }: { eyebrow: string; title: string; lead?: string }) {
@@ -163,7 +164,7 @@ export default function HomePage() {
           ) : (
             <div className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {featured.map((idea) => (
-                <IdeaCard key={idea.id} idea={idea} creator={creatorById.get(idea.creatorId)} />
+                <IdeaCard key={idea.id} idea={toPublicPreview(idea)} creator={creatorById.get(idea.creatorId)} />
               ))}
             </div>
           )}

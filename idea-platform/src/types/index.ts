@@ -72,7 +72,7 @@ export interface ValidationStatus {
   activities: string[]
 }
 
-/** 公開プレビュー用の知識マップ（核心情報は含めない） */
+/** 購入者向けの概要知識マップ（購入後に表示） */
 export interface SampleMap {
   nodes: Array<{ id: string; kind: NodeKind; label: string; x: number; y: number }>
   edges: Array<{ id: string; source: string; target: string; relation: EdgeRelation }>
@@ -82,7 +82,7 @@ export interface Idea {
   id: string
   creatorId: string
   title: string
-  /** カード用の一文 */
+  /** 公開用の紹介文（購入前に誰でも読める唯一の説明） */
   catchcopy: string
   category: IdeaCategory
   tags: string[]
@@ -99,7 +99,7 @@ export interface Idea {
   status: IdeaStatus
   /** 注目度（デモ用の並び替え指標） */
   featuredScore: number
-  /** 購入前に開示しない核心部分の説明（中身ではなく「何が非公開か」） */
+  /** 購入後に開示される内容についての補足 */
   hiddenNotice: string
   createdAt: ISODate
   updatedAt: ISODate
@@ -109,29 +109,18 @@ export interface Idea {
   origin: 'seed' | 'user'
 }
 
-/** 購入前に表示できる範囲だけを持つ型。一覧・詳細はこの型で描画します。 */
+/**
+ * 購入前に誰でも見られる範囲だけを持つ型。一覧・カード・購入前の詳細はこの型で描画します。
+ * 概要・課題の詳細・既存手段との差異・知識マップ・検証内容は含めません。
+ */
 export type IdeaPreview = Pick<
   Idea,
-  | 'id'
-  | 'creatorId'
-  | 'title'
-  | 'catchcopy'
-  | 'category'
-  | 'tags'
-  | 'summary'
-  | 'problem'
-  | 'targetCustomers'
-  | 'differentiation'
-  | 'validation'
-  | 'deliverables'
-  | 'sampleMap'
-  | 'price'
-  | 'status'
-  | 'featuredScore'
-  | 'hiddenNotice'
-  | 'publishedAt'
-  | 'updatedAt'
->
+  'id' | 'creatorId' | 'title' | 'catchcopy' | 'category' | 'tags' | 'targetCustomers' | 'price' | 'status' | 'featuredScore' | 'publishedAt' | 'updatedAt'
+> & {
+  validationStage: ValidationStage
+  /** 納品物の名前のみ（説明は購入後） */
+  deliverableNames: string[]
+}
 
 /* ---------- IIP（アイデア情報パッケージ） ---------- */
 
@@ -157,7 +146,7 @@ export interface IdeaPackage {
   catchcopy: string
   targetCustomers: string
   sections: Record<IipSectionKey, string>
-  /** 購入前プレビュー用のサンプル知識マップに使うノードID（核心情報を含めない） */
+  /** 購入者向けの概要知識マップに使うノードID */
   linkedNodeIds: string[]
   status: 'draft' | 'submitted'
   submittedIdeaId?: string
@@ -301,7 +290,7 @@ export const REVIEW_CHECKLIST = [
   { key: 'problemClear', label: '解決する課題と想定顧客が具体的に書かれている' },
   { key: 'evidenceListed', label: '根拠資料・調査の出典が示されている' },
   { key: 'risksStated', label: 'リスクと検証計画が記載されている' },
-  { key: 'previewSafe', label: '購入前プレビューに核心情報が含まれていない' },
+  { key: 'previewSafe', label: '公開用の紹介文に核心情報が含まれていない' },
 ] as const
 export type ReviewChecklistKey = (typeof REVIEW_CHECKLIST)[number]['key']
 

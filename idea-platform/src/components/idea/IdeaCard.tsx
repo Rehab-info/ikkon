@@ -7,7 +7,7 @@ import { IdeaStatusBadge } from './IdeaStatusBadge'
 import { SaveIdeaButton } from './SaveIdeaButton'
 
 export function IdeaCard({ idea, creator }: { idea: IdeaPreview; creator?: CreatorProfile }) {
-  const stage = VALIDATION_STAGE_META[idea.validation.stage]
+  const stage = VALIDATION_STAGE_META[idea.validationStage]
   return (
     <article className="group relative flex min-w-0 flex-col rounded-lg border border-line bg-white p-6 transition-colors hover:border-ink/40" data-testid="idea-card">
       <div className="flex items-center justify-between gap-2">

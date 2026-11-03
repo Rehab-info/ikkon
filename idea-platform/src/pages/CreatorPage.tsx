@@ -9,6 +9,7 @@ import { EmptyState, ErrorState, Loading } from '../components/ui/States'
 import { db } from '../db/database'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { useLiveData } from '../hooks/useLiveData'
+import { toPublicPreview } from '../lib/ideaAccess'
 import { formatDate } from '../lib/format'
 import { CONSULTATION_META } from '../lib/labels'
 
@@ -90,7 +91,7 @@ export default function CreatorPage() {
                 ) : (
                   <div className="grid gap-6 md:grid-cols-2">
                     {ideas.map((idea) => (
-                      <IdeaCard key={idea.id} idea={idea} creator={creator} />
+                      <IdeaCard key={idea.id} idea={toPublicPreview(idea)} creator={creator} />
                     ))}
                   </div>
                 )}

@@ -15,22 +15,14 @@ import { db } from '../db/database'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { useLiveData } from '../hooks/useLiveData'
 import { formatDate, formatYen } from '../lib/format'
+import { canViewFullIdea, toPublicPreview } from '../lib/ideaAccess'
 import { CONSULTATION_META, IDEA_STATUS_META, NODE_KIND_META, VALIDATION_STAGE_META } from '../lib/labels'
-import { NODE_KINDS, type Idea, type IdeaPreview } from '../types'
+import { NODE_KINDS, type Idea } from '../types'
 
 const KnowledgeMapPreview = lazy(() => import('../components/idea/KnowledgeMapPreview'))
 
-/** 購入前に表示できる項目だけを取り出す（核心情報を画面に渡さない） */
-function toPreview(idea: Idea): IdeaPreview {
-  const {
-    id, creatorId, title, catchcopy, category, tags, summary, problem, targetCustomers, differentiation,
-    validation, deliverables, sampleMap, price, status, featuredScore, hiddenNotice, publishedAt, updatedAt,
-  } = idea
-  return {
-    id, creatorId, title, catchcopy, category, tags, summary, problem, targetCustomers, differentiation,
-    validation, deliverables, sampleMap, price, status, featuredScore, hiddenNotice, publishedAt, updatedAt,
-  }
-}
+/** 購入後に開示される項目（購入前の画面には名前だけを示す） */
+const LOCKED_SECTIONS = ['概要', '解決する課題の詳細', '既存手段との差異', '調査・検証の内容', '知識マップ', '納品物の中身（IIPなど）']
 
 function Block({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -41,19 +33,85 @@ function Block({ title, children }: { title: string; children: ReactNode }) {
   )
 }
 
+/** 購入者・創作者本人・運営だけに表示する詳細 */
+function FullContent({ idea }: { idea: Idea }) {
+  const usedKinds = NODE_KINDS.filter((k) => idea.sampleMap.nodes.some((n) => n.kind === k))
+  return (
+    <>
+      <Block title="概要">
+        <p>{idea.summary}</p>
+      </Block>
+      <Block title="解決する課題">
+        <p>{idea.problem}</p>
+      </Block>
+      <Block title="既存手段との差異">
+        <p>{idea.differentiation}</p>
+      </Block>
+      <Block title="調査・検証の内容">
+        <ul className="space-y-2">
+          {idea.validation.activities.map((a) => (
+            <li key={a} className="flex gap-2.5 text-[15px]">
+              <Check className="mt-1.5 size-4 shrink-0 text-moss" aria-hidden />
+              {a}
+            </li>
+          ))}
+        </ul>
+      </Block>
+      <Block title="納品物の内容">
+        <ul className="divide-y divide-line rounded-lg border border-line">
+          {idea.deliverables.map((d) => (
+            <li key={d.name} className="flex gap-3 px-4 py-3.5">
+              <FileText className="mt-1 size-4 shrink-0 text-muted" aria-hidden />
+              <div>
+                <p className="text-[15px] font-medium text-ink">{d.name}</p>
+                <p className="text-sm text-muted">{d.description}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
+        <p className="mt-3 text-sm text-muted">{idea.hiddenNotice} 納品物ファイルの受け渡しはデモ対象外です。</p>
+      </Block>
+      <Block title="知識マップ（概要）">
+        {idea.sampleMap.nodes.length > 0 ? (
+          <>
+            <Suspense fallback={<Loading label="知識マップを読み込み中…" />}>
+              <KnowledgeMapPreview map={idea.sampleMap} />
+            </Suspense>
+            <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted" aria-label="ノード種別の凡例">
+              {usedKinds.map((k) => {
+                const meta = NODE_KIND_META[k]
+                const Icon = meta.icon
+                return (
+                  <li key={k} className="flex items-center gap-1">
+                    <Icon className="size-3.5" style={{ color: meta.color }} aria-hidden />
+                    {meta.label}
+                  </li>
+                )
+              })}
+            </ul>
+          </>
+        ) : (
+          <p className="text-sm text-muted">知識マップは添付されていません。</p>
+        )}
+      </Block>
+    </>
+  )
+}
+
 export default function IdeaDetailPage() {
   const { id = '' } = useParams()
   const { user } = useDemoUser()
   const ideaQuery = useLiveData(() => db.ideas.get(id), [id])
   const raw = ideaQuery.data
   const { data: creator } = useLiveData(() => (raw ? db.creators.get(raw.creatorId) : Promise.resolve(undefined)), [raw?.creatorId])
-  const { data: myPurchase } = useLiveData(
+  const purchaseQuery = useLiveData(
     () => db.purchases.where('buyerId').equals(user.id).filter((p) => p.ideaId === id).first(),
     [user.id, id],
   )
+  const myPurchase = purchaseQuery.data
   useDocumentTitle(raw?.title ?? 'アイデア詳細')
 
-  if (ideaQuery.loading) return <Loading />
+  if (ideaQuery.loading || purchaseQuery.loading) return <Loading />
 
   const isOwner = Boolean(raw && user.creatorId && raw.creatorId === user.creatorId)
   const isPublic = raw && (raw.status === 'published' || raw.status === 'nondisclosure')
@@ -69,10 +127,16 @@ export default function IdeaDetailPage() {
     )
   }
 
-  const idea = toPreview(raw)
-  const stage = VALIDATION_STAGE_META[idea.validation.stage]
+  // 画面には公開範囲の値だけを使い、詳細は閲覧できる場合にのみ FullContent へ渡す
+  const idea = toPublicPreview(raw)
+  const fullAccess = canViewFullIdea(raw, user, Boolean(myPurchase))
+  const stage = VALIDATION_STAGE_META[idea.validationStage]
   const canPurchase = idea.status === 'published'
-  const usedKinds = NODE_KINDS.filter((k) => idea.sampleMap.nodes.some((n) => n.kind === k))
+  const accessReason = myPurchase
+    ? `${formatDate(myPurchase.createdAt)}に購入デモを実行したため、購入者向けの内容を表示しています。`
+    : isOwner
+      ? 'あなたが創作者のため、購入者向けの内容を表示しています。'
+      : '運営（デモ）として、購入者向けの内容を表示しています。'
 
   return (
     <Container className="py-10 sm:py-14">
@@ -102,26 +166,17 @@ export default function IdeaDetailPage() {
               ))}
             </div>
             <h1 className="mt-4 text-2xl font-semibold leading-snug sm:text-[32px] sm:leading-snug">{idea.title}</h1>
-            <p className="mt-4 text-base text-muted">{idea.catchcopy}</p>
+            <p className="mt-4 text-base text-charcoal">{idea.catchcopy}</p>
             <p className="mt-4 text-xs text-muted">
               公開日 {formatDate(idea.publishedAt)}・更新日 {formatDate(idea.updatedAt)}
             </p>
           </header>
 
           <div className="mt-10 space-y-10">
-            <Block title="概要">
-              <p>{idea.summary}</p>
-            </Block>
-            <Block title="解決する課題">
-              <p>{idea.problem}</p>
-            </Block>
             <Block title="想定顧客">
               <p>{idea.targetCustomers}</p>
             </Block>
-            <Block title="既存手段との差異">
-              <p>{idea.differentiation}</p>
-            </Block>
-            <Block title="調査・検証状況">
+            <Block title="検証の段階">
               <div className="flex items-center gap-3">
                 <span className="flex gap-1" aria-hidden>
                   {[1, 2, 3, 4].map((i) => (
@@ -132,61 +187,49 @@ export default function IdeaDetailPage() {
                   {stage.label}（4段階中{stage.step}）
                 </span>
               </div>
-              <ul className="mt-4 space-y-2">
-                {idea.validation.activities.map((a) => (
-                  <li key={a} className="flex gap-2.5 text-[15px]">
-                    <Check className="mt-1.5 size-4 shrink-0 text-moss" aria-hidden />
-                    {a}
-                  </li>
-                ))}
-              </ul>
             </Block>
             <Block title="納品物">
-              <ul className="divide-y divide-line rounded-lg border border-line">
-                {idea.deliverables.map((d) => (
-                  <li key={d.name} className="flex gap-3 px-4 py-3.5">
-                    <FileText className="mt-1 size-4 shrink-0 text-muted" aria-hidden />
-                    <div>
-                      <p className="text-[15px] font-medium text-ink">{d.name}</p>
-                      <p className="text-sm text-muted">{d.description}</p>
-                    </div>
+              <ul className="flex flex-wrap gap-2">
+                {idea.deliverableNames.map((name) => (
+                  <li key={name} className="inline-flex items-center gap-1.5 rounded-md border border-line px-3 py-1.5 text-sm text-ink">
+                    <FileText className="size-3.5 text-muted" aria-hidden />
+                    {name}
                   </li>
                 ))}
               </ul>
-              <div className="mt-4 flex gap-3 rounded-lg bg-paper px-4 py-4 text-sm">
-                <Lock className="mt-0.5 size-4 shrink-0 text-ink" aria-hidden />
-                <div>
-                  <p className="font-medium text-ink">購入前には表示されない内容</p>
-                  <p className="mt-1 text-muted">{idea.hiddenNotice}</p>
+            </Block>
+
+            {fullAccess ? (
+              <>
+                <Notice tone="demo" title="購入者向けの内容">
+                  {accessReason}
+                </Notice>
+                <FullContent idea={raw} />
+              </>
+            ) : (
+              <section className="rounded-lg border border-line bg-paper p-6 sm:p-8" aria-labelledby="locked-heading" data-testid="locked-content">
+                <div className="flex items-center gap-2">
+                  <Lock className="size-4 text-ink" aria-hidden />
+                  <h2 id="locked-heading" className="text-lg font-semibold">
+                    アイデアの中身は購入後に開示されます
+                  </h2>
                 </div>
-              </div>
-            </Block>
-            <Block title="サンプル知識マップ">
-              <p className="mb-4 text-sm text-muted">
-                アイデアの構造の一部を、公開できる範囲で示したものです。根拠の詳細などは購入後の完全版に含まれます。
-              </p>
-              {idea.sampleMap.nodes.length > 0 ? (
-                <>
-                  <Suspense fallback={<Loading label="知識マップを読み込み中…" />}>
-                    <KnowledgeMapPreview map={idea.sampleMap} />
-                  </Suspense>
-                  <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted" aria-label="ノード種別の凡例">
-                    {usedKinds.map((k) => {
-                      const meta = NODE_KIND_META[k]
-                      const Icon = meta.icon
-                      return (
-                        <li key={k} className="flex items-center gap-1">
-                          <Icon className="size-3.5" style={{ color: meta.color }} aria-hidden />
-                          {meta.label}
-                        </li>
-                      )
-                    })}
-                  </ul>
-                </>
-              ) : (
-                <p className="text-sm text-muted">サンプル知識マップは公開されていません。</p>
-              )}
-            </Block>
+                <p className="mt-3 text-sm leading-relaxed text-charcoal">
+                  創作者のアイデアを守るため、購入前に公開しているのは紹介文・想定顧客・検証の段階・納品物の名前だけです。
+                </p>
+                <ul className="mt-5 grid gap-2 sm:grid-cols-2">
+                  {LOCKED_SECTIONS.map((name) => (
+                    <li key={name} className="flex items-center gap-2 rounded-md border border-line bg-white px-3 py-2.5 text-sm text-muted">
+                      <Lock className="size-3.5 shrink-0" aria-hidden />
+                      {name}
+                    </li>
+                  ))}
+                </ul>
+                <p className="mt-5 text-xs leading-relaxed text-muted">
+                  購入前に確かめたいことがあれば、創作者に相談を申し込むこともできます（創作者の同意が必要です）。
+                </p>
+              </section>
+            )}
           </div>
         </article>
 

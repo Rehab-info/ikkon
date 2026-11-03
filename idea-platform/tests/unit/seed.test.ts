@@ -60,3 +60,29 @@ describe('IIP', () => {
     expect(errors.join()).toMatch(/リスク/)
   })
 })
+
+describe('購入前の公開範囲', () => {
+  it('公開用プレビューにアイデアの中身を含めない', async () => {
+    const { toPublicPreview } = await import('../../src/lib/ideaAccess')
+    for (const idea of DEMO_IDEAS) {
+      const preview = toPublicPreview(idea) as Record<string, unknown>
+      for (const key of ['summary', 'problem', 'differentiation', 'sampleMap', 'validation', 'deliverables', 'hiddenNotice']) {
+        expect(preview).not.toHaveProperty(key)
+      }
+      const text = JSON.stringify(preview)
+      expect(text).not.toContain(idea.summary)
+      expect(text).not.toContain(idea.problem)
+      expect(preview.deliverableNames).toEqual(idea.deliverables.map((d) => d.name))
+    }
+  })
+
+  it('詳細を見られるのは購入者・創作者本人・運営のみ', async () => {
+    const { canViewFullIdea } = await import('../../src/lib/ideaAccess')
+    const idea = { creatorId: 'c_asakura' }
+    expect(canViewFullIdea(idea, { role: 'buyer' }, false)).toBe(false)
+    expect(canViewFullIdea(idea, { role: 'buyer' }, true)).toBe(true)
+    expect(canViewFullIdea(idea, { role: 'creator', creatorId: 'c_asakura' }, false)).toBe(true)
+    expect(canViewFullIdea(idea, { role: 'creator', creatorId: 'c_hoshino' }, false)).toBe(false)
+    expect(canViewFullIdea(idea, { role: 'admin' }, false)).toBe(true)
+  })
+})

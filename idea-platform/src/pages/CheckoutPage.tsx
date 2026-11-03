@@ -141,10 +141,7 @@ export default function CheckoutPage() {
               {idea.deliverables.map((d) => (
                 <li key={d.name} className="flex gap-3 text-[15px]">
                   <FileText className="mt-1.5 size-4 shrink-0 text-muted" aria-hidden />
-                  <span>
-                    <span className="font-medium text-ink">{d.name}</span>
-                    <span className="text-muted"> — {d.description}</span>
-                  </span>
+                  <span className="font-medium text-ink">{d.name}</span>
                 </li>
               ))}
             </ul>

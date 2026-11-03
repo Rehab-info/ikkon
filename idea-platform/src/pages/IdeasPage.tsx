@@ -8,17 +8,18 @@ import { EmptyState, ErrorState, Loading } from '../components/ui/States'
 import { db } from '../db/database'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { useLiveData } from '../hooks/useLiveData'
+import { toPublicPreview } from '../lib/ideaAccess'
 import { VALIDATION_STAGE_META } from '../lib/labels'
-import { IDEA_CATEGORIES, type Idea } from '../types'
+import { IDEA_CATEGORIES, type IdeaPreview } from '../types'
 
 const SORTS = {
-  featured: { label: '注目度順', fn: (a: Idea, b: Idea) => b.featuredScore - a.featuredScore },
-  newest: { label: '新着順', fn: (a: Idea, b: Idea) => (b.publishedAt ?? '').localeCompare(a.publishedAt ?? '') },
+  featured: { label: '注目度順', fn: (a: IdeaPreview, b: IdeaPreview) => b.featuredScore - a.featuredScore },
+  newest: { label: '新着順', fn: (a: IdeaPreview, b: IdeaPreview) => (b.publishedAt ?? '').localeCompare(a.publishedAt ?? '') },
   validation: {
     label: '検証が進んでいる順',
-    fn: (a: Idea, b: Idea) => VALIDATION_STAGE_META[b.validation.stage].step - VALIDATION_STAGE_META[a.validation.stage].step,
+    fn: (a: IdeaPreview, b: IdeaPreview) => VALIDATION_STAGE_META[b.validationStage].step - VALIDATION_STAGE_META[a.validationStage].step,
   },
-  priceAsc: { label: '価格の安い順', fn: (a: Idea, b: Idea) => a.price - b.price },
+  priceAsc: { label: '価格の安い順', fn: (a: IdeaPreview, b: IdeaPreview) => a.price - b.price },
 } as const
 type SortKey = keyof typeof SORTS
 
@@ -50,13 +51,15 @@ export default function IdeasPage() {
 
   const results = useMemo(() => {
     const keyword = q.trim().toLowerCase()
+    // 検索対象も購入前に公開している項目だけ（非公開の本文が検索で推測されないように）
     return (ideasQuery.data ?? [])
+      .map(toPublicPreview)
       .filter((idea) => !category || idea.category === category)
       .filter((idea) => !onlyAvailable || idea.status === 'published')
       .filter((idea) => {
         if (!keyword) return true
         const creator = creatorById.get(idea.creatorId)
-        const haystack = [idea.title, idea.catchcopy, idea.summary, idea.problem, idea.category, ...idea.tags, creator?.displayName ?? '']
+        const haystack = [idea.title, idea.catchcopy, idea.targetCustomers, idea.category, ...idea.tags, creator?.displayName ?? '']
           .join(' ')
           .toLowerCase()
         return keyword.split(/\s+/).every((w) => haystack.includes(w))
@@ -69,7 +72,7 @@ export default function IdeasPage() {
       <PageHeader
         eyebrow="IDEAS"
         title="アイデアを探す"
-        description="課題・想定顧客・検証状況は購入前に確認できます。核心となる内容は、購入後の納品物でのみ開示されます。"
+        description="購入前に見られるのは、紹介文・想定顧客・検証の段階まで。アイデアの中身は購入後に開示されます。"
       />
 
       <div className="mt-8 space-y-5">

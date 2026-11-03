@@ -226,11 +226,11 @@ function IipEditor({ pkg }: { pkg: IdeaPackage }) {
             <legend className="sr-only">基本情報</legend>
             <TextField label="タイトル" required value={form.title} maxLength={60} onChange={(e) => change({ ...form, title: e.target.value })} />
             <TextField
-              label="一文紹介"
+              label="公開用の紹介文"
               required
               value={form.catchcopy}
               maxLength={80}
-              hint="一覧のカードに表示されます。核心情報は書かないでください。"
+              hint="購入前に誰でも読める唯一の説明です。仕組みや解決策の核心は書かず、どんな価値があるかを伝えてください。"
               onChange={(e) => change({ ...form, catchcopy: e.target.value })}
             />
             <SelectField label="カテゴリー" value={form.category} onChange={(e) => change({ ...form, category: e.target.value as IdeaCategory })}>
@@ -264,9 +264,9 @@ function IipEditor({ pkg }: { pkg: IdeaPackage }) {
               <p className="mt-2 text-sm text-muted">連携しているプロジェクトにノードがありません。</p>
             ) : (
               <>
-                <p className="mt-1 text-sm text-muted">購入前に公開する「サンプル知識マップ」に含めるノードを選びます。核心情報を含むノードは選ばないでください。</p>
+                <p className="mt-1 text-sm text-muted">購入者向けの詳細ページに表示する「知識マップ（概要）」に含めるノードを選びます。購入前には表示されません。</p>
                 <fieldset disabled={locked} className="mt-4 space-y-1.5">
-                  <legend className="sr-only">サンプル知識マップに含めるノード</legend>
+                  <legend className="sr-only">知識マップ（概要）に含めるノード</legend>
                   {NODE_KINDS.flatMap((k) => projectNodes.filter((n) => n.kind === k)).map((n) => {
                     const meta = NODE_KIND_META[n.kind]
                     return (
@@ -383,23 +383,22 @@ function IipDocument({ form, author }: { form: Editable; author: string }) {
 function ProductPreview({ form, sampleMap }: { form: Editable; sampleMap: SampleMap }) {
   return (
     <div className="space-y-5">
-      <p className="text-sm text-muted">審査で承認されると、アイデア詳細ページには次の範囲が表示されます。</p>
+      <p className="text-sm text-muted">審査で承認されると、購入前のアイデア詳細ページには次の範囲だけが表示されます。</p>
       <div className="rounded-lg border border-line p-6">
         <div className="flex items-center gap-2">
           <span className="text-xs font-medium tracking-wider text-accent">{form.category}</span>
           <Badge tone="ink">購入受付中</Badge>
         </div>
         <p className="mt-3 text-[17px] font-semibold text-ink">{form.title || '（タイトル未入力）'}</p>
-        <p className="mt-2 text-sm text-muted">{form.catchcopy || '（一文紹介未入力）'}</p>
+        <p className="mt-2 text-sm text-muted">{form.catchcopy || '（公開用の紹介文が未入力）'}</p>
         <p className="mt-4 text-right text-sm font-semibold text-ink">{formatYen(STANDARD_PRICE)}</p>
       </div>
       <dl className="space-y-3 text-sm">
         {(
           [
-            ['公開：概要', form.sections.overview],
-            ['公開：解決する課題', form.sections.customerProblem],
             ['公開：想定顧客', form.targetCustomers],
-            ['公開：既存手段との差異', form.sections.competition],
+            ['公開：検証の段階', '構想段階（審査後に運営と確認）'],
+            ['公開：納品物の名前', 'IIP（アイデア情報パッケージ）、知識マップ（完全版）'],
           ] as const
         ).map(([k, v]) => (
           <div key={k}>
@@ -410,10 +409,10 @@ function ProductPreview({ form, sampleMap }: { form: Editable; sampleMap: Sample
       </dl>
       <div className="flex gap-3 rounded-lg bg-paper px-4 py-3 text-sm">
         <Lock className="mt-0.5 size-4 shrink-0" aria-hidden />
-        <p className="text-muted">提案内容・市場調査・根拠資料・財務仮説・リスク・検証計画は、購入後の納品物にのみ含まれます。</p>
+        <p className="text-muted">概要・顧客課題・提案内容・市場調査・競合分析・根拠資料・財務仮説・リスク・検証計画・知識マップは、購入後にのみ開示されます。</p>
       </div>
       <div>
-        <p className="mb-2 text-xs font-medium text-moss">公開：サンプル知識マップ（{sampleMap.nodes.length}ノード）</p>
+        <p className="mb-2 text-xs font-medium text-moss">購入後に表示：知識マップ（概要）（{sampleMap.nodes.length}ノード）</p>
         {sampleMap.nodes.length > 0 ? (
           <Suspense fallback={<Loading />}>
             <KnowledgeMapPreview map={sampleMap} height={280} />
