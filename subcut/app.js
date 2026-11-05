@@ -57,7 +57,7 @@
 
   // ---------- 描画 ----------
   let filter = "active";
-  const COLORS = ["#0F766E", "#7C3AED", "#DB2777", "#EA580C", "#2563EB", "#65A30D", "#0891B2", "#9333EA", "#C2410C", "#4F46E5"];
+  const COLORS = ["#141414", "#2F5D50", "#8A5A44", "#4B5D7A", "#7A6A4F", "#5C4B6E", "#A0522D", "#3E6B5E"];
   const colorOf = s => COLORS[[...s].reduce((a, c) => a + c.charCodeAt(0), 0) % COLORS.length];
 
   function render() {
@@ -67,9 +67,9 @@
     const review = act.filter(isReview);
     const reviewSum = review.reduce((a, s) => a + s.monthly, 0);
     $("#summary").innerHTML = all.length ? `
-      <div class="stat"><div class="label">毎月のサブスク・固定費</div><div class="value num">${yen(monthly)}<small>/月</small></div></div>
-      <div class="stat"><div class="label">1年にすると</div><div class="value num">${yen(monthly * 12)}</div></div>
-      <div class="stat hl"><div class="label">見直し候補 ${review.length}件</div><div class="value num">${yen(reviewSum)}<small>/月</small></div></div>` : "";
+      <div class="kpi"><p class="kpi-en">Monthly</p><p class="kpi-value num">${yen(monthly)}</p><p class="kpi-ja">毎月のサブスク・固定費(${act.length}件)</p></div>
+      <div class="kpi"><p class="kpi-en">Yearly</p><p class="kpi-value num">${yen(monthly * 12)}</p><p class="kpi-ja">1年にすると</p></div>
+      <div class="kpi hl"><p class="kpi-en">To review</p><p class="kpi-value num">${yen(reviewSum)}<small>/月</small></p><p class="kpi-ja">見直し候補 ${review.length}件</p></div>` : "";
 
     // 気づき
     const ins = [];
@@ -83,13 +83,16 @@
     if (after.length) ins.push(`<b>${after.map(s => esc(s.name)).join("・")}</b> は解約したあとにも請求がありました。解約が完了しているか確かめてください。`);
     const unasked = act.filter(s => !s.fixed && !s.usage).length;
     if (unasked) ins.push(`${unasked}件のサブスクに「最近使った?」が未回答です。答えると見直し候補が絞りこめます。`);
-    $("#insights").innerHTML = ins.map(t => `<div class="insight">${t}</div>`).join("");
+    $("#insights").innerHTML = ins.map((t, i) => `<li><span class="idx num">${String(i + 1).padStart(2, "0")}</span><p>${t}</p></li>`).join("");
+    $("#insights-head").hidden = !ins.length;
 
     const shown = all.filter(s => filter === "all" ? true : filter === "active" ? active(s) : filter === "review" ? isReview(s) : s.status === "cancelled")
       .sort((a, b) => (isReview(b) - isReview(a)) || b.monthly - a.monthly);
     $("#subs").innerHTML = shown.map(card).join("") || (all.length ? `<li class="fine">該当するサブスクはありません。</li>` : "");
     $("#empty").hidden = all.length > 0;
+    document.body.classList.toggle("is-empty", !all.length);
     renderSavings();
+    reveal();
   }
 
   function card(s) {
@@ -107,14 +110,14 @@
       if (s.status === "keep") chips.push(`<span class="chip ok">残す</span>`);
     }
     const usage = s.status === "cancelled" || s.fixed ? "" : `
-      <div class="usage">最近使った?
+      <div class="usage"><span>最近使った?</span>
         ${[["often", "よく使う"], ["rarely", "たまに"], ["never", "使ってない"]].map(([v, l]) => `<button data-act="usage" data-v="${v}" aria-pressed="${s.usage === v}">${l}</button>`).join("")}
       </div>`;
     const actions = s.status === "cancelled"
       ? `<button class="ghost" data-act="undo">解約を取り消す</button><button class="ghost" data-act="remove">一覧から消す</button>`
-      : `<button class="primary" data-act="nav">解約ナビ</button>
+      : `<button class="primary" data-act="nav">解約ナビ <span aria-hidden="true">→</span></button>
          <button class="ghost" data-act="keep">${s.status === "keep" ? "残すをやめる" : "残す"}</button>`;
-    return `<li class="sub${s.status === "cancelled" ? " cancelled" : ""}" data-id="${esc(s.id)}">
+    return `<li class="sub reveal${s.status === "cancelled" ? " cancelled" : ""}" data-id="${esc(s.id)}">
       <div class="sub-head">
         <div class="logo" style="background:${colorOf(s.name)}">${esc([...s.name][0])}</div>
         <div class="sub-name"><b>${esc(s.name)}</b><span>${svc ? "" : esc(s.rawDesc || "")}${s.lastDate ? ` 最終請求 ${esc(s.lastDate)}` : ""}</span></div>
@@ -136,11 +139,11 @@
       return a + Math.floor(Math.max(0, days(s.cancelledAt, today())) / step) * s.amount;
     }, 0);
     $("#savings").innerHTML = `
-      <div class="big-save"><div class="label">解約で減らせた額(1年あたり)</div><div class="value num">${yen(m * 12)}</div>
-        <div class="label">${done.length}件を解約・毎月 ${yen(m)} の削減</div></div>
-      <div class="save-grid">
-        <div class="stat"><div class="label">これまでに浮いた額</div><div class="value num">${yen(so_far)}</div></div>
-        <div class="stat"><div class="label">見直し候補をすべて解約すると</div><div class="value num">+${yen(list().filter(isReview).reduce((a, s) => a + s.monthly, 0) * 12)}<small>/年</small></div></div>
+      <div class="big-save"><p class="kpi-en">Saved per year</p><p class="big-value num">${yen(m * 12)}</p>
+        <p class="kpi-ja">${done.length}件を解約・毎月 ${yen(m)} の削減</p></div>
+      <div class="summary two">
+        <div class="kpi"><p class="kpi-en">So far</p><p class="kpi-value num">${yen(so_far)}</p><p class="kpi-ja">これまでに浮いた額</p></div>
+        <div class="kpi hl"><p class="kpi-en">Potential</p><p class="kpi-value num">+${yen(list().filter(isReview).reduce((a, s) => a + s.monthly, 0) * 12)}<small>/年</small></p><p class="kpi-ja">見直し候補をすべて解約すると</p></div>
       </div>
       ${m ? `<p class="fee">「解約おまかせ」を使っていた場合の手数料は ${yen(m)}(削減月額の1か月分)。1年で ${yen(m * 11)} が手元に残ります。</p>` : ""}`;
     const soon = list().filter(s => active(s) && s.nextDate && days(today(), s.nextDate) >= 0 && days(today(), s.nextDate) <= 14)
@@ -156,11 +159,12 @@
     const steps = svc ? svc.steps : ["サービスにログインする", "「アカウント」「プラン」「お支払い」などの設定を開く", "「解約」「キャンセル」「自動更新を停止」を選ぶ"];
     const left = s.nextDate ? days(today(), s.nextDate) : null;
     $("#nav-body").innerHTML = `
+      <p class="eyebrow">Cancel Navigator</p>
       <h2>${esc(s.name)} の解約</h2>
       <p class="fine">${yen(s.amount)}/${(CYCLE[s.cycle] || "").replace("毎", "")}${left !== null && left >= 0 ? `・次の引き落としまで<b>あと${left}日</b>(それまでに解約すれば次回分はかかりません)` : ""}</p>
       <ol>${steps.map(x => `<li>${esc(x)}</li>`).join("")}</ol>
       ${svc && svc.note ? `<p class="note">${esc(svc.note)}</p>` : ""}
-      ${svc ? `<a class="primary open" href="${esc(svc.url)}" target="_blank" rel="noopener noreferrer">${esc(svc.name)} の解約ページを開く ↗</a>`
+      ${svc ? `<a class="primary open" href="${esc(svc.url)}" target="_blank" rel="noopener noreferrer">${esc(svc.name)} の解約ページを開く <span aria-hidden="true">↗</span></a>`
             : `<a class="primary open" href="https://www.google.com/search?q=${q}" target="_blank" rel="noopener noreferrer">解約方法を検索する ↗</a>`}
       <p class="fine">手続きが終わったら、完了メールや画面を確かめてから押してください。</p>
       <div class="done-row">
@@ -280,6 +284,16 @@
     e.target.value = "";
   });
   $("#wipe").addEventListener("click", () => { if (confirm("すべての記録を消します。よろしいですか?")) { state = { subs: {} }; save(); render(); } });
+
+  // 画面に入ったものから、ふわっと出す(動きを減らす設定の人には出さない)
+  const io = "IntersectionObserver" in window && !matchMedia("(prefers-reduced-motion: reduce)").matches
+    ? new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }), { rootMargin: "0px 0px -40px 0px" }) : null;
+  function reveal() {
+    document.querySelectorAll(".reveal:not(.in)").forEach(el => io ? io.observe(el) : el.classList.add("in"));
+  }
+  // ヒーローの下を流れるサービス名
+  const names = SERVICES.filter(s => s.cat !== "まとめ請求").map(s => s.name);
+  $("#marquee").innerHTML = [...names, ...names].map(n => `<span>${esc(n)}</span>`).join("");
 
   let tt;
   function toast(msg) { const t = $("#toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(tt); tt = setTimeout(() => t.classList.remove("show"), 3200); }

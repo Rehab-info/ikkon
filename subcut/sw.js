@@ -1,6 +1,6 @@
 // Sub-Cut: オフラインでも開けるようにする。中身を直したら VERSION を上げる。
-const VERSION = "subcut-1";
-const SHELL = ["./", "./index.html", "./style.css?v=1", "./services.js?v=1", "./detect.js?v=1", "./app.js?v=1", "./icon.svg", "./manifest.webmanifest", "./sample.csv"];
+const VERSION = "subcut-3";
+const SHELL = ["./", "./index.html", "./style.css?v=3", "./services.js?v=2", "./detect.js?v=2", "./app.js?v=2", "./icon.svg", "./manifest.webmanifest", "./sample.csv"];
 
 self.addEventListener("install", ev => {
   ev.waitUntil(caches.open(VERSION).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
