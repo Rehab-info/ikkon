@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sub-Cut サブスク断捨離</title>
+<meta name="description" content="カード明細からサブスクを自動で見つけて一覧にし、解約ページまでワンタップで案内します。明細はブラウザの中だけで読み、どこにも送りません。">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#F3F1EC">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="style.css?v=3">
+</head>
+<body>
+<header class="top">
+  <div class="top-inner">
+    <a class="brand" href="./" aria-label="Sub-Cut">Sub<span>—</span>Cut<small>Beta</small></a>
+    <nav class="tabs" role="tablist">
+      <button role="tab" data-tab="list" aria-selected="true"><i>01</i>一覧</button>
+      <button role="tab" data-tab="import"><i>02</i>明細を読む</button>
+      <button role="tab" data-tab="savings"><i>03</i>削減額</button>
+      <button role="tab" data-tab="settings"><i>04</i>設定</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <!-- 一覧 -->
+  <section id="tab-list" class="tab">
+    <div class="hero">
+      <p class="eyebrow">Subscription Manager</p>
+      <h1 class="display">Cut what<br>you <em>forgot.</em></h1>
+      <p class="hero-ja">忘れていたサブスクを、ひとつずつ手放す。<br>カード明細から見つけて、解約まで案内します。</p>
+    </div>
+    <div class="marquee" aria-hidden="true"><div class="marquee-track" id="marquee"></div></div>
+    <div class="summary" id="summary"></div>
+    <div class="sec-head" id="insights-head" hidden><p class="eyebrow">01 — Insights</p><h2>気づいたこと</h2></div>
+    <ol class="insights" id="insights"></ol>
+    <div class="sec-head" id="subs-head"><p class="eyebrow">02 — Subscriptions</p><h2>契約しているサブスク</h2></div>
+    <div class="filters" role="group" aria-label="絞り込み">
+      <button data-filter="active" class="on">契約中</button>
+      <button data-filter="review">見直し候補</button>
+      <button data-filter="cancelled">解約済み</button>
+      <button data-filter="all">すべて</button>
+    </div>
+    <ul class="subs" id="subs"></ul>
+    <div class="empty" id="empty" hidden>
+      <h2>まずはカード明細を読みこみましょう</h2>
+      <p>カード会社の会員サイトから明細の CSV をダウンロードして読みこむと、毎月・毎年の引き落としを自動で見つけます。</p>
+      <button class="primary" data-goto="import">明細を読みこむ</button>
+      <button class="ghost" id="try-sample">サンプル明細で試す</button>
+    </div>
+    <details class="add">
+      <summary>手で追加する</summary>
+      <form id="add-form">
+        <label>サービス名<input name="name" required list="svc-names" placeholder="例: Netflix"></label>
+        <datalist id="svc-names"></datalist>
+        <label>金額(円)<input name="amount" type="number" min="1" required inputmode="numeric"></label>
+        <label>周期<select name="cycle"><option value="monthly">毎月</option><option value="yearly">毎年</option><option value="weekly">毎週</option></select></label>
+        <label>次の引き落とし日<input name="next" type="date"></label>
+        <button class="primary" type="submit">追加</button>
+      </form>
+    </details>
+  </section>
+
+  <!-- 明細を読む -->
+  <section id="tab-import" class="tab" hidden>
+    <div class="sec-head big"><p class="eyebrow">Import</p><h2 class="display-sm">Read your<br>statement.</h2><p class="ja">カード明細を読む</p></div>
+    <p class="lead">明細の CSV は<strong>このブラウザの中だけ</strong>で読みます。サーバーには送りません。</p>
+    <label class="drop" id="drop">
+      <input type="file" id="file" accept=".csv,.txt,text/csv" multiple>
+      <span class="drop-icon" aria-hidden="true">↑</span><span class="drop-main">CSV ファイルを選ぶ</span>
+      <span class="drop-sub">ここにドラッグしてもかまいません(複数月まとめて可)</span>
+    </label>
+    <details>
+      <summary>テキストを貼りつける</summary>
+      <textarea id="paste" rows="6" placeholder="2026/10/03,NETFLIX.COM,1590&#10;2026/10/08,OPENAI *CHATGPT SUBSCR,3150"></textarea>
+      <button class="primary" id="paste-go">読みこむ</button>
+    </details>
+    <button class="ghost" id="try-sample2">サンプル明細で試す</button>
+    <p class="status" id="import-status" role="status"></p>
+    <div class="howto">
+      <h3>明細 CSV の取り方</h3>
+      <ul>
+        <li>多くのカード会社の会員サイト・アプリに「明細ダウンロード」「CSV 出力」があります。</li>
+        <li>3〜6か月分あると、毎月の引き落としかどうかを正確に見分けられます(年払いは1年分以上)。</li>
+        <li>文字コード(Shift_JIS・UTF-8)や列の並びは自動で判定します。</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 削減額 -->
+  <section id="tab-savings" class="tab" hidden>
+    <div class="sec-head big"><p class="eyebrow">Savings</p><h2 class="display-sm">What you<br>kept.</h2><p class="ja">解約で手元に残ったお金</p></div>
+    <div id="savings"></div>
+    <div class="sec-head"><p class="eyebrow">01 — Upcoming</p><h2>14日以内の引き落とし</h2></div>
+    <ul class="upcoming" id="upcoming"></ul>
+    <button class="ghost" id="ics">更新日をカレンダーに入れる(.ics)</button>
+    <div class="sec-head"><p class="eyebrow">02 — Plans</p><h2>料金プラン</h2></div>
+    <div class="plans">
+      <div class="plan">
+        <p class="plan-en">Free</p><h4>無料</h4><p class="price">¥0</p>
+        <ul><li>明細からの自動検知</li><li>一覧・見直し候補</li><li>解約ページへの案内</li></ul>
+      </div>
+      <div class="plan featured">
+        <p class="plan-en">Premium</p><h4>プレミアム</h4><p class="price">¥300<small>/月</small></p>
+        <ul><li>更新日前のお知らせ</li><li>複数カード・口座のまとめ</li><li>家族のサブスクも一緒に管理</li></ul>
+        <button class="primary" disabled>近日公開</button>
+      </div>
+      <div class="plan">
+        <p class="plan-en">Concierge</p><h4>解約おまかせ</h4><p class="price">成果報酬</p>
+        <ul><li>解約の手続きを代わりに進めます</li><li>料金は<strong>削減できた月額の1か月分</strong></li><li>解約できなければ0円</li></ul>
+        <button class="primary" disabled>近日公開</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 設定 -->
+  <section id="tab-settings" class="tab" hidden>
+    <div class="sec-head big"><p class="eyebrow">Settings</p><h2 class="display-sm">Your data,<br>your device.</h2><p class="ja">記録はこの端末の中だけに</p></div>
+    <div class="sec-head"><p class="eyebrow">01 — Data</p><h2>データ</h2></div>
+    <p class="lead">記録はこの端末のブラウザにだけ保存されます。機種変更のときは書き出して、新しい端末で読みこんでください。</p>
+    <div class="row">
+      <button class="ghost" id="export">書き出す(JSON)</button>
+      <label class="ghost file-btn">読みこむ(JSON)<input type="file" id="restore" accept=".json,application/json"></label>
+      <button class="danger" id="wipe">すべて消す</button>
+    </div>
+    <div class="sec-head"><p class="eyebrow">02 — About</p><h2>この試作版について</h2></div>
+    <p class="fine">解約ページのリンクは各サービスの公式サイトです。サービス側の画面が変わってリンク先が違うときは、公式ヘルプで「解約」を検索してください。金額・次回日は明細からの推定です。</p>
+  </section>
+</main>
+<footer class="foot"><p class="foot-mark">Sub—Cut</p><p>明細はブラウザの中だけで読み、どこにも送りません。</p></footer>
+
+<dialog id="nav">
+  <form method="dialog" class="nav-body" id="nav-body"></form>
+</dialog>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="services.js?v=2"></script>
+<script src="detect.js?v=2"></script>
+<script src="app.js?v=2"></script>
+</body>
+</html>

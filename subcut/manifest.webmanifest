@@ -1,0 +1,12 @@
+{
+  "name": "Sub-Cut サブスク断捨離",
+  "short_name": "Sub-Cut",
+  "description": "カード明細からサブスクを見つけて、解約まで案内します。",
+  "lang": "ja",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#F5F7F6",
+  "theme_color": "#0F766E",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}
