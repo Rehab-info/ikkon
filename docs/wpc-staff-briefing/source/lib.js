@@ -29,7 +29,7 @@ pres.subject = "社員向け事業説明資料";
 const C = pres.SchemeColor;
 
 const CHAPTERS = ["なぜ", "サービス", "測定・KPI", "市場・営業", "お金", "体制・安全", "これから"];
-const FOOT = "WPC事業 社員向け説明資料 v2.0｜社内限り｜数値はすべて計画上の仮定・試算（実績ではありません）";
+const FOOT = "WPC事業 社員向け説明資料 v2.1｜社内限り｜数値はすべて計画上の仮定・試算（実績ではありません）";
 
 pres.defineSlideMaster({
   title: "CONTENT",
