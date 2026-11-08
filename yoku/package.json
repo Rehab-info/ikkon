@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:preview": "VITE_PREVIEW=1 vite build --outDir dist-preview",
     "preview": "vite preview --port 4173 --strictPort",
     "typecheck": "tsc -b --noEmit",
     "test": "vitest run",

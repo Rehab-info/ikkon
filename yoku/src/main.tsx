@@ -3,6 +3,8 @@ import { createRoot } from "react-dom/client";
 import "./index.css";
 import App from "./App";
 
+document.documentElement.lang = "ja";
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <App />
@@ -10,6 +12,6 @@ createRoot(document.getElementById("root")!).render(
 );
 
 // Service Worker(オフライン用)。本番ビルドのときだけ登録する
-if (import.meta.env.PROD && "serviceWorker" in navigator) {
+if (import.meta.env.PROD && import.meta.env.VITE_PREVIEW !== "1" && "serviceWorker" in navigator) {
   void import("virtual:pwa-register").then(({ registerSW }) => registerSW({ immediate: true }));
 }

@@ -24,10 +24,13 @@ export const CSP = [
   "frame-src 'none'"
 ].join("; ");
 
+const PREVIEW = process.env.VITE_PREVIEW === "1";
+
 function cspPlugin(): Plugin {
   return {
     name: "yoku-csp",
-    apply: "build",
+    // プレビュー版は表示先の枠が独自の CSP とスクリプトを持つため、ここでは入れない
+    apply: (_config, env) => env.command === "build" && !PREVIEW,
     transformIndexHtml(html) {
       return html.replace(
         "<meta charset=\"UTF-8\" />",
@@ -45,6 +48,7 @@ export default defineConfig({
     tailwindcss(),
     cspPlugin(),
     VitePWA({
+      disable: PREVIEW,
       registerType: "autoUpdate",
       injectRegister: false,
       includeAssets: ["icon.svg", "icon-192.png", "icon-512.png", "apple-touch-icon.png"],

@@ -7,6 +7,7 @@ import { buildExport, downloadJson, formatBytes } from "../../lib/export";
 import { todayISO } from "../../lib/date";
 import { href } from "../../lib/router";
 import type { ThemePreference } from "../../db/types";
+import { IS_PREVIEW } from "../../lib/env";
 
 const TABLE_LABEL: Record<string, string> = {
   wellness: "Wellness",
@@ -162,10 +163,11 @@ export function SettingsPage() {
           <StorageInfo />
         </Card>
         <div className="mt-3 flex flex-col gap-2">
-          <Button variant="secondary" full onClick={() => setExportOpen(true)}>
+          <Button variant="secondary" full disabled={IS_PREVIEW} onClick={() => setExportOpen(true)}>
             <Download aria-hidden size={18} />
             すべての記録を書き出す(JSON)
           </Button>
+          {IS_PREVIEW && <p className="text-center text-xs text-muted">プレビュー版ではファイルを保存できないため、書き出しは使えません。</p>}
           <Button variant="ghost" full className="text-danger hover:bg-danger-soft" onClick={() => setDeleteOpen(true)}>
             <Trash2 aria-hidden size={18} />
             すべての記録を削除

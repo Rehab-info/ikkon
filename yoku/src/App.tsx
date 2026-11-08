@@ -23,6 +23,7 @@ import { SettingsPage } from "./features/settings/SettingsPage";
 import { PrivacyPage } from "./features/settings/PrivacyPage";
 import { Welcome } from "./features/onboarding/Welcome";
 import type { DataMode } from "./db/types";
+import { IS_PREVIEW } from "./lib/env";
 
 function useTheme() {
   const { settings } = useApp();
@@ -30,13 +31,21 @@ function useTheme() {
     const root = document.documentElement;
     const mq = window.matchMedia?.("(prefers-color-scheme: dark)");
     const apply = () => {
-      const dark = settings.theme === "dark" || (settings.theme === "system" && !!mq?.matches);
+      // 表示先が data-theme でテーマを指定していれば、「端末に合わせる」のときはそれに従う
+      const hostTheme = root.getAttribute("data-theme");
+      const systemDark = hostTheme === "dark" ? true : hostTheme === "light" ? false : !!mq?.matches;
+      const dark = settings.theme === "dark" || (settings.theme === "system" && systemDark);
       root.classList.toggle("dark", dark);
       document.querySelector('meta[name="theme-color"]')?.setAttribute("content", dark ? "#121816" : "#FAF9F6");
     };
     apply();
     mq?.addEventListener?.("change", apply);
-    return () => mq?.removeEventListener?.("change", apply);
+    const obs = new MutationObserver(apply);
+    obs.observe(root, { attributes: true, attributeFilter: ["data-theme"] });
+    return () => {
+      mq?.removeEventListener?.("change", apply);
+      obs.disconnect();
+    };
   }, [settings.theme]);
 }
 
@@ -207,6 +216,11 @@ function Shell() {
         本文へ移動
       </a>
       <TopBar />
+      {IS_PREVIEW && (
+        <p className="mx-auto max-w-xl px-4 pt-3 text-xs leading-relaxed text-muted">
+          仮公開のプレビュー版です。記録はこのブラウザーの中だけに保存され、ブラウザーの設定などで消えることがあります。オフライン・共有シート・書き出しは使えません(共有はコピーで行えます)。
+        </p>
+      )}
       <main id="main" tabIndex={-1} className="outline-none">
         <Routes route={route} />
       </main>

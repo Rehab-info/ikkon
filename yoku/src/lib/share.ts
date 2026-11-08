@@ -13,6 +13,7 @@ import type {
   IntimacyPreference,
   IntimacyPreferenceStatus
 } from "../db/types";
+import { IS_PREVIEW } from "./env";
 import { BOUNDARY_STATUS_LABEL, BOUNDARY_STATUS_ORDER, PREF_STATUS_LABEL, PREF_STATUS_ORDER } from "./labels";
 
 export type ShareKind = "feeling" | "intimacy" | "food" | "thanks" | "topic";
@@ -88,7 +89,7 @@ export type ShareResult = "shared" | "copied" | "cancelled" | "failed";
 export async function shareText(text: string): Promise<ShareResult> {
   const body = normalizeShareText(text);
   const nav = globalThis.navigator as Navigator | undefined;
-  if (nav && typeof nav.share === "function") {
+  if (canUseShareSheet() && nav) {
     try {
       await nav.share({ text: body });
       return "shared";
@@ -127,5 +128,6 @@ export async function copyText(text: string): Promise<boolean> {
 }
 
 export function canUseShareSheet(): boolean {
+  if (IS_PREVIEW) return false;
   return typeof globalThis.navigator?.share === "function";
 }

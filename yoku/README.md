@@ -87,5 +87,17 @@ yoku/
 
 ## 公開について
 
+### 仮公開(プレビュー)
+
+claude.ai の非公開ページとして仮公開している(所有者と、共有された人だけが開ける)。
+
+```bash
+npm run build:preview   # dist-preview/ に出力(VITE_PREVIEW=1)
+```
+
+プレビュー版は表示先の枠の制限に合わせ、Service Worker(オフライン)・CSP の meta・共有シート・JSON の書き出しを止め、画面上部に「仮公開のプレビュー版です」と表示する。共有はコピーで行う。記録は開いたブラウザーの中だけに保存される。公開時は `dist-preview/index.html` を `<title>` からはじまる断片(doctype・head・body なし)に書き換えて載せる。
+
+### GitHub Pages
+
 GitHub Pages への公開は**していません**(公開デプロイは事前承認事項のため)。
 現在のリポジトリの Pages ワークフローはリポジトリをそのまま公開するため、`main` に入ると `yoku/` の**ソース**が `/ikkon/yoku/` に置かれますが、ビルドしていないので画面は表示されません。公開する場合は、ワークフローに `cd yoku && npm ci && npm run build` を足し、`yoku/dist` を公開物に含める変更が必要です(KNOWN_LIMITATIONS.md)。
