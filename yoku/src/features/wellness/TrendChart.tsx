@@ -32,7 +32,7 @@ export function TrendChart({ points, label, unit = "", max = 10 }: { points: Tre
               contentStyle={{ background: c.surface, border: `1px solid ${c.line}`, borderRadius: 12, color: c.text, fontSize: 12 }}
             />
             <Line
-              type="monotone"
+              type="linear"
               dataKey="value"
               stroke={c.primary}
               strokeWidth={2.25}

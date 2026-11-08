@@ -41,16 +41,17 @@ const Ctx = createContext<AppState | null>(null);
 export function AppProvider({ children, initialMode }: { children: ReactNode; initialMode?: DataMode }) {
   const [mode, setMode] = useState<DataMode>(() => initialMode ?? readMode());
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
-  const [ready, setReady] = useState(false);
+  // どの DB の読みこみが終わったか。mode を切り替えた直後の描画で、古い ready を使わないようにする
+  const [readyDb, setReadyDb] = useState<YokuDB | null>(null);
   const [generation, setGeneration] = useState(0);
   const [busy, setBusy] = useState(false);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const db = useMemo(() => getDb(mode), [mode, generation]);
+  const ready = readyDb === db;
 
   useEffect(() => {
     if (busy) return;
     let alive = true;
-    setReady(false);
     (async () => {
       if (mode === "demo") {
         const isDemo = await db.meta.get("isDemo");
@@ -63,11 +64,11 @@ export function AppProvider({ children, initialMode }: { children: ReactNode; in
       const s = await loadSettings(db);
       if (alive) {
         setSettings(s);
-        setReady(true);
+        setReadyDb(db);
       }
     })().catch((e) => {
       console.error(e);
-      if (alive) setReady(true);
+      if (alive) setReadyDb(db);
     });
     return () => {
       alive = false;
@@ -96,7 +97,7 @@ export function AppProvider({ children, initialMode }: { children: ReactNode; in
 
   const deleteEverything = useCallback(async () => {
     // 先に画面を外し、開いているライブクエリ(DB 接続)を止めてから消す
-    setReady(false);
+    setReadyDb(null);
     setBusy(true);
     await new Promise((r) => setTimeout(r, 0));
     await destroyDb("real");

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Suspense, lazy, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useApp } from "../../state/AppContext";
@@ -10,7 +10,8 @@ import { deleteWellness } from "../../db/repo";
 import type { WellnessEntry } from "../../db/types";
 import { visibleScoreMeta } from "./visibleMetrics";
 import { buildTrend, type MetricKey } from "./trend";
-import { TrendChart } from "./TrendChart";
+// グラフのライブラリは大きいので、Wellness を開いたときだけ読みこむ
+const TrendChart = lazy(() => import("./TrendChart").then((m) => ({ default: m.TrendChart })));
 
 export function WellnessSummary({ entry, compact = false }: { entry: WellnessEntry; compact?: boolean }) {
   const { settings } = useApp();
@@ -96,7 +97,9 @@ export function WellnessPage() {
               </option>
             ))}
           </select>
-          <TrendChart points={points} label={metricLabel} unit={safeMetric === "sleepHours" ? "時間" : ""} max={safeMetric === "sleepHours" ? 12 : 10} />
+          <Suspense fallback={<div className="h-48 animate-pulse rounded-xl bg-surface-2" aria-label="グラフを読みこみ中" />}>
+            <TrendChart points={points} label={metricLabel} unit={safeMetric === "sleepHours" ? "時間" : ""} max={safeMetric === "sleepHours" ? 12 : 10} />
+          </Suspense>
         </Card>
         <div className="mt-3">
           <Notice>
