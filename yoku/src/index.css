@@ -1,0 +1,195 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* デザイントークン(DESIGN_SYSTEM.md)。色は CSS 変数で持ち、ダークモードで差し替える */
+:root {
+  --c-primary: #486a64;
+  --c-primary-strong: #3a5852;
+  --c-primary-soft: #e3ece9;
+  --c-bg: #faf9f6;
+  --c-surface: #ffffff;
+  --c-surface-2: #f3f1ec;
+  --c-text: #273330;
+  --c-muted: #5c6763;
+  --c-line: #e4e1da;
+  --c-accent: #c88f91;
+  --c-accent-text: #9a5c5f;
+  --c-accent-soft: #f6e9e9;
+  --c-food: #b98a4e;
+  --c-food-soft: #f5ecdf;
+  --c-thanks: #8a7a52;
+  --c-thanks-soft: #f2efe2;
+  --c-danger: #a8443f;
+  --c-danger-soft: #f8e6e4;
+  --c-on-primary: #ffffff;
+  color-scheme: light;
+}
+
+.dark {
+  --c-primary: #8fb8ae;
+  --c-primary-strong: #a9cbc2;
+  --c-primary-soft: #23332f;
+  --c-bg: #121816;
+  --c-surface: #1b2321;
+  --c-surface-2: #222c29;
+  --c-text: #e8ece9;
+  --c-muted: #a6b1ad;
+  --c-line: #2e3a37;
+  --c-accent: #e0a9ab;
+  --c-accent-text: #ebbbbd;
+  --c-accent-soft: #3a2829;
+  --c-food: #e0b67c;
+  --c-food-soft: #352c20;
+  --c-thanks: #d6c58f;
+  --c-thanks-soft: #302d20;
+  --c-danger: #f09a94;
+  --c-danger-soft: #3c2221;
+  --c-on-primary: #10201c;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-primary: var(--c-primary);
+  --color-primary-strong: var(--c-primary-strong);
+  --color-primary-soft: var(--c-primary-soft);
+  --color-bg: var(--c-bg);
+  --color-surface: var(--c-surface);
+  --color-surface-2: var(--c-surface-2);
+  --color-ink: var(--c-text);
+  --color-muted: var(--c-muted);
+  --color-line: var(--c-line);
+  --color-accent: var(--c-accent);
+  --color-accent-text: var(--c-accent-text);
+  --color-accent-soft: var(--c-accent-soft);
+  --color-food: var(--c-food);
+  --color-food-soft: var(--c-food-soft);
+  --color-thanks: var(--c-thanks);
+  --color-thanks-soft: var(--c-thanks-soft);
+  --color-danger: var(--c-danger);
+  --color-danger-soft: var(--c-danger-soft);
+  --color-on-primary: var(--c-on-primary);
+  --font-sans: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic UI", "Meiryo", system-ui, sans-serif;
+  --font-serif: "Hiragino Mincho ProN", "Noto Serif JP", "Yu Mincho", "YuMincho", serif;
+  --radius-card: 1.25rem;
+  --shadow-card: 0 1px 2px rgb(39 51 48 / 0.04), 0 8px 24px -12px rgb(39 51 48 / 0.12);
+}
+
+html {
+  background: var(--c-bg);
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--c-bg);
+  color: var(--c-text);
+  font-family: var(--font-sans);
+  font-feature-settings: "palt" 1;
+  line-height: 1.7;
+  letter-spacing: 0.01em;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* キーボード操作のときだけ、はっきり見えるフォーカス枠 */
+:focus-visible {
+  outline: 3px solid var(--c-primary);
+  outline-offset: 2px;
+  border-radius: 0.5rem;
+}
+
+.font-brand {
+  font-family: var(--font-serif);
+  letter-spacing: 0.18em;
+}
+
+.sr-only-focusable:not(:focus):not(:focus-within) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* 0〜10 のスライダー */
+.yoku-range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 2.75rem;
+  background: transparent;
+  cursor: pointer;
+}
+.yoku-range::-webkit-slider-runnable-track {
+  height: 0.375rem;
+  border-radius: 999px;
+  background: linear-gradient(to right, var(--c-primary) var(--fill, 0%), var(--c-line) var(--fill, 0%));
+}
+.yoku-range::-moz-range-track {
+  height: 0.375rem;
+  border-radius: 999px;
+  background: var(--c-line);
+}
+.yoku-range::-moz-range-progress {
+  height: 0.375rem;
+  border-radius: 999px;
+  background: var(--c-primary);
+}
+.yoku-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 1.75rem;
+  height: 1.75rem;
+  margin-top: -0.6875rem;
+  border-radius: 999px;
+  background: var(--c-surface);
+  border: 2px solid var(--c-primary);
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.15);
+}
+.yoku-range::-moz-range-thumb {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 999px;
+  background: var(--c-surface);
+  border: 2px solid var(--c-primary);
+}
+.yoku-range:focus-visible {
+  outline: none;
+}
+.yoku-range:focus-visible::-webkit-slider-thumb {
+  outline: 3px solid var(--c-primary);
+  outline-offset: 2px;
+}
+
+.safe-bottom {
+  padding-bottom: max(env(safe-area-inset-bottom), 0.5rem);
+}
+.safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.fade-in {
+  animation: fade-in 0.25s ease-out both;
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
