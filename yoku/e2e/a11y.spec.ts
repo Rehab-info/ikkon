@@ -8,6 +8,7 @@ const ROUTES = [
   "/#/wellness/edit",
   "/#/intimacy",
   "/#/intimacy/preference/new",
+  "/#/intimacy?tab=memories",
   "/#/food",
   "/#/food/new",
   "/#/thanks",

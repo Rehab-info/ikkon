@@ -35,6 +35,7 @@ test.describe("スマートフォンでの4領域の操作", () => {
     // ぼかし表示 → タップで表示
     await page.getByRole("button", { name: "内容を表示" }).first().click();
     await page.getByRole("link", { name: /ゆっくりした時間/ }).click();
+    await page.getByRole("button", { name: "好みを編集" }).click();
     await page.getByText("今は希望しない").click();
     await page.getByRole("button", { name: "保存する" }).click();
     await expect(page.getByText("今は希望しない").first()).toBeVisible();

@@ -1,14 +1,18 @@
 import { useEffect, useState } from "react";
 import { useApp } from "../../state/AppContext";
-import { ChoiceGroup, EmptyState, Notice, Page, Select, TextArea, TextField, useConfirm, useToast } from "../../components/ui";
+import { Pencil, Send } from "lucide-react";
+import { Card, ChoiceGroup, Chip, EmptyState, Notice, Page, Select, TextArea, TextField, buttonClass, useConfirm, useToast } from "../../components/ui";
 import { TagInput } from "../../components/TagInput";
 import { FormActions } from "../../components/FormActions";
 import { useEditable } from "../../components/useEditable";
 import { CATEGORY_DEFAULT_STATUS, CATEGORY_LABEL, CATEGORY_ORDER, PREF_STATUS_LABEL, PREF_STATUS_ORDER } from "../../lib/labels";
 import { LIMITS, isCategory } from "../../lib/validate";
 import { ValidationError, savePreference } from "../../db/repo";
-import { goBack, navigate } from "../../lib/router";
-import type { IntimacyCategory, IntimacyPreferenceStatus } from "../../db/types";
+import { goBack, href, navigate } from "../../lib/router";
+import { canRequestAgain } from "../../lib/request";
+import { daysBetween } from "../../lib/date";
+import { RequestActionCard } from "./RequestActionCard";
+import type { IntimacyCategory, IntimacyPreference, IntimacyPreferenceStatus } from "../../db/types";
 import type { FieldErrors } from "../../lib/validate";
 
 export function PreferenceEditPage({ id, category: categoryParam }: { id?: string; category: string | null }) {
@@ -25,6 +29,8 @@ export function PreferenceEditPage({ id, category: categoryParam }: { id?: strin
   const [errors, setErrors] = useState<FieldErrors>({});
   const [saving, setSaving] = useState(false);
   const [statusTouched, setStatusTouched] = useState(false);
+  /** 既存の記録は、まず詳細を表示し、「好みを編集」でフォームに切り替える */
+  const [editing, setEditing] = useState(!id);
 
   useEffect(() => {
     if (!item) return;
@@ -37,6 +43,7 @@ export function PreferenceEditPage({ id, category: categoryParam }: { id?: strin
 
   if (!loaded) return null;
   if (id && !item) return <Page title="見つかりません" back="/intimacy"><EmptyState title="この記録は削除されたか、存在しません" /></Page>;
+  if (item && !editing) return <PreferenceDetail item={item} onEdit={() => setEditing(true)} />;
 
   async function onSubmit() {
     setSaving(true);
@@ -115,6 +122,58 @@ export function PreferenceEditPage({ id, category: categoryParam }: { id?: strin
           }
         />
       </form>
+    </Page>
+  );
+}
+
+const STALE_DAYS = 90;
+
+/** 好みの詳細。編集・もう一度お願いしたい・共有メッセージの作成への入口 */
+function PreferenceDetail({ item, onEdit }: { item: IntimacyPreference; onEdit: () => void }) {
+  const requestable = canRequestAgain(item);
+  const requestCategory = ["play", "position", "again"].includes(item.category);
+  const stale = daysBetween(new Date(item.updatedAt), new Date()) >= STALE_DAYS;
+  return (
+    <Page title={item.title} eyebrow={`Intimacy・${CATEGORY_LABEL[item.category]}`} back="/intimacy">
+      <Card className="mb-5">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs text-muted">今の気持ち</span>
+          <Chip tone={item.status === "like" || item.status === "curious" ? "accent" : "neutral"}>{PREF_STATUS_LABEL[item.status]}</Chip>
+          {item.tags.map((t) => (
+            <Chip key={t}>#{t}</Chip>
+          ))}
+        </div>
+        <p className="mt-2 text-xs text-muted">最終更新:{new Date(item.updatedAt).toLocaleDateString("ja-JP")}</p>
+        {stale && <p className="mt-1 text-xs text-muted">しばらく見直していません。今の気持ちと合っていますか？</p>}
+        {item.notes && (
+          <div className="mt-3 border-t border-line pt-3">
+            <p className="text-xs text-muted">メモ(自分だけが見られます。共有文には入りません)</p>
+            <p className="mt-1 whitespace-pre-wrap text-sm text-ink">{item.notes}</p>
+          </div>
+        )}
+      </Card>
+
+      {requestable && (
+        <div className="mb-5">
+          <RequestActionCard to={`/intimacy/request?preference=${item.id}`} />
+        </div>
+      )}
+      {requestCategory && !requestable && (
+        <div className="mb-5">
+          <Notice>今の気持ちが「{PREF_STATUS_LABEL[item.status]}」なので、「もう一度お願いしたい」は表示していません。気持ちが変わったら、編集から変えられます。</Notice>
+        </div>
+      )}
+
+      <div className="flex flex-col gap-2">
+        <a href={href(`/share?kind=intimacy&ids=p:${item.id}`)} className={buttonClass("secondary", true)}>
+          <Send aria-hidden size={18} />
+          共有メッセージを作成
+        </a>
+        <button type="button" onClick={onEdit} className={buttonClass("ghost", true)}>
+          <Pencil aria-hidden size={18} />
+          好みを編集
+        </button>
+      </div>
     </Page>
   );
 }

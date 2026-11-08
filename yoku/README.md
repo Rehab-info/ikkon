@@ -5,7 +5,7 @@
 YOKU は、食欲・睡眠・性的な関心といった欲求を「採点」するのではなく、自分を理解し、パートナーに気持ちや好みを伝え、うれしかったことと感謝を残すためのウェルビーイング・アプリです(成人向け)。
 
 - **Wellness**:三大欲求と心身の状態を 0〜10 の主観で記録し、項目ごとに 7日・30日の推移を見る
-- **Intimacy**:好み・良かった体験・境界線を、自分のために整理する(初期設定で非公開)
+- **Intimacy**:好み・良かった体験・境界線を、自分のために整理する(初期設定で非公開)。「もう一度お願いしたい ♡」で、伝えにくい希望をやさしい文章にして、自分で確認してから送れる
 - **Food**:美味しかった料理と写真、また食べたいものを残す
 - **Thanks**:感謝とうれしかった出来事を残す
 - **Together**:上の4つから、本人が選んで確認した文章だけを共有する
@@ -46,9 +46,9 @@ npm run preview    # http://localhost:4173/
 
 ```bash
 npm run typecheck  # TypeScript strict
-npm test           # Vitest + React Testing Library(70件)
+npm test           # Vitest + React Testing Library(83件)
 npm run build
-npm run e2e        # Playwright(スマートフォン画面・13件。本番ビルドを vite preview で起動して実行)
+npm run e2e        # Playwright(スマートフォン画面・15件。本番ビルドを vite preview で起動して実行)
 npm run check      # 上の4つをまとめて
 ```
 

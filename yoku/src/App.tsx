@@ -12,6 +12,7 @@ import { IntimacyPage } from "./features/intimacy/IntimacyPage";
 import { PreferenceEditPage } from "./features/intimacy/PreferenceEditPage";
 import { MemoryEditPage } from "./features/intimacy/MemoryEditPage";
 import { BoundaryEditPage } from "./features/intimacy/BoundaryEditPage";
+import { RequestPage } from "./features/intimacy/RequestPage";
 import { FoodPage } from "./features/food/FoodPage";
 import { FoodEditPage } from "./features/food/FoodEditPage";
 import { ThanksPage } from "./features/thanks/ThanksPage";
@@ -159,6 +160,7 @@ function Routes({ route }: { route: Route }) {
       if (b === "preference") return <PreferenceEditPage id={c === "new" ? undefined : c} category={route.query.get("category")} />;
       if (b === "memory") return <MemoryEditPage id={c === "new" ? undefined : c} />;
       if (b === "boundary") return <BoundaryEditPage id={c === "new" ? undefined : c} />;
+      if (b === "request") return <RequestPage query={route.query} />;
       return <IntimacyPage tab={route.query.get("tab")} />;
     case "food":
       return b ? <FoodEditPage id={b === "new" ? undefined : b} /> : <FoodPage />;

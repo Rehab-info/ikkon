@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 import { useApp } from "../../state/AppContext";
-import { EmptyState, Notice, Page, TextArea, TextField, useConfirm, useToast } from "../../components/ui";
+import { Pencil } from "lucide-react";
+import { Card, EmptyState, Notice, Page, TextArea, TextField, buttonClass, useConfirm, useToast } from "../../components/ui";
+import { RequestActionCard } from "./RequestActionCard";
+import { formatJaDate } from "../../lib/date";
+import type { IntimacyMemory } from "../../db/types";
 import { FormActions } from "../../components/FormActions";
 import { useEditable } from "../../components/useEditable";
 import { LIMITS, type FieldErrors } from "../../lib/validate";
@@ -15,6 +19,7 @@ export function MemoryEditPage({ id }: { id?: string }) {
   const [f, setF] = useState({ date: "", title: "", positiveExperience: "", feelings: "", wouldLikeAgain: "", notes: "" });
   const [errors, setErrors] = useState<FieldErrors>({});
   const [saving, setSaving] = useState(false);
+  const [editing, setEditing] = useState(!id);
   useEffect(() => {
     if (item)
       setF({
@@ -28,6 +33,7 @@ export function MemoryEditPage({ id }: { id?: string }) {
   }, [item]);
   if (!loaded) return null;
   if (id && !item) return <Page title="見つかりません" back="/intimacy"><EmptyState title="この記録は削除されたか、存在しません" /></Page>;
+  if (item && !editing) return <MemoryDetail item={item} onEdit={() => setEditing(true)} />;
   const set = (k: keyof typeof f) => (v: string) => setF((s) => ({ ...s, [k]: v }));
 
   return (
@@ -74,6 +80,41 @@ export function MemoryEditPage({ id }: { id?: string }) {
           }
         />
       </form>
+    </Page>
+  );
+}
+
+/** 良かった体験の詳細 */
+function MemoryDetail({ item, onEdit }: { item: IntimacyMemory; onEdit: () => void }) {
+  const rows: [string, string | undefined][] = [
+    ["心地よかったこと", item.positiveExperience],
+    ["うれしかったこと", item.feelings],
+    ["また希望すること", item.wouldLikeAgain],
+    ["自由記述", item.notes]
+  ];
+  return (
+    <Page title={item.title} eyebrow="Intimacy・良かった体験" back="/intimacy?tab=memories" subtitle={item.date ? formatJaDate(item.date) : "日付なし"}>
+      <Card className="mb-5">
+        <dl className="space-y-3">
+          {rows
+            .filter(([, v]) => v)
+            .map(([k, v]) => (
+              <div key={k}>
+                <dt className="text-xs text-muted">{k}</dt>
+                <dd className="whitespace-pre-wrap text-sm text-ink">{v}</dd>
+              </div>
+            ))}
+          {rows.every(([, v]) => !v) && <p className="text-sm text-muted">タイトルだけの記録です。</p>}
+        </dl>
+        <p className="mt-3 border-t border-line pt-3 text-xs text-muted">この記録は自分だけが見られます。共有文に自動では入りません。</p>
+      </Card>
+      <div className="mb-5">
+        <RequestActionCard to={`/intimacy/request?memory=${item.id}`} />
+      </div>
+      <button type="button" onClick={onEdit} className={buttonClass("ghost", true)}>
+        <Pencil aria-hidden size={18} />
+        記録を編集
+      </button>
     </Page>
   );
 }

@@ -67,6 +67,23 @@ interface GratitudeEntry { id; date; recipient?; reason; feeling?; message?; sha
 - `IntimacyBoundary` を独立したテーブルに(境界線は好みとは別の4段階)
 - 体験・相手を評価する数値の項目は**どの型にもない**
 
+## 一時的な型(保存しない)
+
+「もう一度お願いしたい」の下書き(`src/lib/request.ts`)。画面の状態としてだけ持ち、IndexedDB には書かない。
+
+```ts
+type RequestTone = "gentle" | "shy" | "discuss" | "simple";
+interface IntimacyRequestDraft {
+  preferenceId?: string;  // どちらか一方
+  memoryId?: string;
+  playTitle: string;      // 〇〇 に入る呼び方(本人が編集可・80字まで・1行)
+  tone: RequestTone;
+  message: string;        // 送る文章(本人が編集可)
+}
+```
+
+スキーマの変更はない(version 1 のまま)。
+
 ## 欠測値
 
 - **未回答はキーを持たない**(`undefined` を保存しない。`compact()` で取り除く)。`0` は有効な回答として保存する。
