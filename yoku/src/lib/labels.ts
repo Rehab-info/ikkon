@@ -13,12 +13,30 @@ export interface ScoreMeta {
   high: string;
   /** 三大欲求か、心身の状態か(表示のまとまりだけに使う。合算はしない) */
   group: "desire" | "state";
+  /** 何を答えればよいかの説明 */
+  hint?: string;
+  /** 数値の目安 */
+  guide?: readonly { score: number; text: string }[];
 }
 
 export const SCORE_META: readonly ScoreMeta[] = [
   { key: "appetite", label: "食欲", low: "まったくない", high: "とても強い", group: "desire" },
   { key: "sleepiness", label: "眠気", low: "まったくない", high: "とても眠い", group: "desire" },
-  { key: "sexualDesire", label: "性的な関心・欲求", low: "まったくない", high: "とても強い", group: "desire" },
+  {
+    key: "sexualDesire",
+    label: "性欲",
+    low: "まったくムラムラしない",
+    high: "したくてたまらない",
+    group: "desire",
+    hint: "今日、セックスやひとりエッチ(オナニー)をどれくらいしたい気分か。相手がいるかどうかは関係なく、自分の体と気持ちのムラムラ度で答えてください。",
+    guide: [
+      { score: 0, text: "まったくしたくない。誘われても気が乗らない" },
+      { score: 3, text: "少しだけ。誘われたら考えるかも" },
+      { score: 5, text: "チャンスがあればしたい" },
+      { score: 7, text: "けっこうムラムラしている。自分から誘いたい" },
+      { score: 10, text: "したくてたまらない。頭から離れない" }
+    ]
+  },
   { key: "stress", label: "ストレス", low: "まったくない", high: "とても強い", group: "state" },
   { key: "mood", label: "気分", low: "とても落ちこんでいる", high: "とても良い", group: "state" },
   { key: "fatigue", label: "疲労", low: "まったくない", high: "とても疲れている", group: "state" },
@@ -63,6 +81,17 @@ export const CATEGORY_ORDER: readonly IntimacyCategory[] = [
   "avoid",
   "memo"
 ];
+
+/** 「名前」欄の入力例。何を書けばよいかが分かるよう、ぼかさずに書く */
+export const CATEGORY_EXAMPLE: Record<IntimacyCategory, string> = {
+  position: "例:正常位、騎乗位、バック、対面座位、寝バック",
+  play: "例:キスをたくさん、前戯を長めに、乳首を責められる、クンニ・フェラ、言葉責め",
+  interest: "例:おもちゃを使う、目隠し、軽く縛る、ラブホテル、一緒にお風呂でする",
+  again: "例:旅行先のホテルでしたこと、朝起きてすぐする、何回も続けてする",
+  dislike: "例:痛いくらい強くされる、急に挿れられる、終わってすぐ寝られる",
+  avoid: "例:ゴムなしでする、写真や動画を撮る、アナル",
+  memo: "例:生理前はしたくなりやすい、疲れていると濡れにくい/勃ちにくい"
+};
 
 /** カテゴリを選んだときに最初に入れておくステータス(いつでも変えられる) */
 export const CATEGORY_DEFAULT_STATUS: Record<IntimacyCategory, IntimacyPreferenceStatus> = {

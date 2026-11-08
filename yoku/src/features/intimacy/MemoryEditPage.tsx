@@ -59,10 +59,28 @@ export function MemoryEditPage({ id }: { id?: string }) {
         }}
       >
         <TextField label="日付" type="date" optional value={f.date} onChange={set("date")} error={errors.date} />
-        <TextField label="タイトル" value={f.title} onChange={set("title")} maxLength={LIMITS.title} error={errors.title} placeholder="例:雨の日曜日" />
-        <TextArea label="心地よかったこと" optional value={f.positiveExperience} onChange={set("positiveExperience")} />
-        <TextArea label="うれしかったこと" optional value={f.feelings} onChange={set("feelings")} />
-        <TextArea label="また希望すること" optional value={f.wouldLikeAgain} onChange={set("wouldLikeAgain")} />
+        <TextField label="タイトル" value={f.title} onChange={set("title")} maxLength={LIMITS.title} error={errors.title} placeholder="例:旅行先のホテルでの夜" />
+        <TextArea
+          label="気持ちよかったこと"
+          optional
+          value={f.positiveExperience}
+          onChange={set("positiveExperience")}
+          placeholder="例:前戯がいつもより長くて、すごく濡れた/硬くなった。騎乗位でゆっくり動いたのがよかった"
+        />
+        <TextArea
+          label="うれしかったこと"
+          optional
+          value={f.feelings}
+          onChange={set("feelings")}
+          placeholder="例:終わったあとも抱きしめてくれた。「かわいい」と言われた"
+        />
+        <TextArea
+          label="また希望すること"
+          optional
+          value={f.wouldLikeAgain}
+          onChange={set("wouldLikeAgain")}
+          placeholder="例:またあの体位でしたい。次は電気を消さずにしてみたい"
+        />
         <TextArea label="自由記述" optional value={f.notes} onChange={set("notes")} rows={4} />
         <FormActions
           saving={saving}
@@ -87,7 +105,7 @@ export function MemoryEditPage({ id }: { id?: string }) {
 /** 良かった体験の詳細 */
 function MemoryDetail({ item, onEdit }: { item: IntimacyMemory; onEdit: () => void }) {
   const rows: [string, string | undefined][] = [
-    ["心地よかったこと", item.positiveExperience],
+    ["気持ちよかったこと", item.positiveExperience],
     ["うれしかったこと", item.feelings],
     ["また希望すること", item.wouldLikeAgain],
     ["自由記述", item.notes]

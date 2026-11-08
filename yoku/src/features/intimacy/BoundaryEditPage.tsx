@@ -47,7 +47,7 @@ export function BoundaryEditPage({ id }: { id?: string }) {
           }
         }}
       >
-        <TextField label="内容" value={title} onChange={setTitle} maxLength={LIMITS.title} error={errors.title} placeholder="例:新しいことを試すタイミング" />
+        <TextField label="内容" value={title} onChange={setTitle} maxLength={LIMITS.title} error={errors.title} placeholder="例:ゴムは必ずつける、生理中はしない、アナルはしない" />
         <ChoiceGroup
           label="今の気持ち"
           value={status}

@@ -84,7 +84,7 @@ describe("Wellness の記録(0 と未回答の区別)", () => {
     await setup({ settings: { showSexualDesire: false } });
     await go("#/wellness/edit");
     await screen.findByRole("group", { name: "食欲" });
-    expect(screen.queryByRole("group", { name: "性的な関心・欲求" })).toBeNull();
+    expect(screen.queryByRole("group", { name: "性欲" })).toBeNull();
   });
 });
 

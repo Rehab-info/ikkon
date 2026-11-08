@@ -18,7 +18,7 @@ export const DOMAINS: Record<DomainKey, DomainMeta> = {
     key: "wellness",
     name: "Wellness",
     ja: "からだと心",
-    description: "食欲・睡眠・性的な関心と、心身の状態",
+    description: "食欲・睡眠・性欲と、心身の状態",
     path: "/wellness",
     Icon: Leaf,
     tone: "bg-primary-soft text-primary-strong"

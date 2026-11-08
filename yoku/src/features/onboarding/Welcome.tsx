@@ -15,7 +15,7 @@ export function Welcome() {
         <h1 className="font-brand mt-5 text-3xl font-semibold text-ink">YOKU</h1>
         <p className="mt-3 font-serif text-lg text-ink">自分を知る。ふたりをもっと知る。</p>
         <p className="mt-4 text-sm leading-relaxed text-muted">
-          食欲・睡眠・性的な関心、好きなこと、美味しかったもの、ありがとう。
+          食欲・睡眠・性欲、好きなこと、美味しかったもの、ありがとう。
           <br />
           採点するのではなく、自分を知り、伝えたいときに伝えるためのアプリです。
         </p>

@@ -5,7 +5,7 @@ import { Card, ChoiceGroup, Chip, EmptyState, Notice, Page, Select, TextArea, Te
 import { TagInput } from "../../components/TagInput";
 import { FormActions } from "../../components/FormActions";
 import { useEditable } from "../../components/useEditable";
-import { CATEGORY_DEFAULT_STATUS, CATEGORY_LABEL, CATEGORY_ORDER, PREF_STATUS_LABEL, PREF_STATUS_ORDER } from "../../lib/labels";
+import { CATEGORY_DEFAULT_STATUS, CATEGORY_EXAMPLE, CATEGORY_LABEL, CATEGORY_ORDER, PREF_STATUS_LABEL, PREF_STATUS_ORDER } from "../../lib/labels";
 import { LIMITS, isCategory } from "../../lib/validate";
 import { ValidationError, savePreference } from "../../db/repo";
 import { goBack, href, navigate } from "../../lib/router";
@@ -84,8 +84,8 @@ export function PreferenceEditPage({ id, category: categoryParam }: { id?: strin
           onChange={setTitle}
           maxLength={LIMITS.title}
           error={errors.title}
-          placeholder="自由に名前をつけてください"
-          hint="共有文を作るとき、選んだ項目の名前とステータスだけが下書きに入ります。"
+          placeholder={CATEGORY_EXAMPLE[category].split("、")[0]}
+          hint={`${CATEGORY_EXAMPLE[category]}。自分の言葉でそのまま書いてOKです。共有文を作るときは、選んだ項目の名前とステータスだけが下書きに入ります。`}
         />
         <ChoiceGroup
           label="今の気持ち"

@@ -115,7 +115,7 @@ export function IntimacyPage({ tab: tabParam }: { tab: string | null }) {
               良かった体験を残す
             </a>
             <p className="mb-4 text-xs leading-relaxed text-muted">
-              心地よかったこと・うれしかったことを、自分のために残す場所です。点数をつけたり、相手を評価したりする機能はありません。体験の記録は共有文に入りません。
+              気持ちよかったこと・うれしかったことを、自分のために残す場所です。点数をつけたり、相手を評価したりする機能はありません。体験の記録は共有文に入りません。
             </p>
             {sortedMemories.length === 0 ? (
               <EmptyState title="まだ記録がありません" />

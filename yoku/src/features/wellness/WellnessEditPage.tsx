@@ -98,10 +98,10 @@ export function WellnessEditPage({ date: dateParam }: { date: string | null }) {
           <Section title="三大欲求">
             <Card>
               {desire.map((m) => (
-                <ScoreInput key={m.key} label={m.label} low={m.low} high={m.high} value={scores[m.key]} onChange={set(m.key)} />
+                <ScoreInput key={m.key} label={m.label} low={m.low} high={m.high} hint={m.hint} guide={m.guide} value={scores[m.key]} onChange={set(m.key)} />
               ))}
               {!settings.showSexualDesire && (
-                <p className="text-xs text-muted">「性的な関心・欲求」は設定で非表示にしています。</p>
+                <p className="text-xs text-muted">「性欲」は設定で非表示にしています。</p>
               )}
             </Card>
           </Section>

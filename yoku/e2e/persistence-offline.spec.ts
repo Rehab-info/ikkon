@@ -18,7 +18,7 @@ test("ブラウザーを再起動してもデータが残る", async () => {
     await expect(page).toHaveURL(/#\/thanks$/);
     await expect(page.getByText("再起動後も残る感謝")).toBeVisible();
     await page.goto("/#/settings");
-    const sw = page.getByRole("switch", { name: "性的な関心・欲求の項目を表示" });
+    const sw = page.getByRole("switch", { name: "性欲の項目を表示" });
     await sw.click();
     await expect(sw).toHaveAttribute("aria-checked", "false");
     // IndexedDB への書きこみが終わるのを待つ
@@ -46,7 +46,7 @@ test("ブラウザーを再起動してもデータが残る", async () => {
     await page.goto("/#/thanks");
     await expect(page.getByText("再起動後も残る感謝")).toBeVisible();
     await page.goto("/#/settings");
-    await expect(page.getByRole("switch", { name: "性的な関心・欲求の項目を表示" })).toHaveAttribute("aria-checked", "false");
+    await expect(page.getByRole("switch", { name: "性欲の項目を表示" })).toHaveAttribute("aria-checked", "false");
     await ctx.close();
   } finally {
     rmSync(dir, { recursive: true, force: true });

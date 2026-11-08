@@ -103,7 +103,7 @@ export function SettingsPage() {
       <Section title="表示">
         <Card className="divide-y divide-line px-4 py-1" padded={false}>
           <Toggle
-            label="性的な関心・欲求の項目を表示"
+            label="性欲の項目を表示"
             description="Wellness の記録とグラフに表示します。オフにしても、これまでの記録は消えません。"
             checked={settings.showSexualDesire}
             onChange={(v) => void updateSettings({ showSexualDesire: v })}

@@ -10,13 +10,17 @@ export function ScoreInput({
   low,
   high,
   value,
-  onChange
+  onChange,
+  hint,
+  guide
 }: {
   label: string;
   low: string;
   high: string;
   value: number | undefined;
   onChange: (v: number | undefined) => void;
+  hint?: string;
+  guide?: readonly { score: number; text: string }[];
 }) {
   const name = useId();
   return (
@@ -42,6 +46,7 @@ export function ScoreInput({
           )}
         </span>
       </div>
+      {hint && <p className="mb-2 text-xs leading-relaxed text-muted">{hint}</p>}
       <div className="grid grid-cols-11 gap-1" role="presentation">
         {Array.from({ length: 11 }, (_, n) => {
           const checked = value === n;
@@ -71,6 +76,16 @@ export function ScoreInput({
         <span>0 {low}</span>
         <span>{high} 10</span>
       </div>
+      {guide && (
+        <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 rounded-xl bg-surface-2 px-3 py-2 text-xs leading-relaxed">
+          {guide.map((g) => (
+            <div key={g.score} className="contents">
+              <dt className={cx("text-right font-semibold tabular-nums", value === g.score ? "text-primary" : "text-ink")}>{g.score}</dt>
+              <dd className={value === g.score ? "font-medium text-ink" : "text-muted"}>{g.text}</dd>
+            </div>
+          ))}
+        </dl>
+      )}
     </fieldset>
   );
 }
