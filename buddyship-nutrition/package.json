@@ -28,7 +28,7 @@
     "check:secrets": "node scripts/check-secrets.mjs",
     "seed:dev-users": "node scripts/seed-dev-users.mjs",
     "test:functions": "deno test --config supabase/functions/deno.json supabase/functions/_shared/",
-    "lint:functions": "deno lint --config supabase/functions/deno.json supabase/functions && deno check --config supabase/functions/deno.json supabase/functions/admin-invite-user/index.ts supabase/functions/analyze-meal/index.ts supabase/functions/meal-image/index.ts",
+    "lint:functions": "deno lint --config supabase/functions/deno.json supabase/functions && deno check --config supabase/functions/deno.json supabase/functions/admin-invite-user/index.ts supabase/functions/analyze-meal/index.ts supabase/functions/meal-image/index.ts supabase/functions/purge-expired-images/index.ts",
     "sfct:extract": "python3 -I scripts/sfct/extract_sfct8.py",
     "sync:nutrition": "node scripts/sync-nutrition.mjs",
     "check:generated": "node scripts/sync-nutrition.mjs --check && node scripts/sfct/build-foods-seed.ts --check"

@@ -14,6 +14,12 @@ export const ALLOWED_LOG_KEYS = [
   'ai_model',
   'ai_input_tokens',
   'ai_output_tokens',
+  // 画像の定期削除の件数(purge-expired-images)
+  'enqueued',
+  'claimed',
+  'done',
+  'retry',
+  'failed',
 ] as const;
 
 export type LogKey = (typeof ALLOWED_LOG_KEYS)[number];

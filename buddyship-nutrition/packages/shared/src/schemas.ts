@@ -47,11 +47,24 @@ export const MyStaff = z.array(
 );
 export type MyStaff = z.infer<typeof MyStaff>;
 
+const DashSlot = z.enum(['recorded', 'skipped', 'dayservice']).nullable();
+/**
+ * 担当利用者の一覧(Sprint 3 で列を追加)。
+ * meals / body が null = その項目を見る同意がない(サーバーはデータを取得していない)。
+ * last_meal_on / last_measured_at が null = 未記録。
+ */
 export const StaffDashboard = z.array(
   z.object({
     member_id: z.uuid(),
     display_name: z.string(),
     scopes: z.array(ConsentScope),
+    meals: z
+      .object({
+        last_meal_on: z.string().nullable(),
+        last_7_days: z.array(z.object({ date: z.string(), breakfast: DashSlot, lunch: DashSlot, dinner: DashSlot })),
+      })
+      .nullable(),
+    body: z.object({ last_measured_at: z.string().nullable() }).nullable(),
   }),
 );
 export type StaffDashboard = z.infer<typeof StaffDashboard>;

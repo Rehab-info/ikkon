@@ -75,7 +75,11 @@ for (const file of tracked) {
   }
   if (
     /createServiceClient\(/.test(text) &&
-    !['supabase/functions/_shared/service-client.ts', 'supabase/functions/admin-invite-user/index.ts'].includes(file)
+    ![
+      'supabase/functions/_shared/service-client.ts',
+      'supabase/functions/admin-invite-user/index.ts',
+      'supabase/functions/purge-expired-images/index.ts',
+    ].includes(file)
   ) {
     problems.push(`${file}: uses createServiceClient but is not an approved function (ARCHITECTURE §4.3)`);
   }

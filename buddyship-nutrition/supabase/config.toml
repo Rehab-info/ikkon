@@ -404,6 +404,7 @@ SITE_URL = "env(BUDDYSHIP_SITE_URL)"
 ALLOWED_ORIGINS = "env(BUDDYSHIP_ALLOWED_ORIGINS)"
 # 解析に使う AI(D-01 決定までは mock のみ。実際の AI を呼ぶ値はまだない)
 AI_PROVIDER = "env(BUDDYSHIP_AI_PROVIDER)"
+PURGE_JOB_SECRET = "env(BUDDYSHIP_PURGE_JOB_SECRET)"
 
 [analytics]
 enabled = false
@@ -441,4 +442,8 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.meal-image]
+verify_jwt = true
+
+# 定期実行用。x-purge-secret ヘッダで認可する(SECURITY §15)
+[functions.purge-expired-images]
 verify_jwt = true
