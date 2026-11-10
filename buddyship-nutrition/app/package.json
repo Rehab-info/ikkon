@@ -12,6 +12,7 @@
     "test:e2e": "playwright test --trace off"
   },
   "dependencies": {
+    "@buddyship/nutrition": "0.1.0",
     "@buddyship/shared": "0.1.0",
     "@supabase/supabase-js": "2.119.0",
     "class-variance-authority": "0.7.1",

@@ -143,10 +143,18 @@ create table public.foods (
   name text not null,                 -- 成分表の正式名
   display_name text not null,         -- 利用者向けのやさしい名前
   category text not null,
-  energy_kcal numeric(7,2) not null check (energy_kcal >= 0),       -- 可食部 100 g あたり
-  protein_g numeric(7,2) not null check (protein_g >= 0),
-  fat_g numeric(7,2) not null check (fat_g >= 0),
-  carbohydrate_g numeric(7,2) not null check (carbohydrate_g >= 0),
+  -- 可食部 100 g あたり。成分表の標準的な成分値(D-18 ②):ENERC_KCAL / PROT- / FAT- / CHOCDF-
+  -- 値が null = 成分表で未測定(-)。0 とはみなさない
+  energy_kcal numeric(7,2) not null check (energy_kcal >= 0),       -- 成分表の公表値(P/F/C から再計算しない)
+  protein_g numeric(7,2) check (protein_g >= 0),
+  fat_g numeric(7,2) check (fat_g >= 0),
+  carbohydrate_g numeric(7,2) check (carbohydrate_g >= 0),
+  -- 成分表の表記の種類(measured / estimated / trace / estimated_trace / not_determined)と元の表記
+  energy_kind text not null, protein_kind text not null, fat_kind text not null, carbohydrate_kind text not null,
+  raw_values jsonb not null,                                       -- 例 {"PROT-": "(9.7)", "FAT-": "Tr"}
+  check ((protein_g is null) = (protein_kind = 'not_determined')),
+  check ((fat_g is null) = (fat_kind = 'not_determined')),
+  check ((carbohydrate_g is null) = (carbohydrate_kind = 'not_determined')),
   is_active boolean not null default true,
   unique (source, source_version, source_food_code)
 );
@@ -159,8 +167,36 @@ create table public.food_portions (                                  -- 目安�
 ```
 
 - 読み取りは authenticated 全員、書き込みはマイグレーション/取込スクリプトのみ。
-- 版:**取込時点の最新版**(D-18 決定)。2026-11-10 時点では「日本食品標準成分表(八訂)増補2023年」に正誤表(2026-03-27 公表)を反映したもの。
-- どの列を P/F/C に使うか、欠損値(`-`・`Tr`・`(0)`)の扱いは **[未決 D-18 ②]**(管理栄養士の判断が必要)。
+- 版:**取込時点の最新版**(D-18 ①)。2026-11-10 時点では「日本食品標準成分表(八訂)増補2023年」に正誤表(2026-03-27 公表)を反映したもの。
+- 列と値の解釈:**D-18 ② 決定(2026-11-10)**。管理栄養士が常勤しない前提で、成分表の標準的な成分値を使う。対応と解釈の規則は `packages/nutrition`(§3.4.2)が唯一の定義で、取込スクリプトもそれに従う。
+
+#### 3.4.2 公式 Excel との対応(実ファイルで確認・テスト済み)
+
+確認したファイル:第2章(データ)`20260327-mxt_kagsei-mext-000029402_02.xlsx`、シート「表全体」、11 行目=単位、12 行目=成分識別子、13 行目からデータ(2,538 食品)。
+
+| アプリの項目 | 成分識別子 | 列 | 列名(見出し) | 単位 | 備考 |
+|---|---|---|---|---|---|
+| エネルギー | `ENERC_KCAL` | G | エネルギー | kcal | 公表値をそのまま使う。全食品に値があり、すべて整数。`ENERC`(F 列)は kJ なので使わない |
+| たんぱく質 | `PROT-` | J | たんぱく質 | g | `PROTCAA`(アミノ酸組成によるたんぱく質、I 列)は使わない |
+| 脂質 | `FAT-` | M | 脂質 | g | `FATNLEA`(トリアシルグリセロール当量、K 列)は使わない |
+| 炭水化物 | `CHOCDF-` | U | 炭水化物 | g | 識別子は末尾にハイフン。`CHOAVL`・`CHOAVLM`・`CHOAVLDF-`(利用可能炭水化物)は使わない |
+
+注:指示の「ENERC(kcal)」「CHOCDF」は、公式 Excel ではそれぞれ `ENERC_KCAL`、`CHOCDF-` という識別子になっている。
+
+値の表記と扱い(実データの件数):
+
+| 表記 | 意味(成分表) | 計算での扱い | たんぱく質 | 脂質 | 炭水化物 |
+|---|---|---|---|---|---|
+| 数値(`12.7`。数値型の場合と `"6.0"` のような文字列の場合がある) | 成分値 | その値 | 2,231 | 2,177 | 2,179 |
+| `(数値)`(`(0)` を含む) | 推定値 | その値 | 284 | 283 | 279 |
+| `Tr` | 微量 | 0 | 17 | 76 | 80 |
+| `(Tr)` | 推定で微量 | 0 | 5 | 1 | 0 |
+| `-` | 未測定 | **値なし(null)。0 とみなさず、合計に「一部の値なし」と表示** | 1 | 1 | 0 |
+
+- `-` は「09059 わかめ カットわかめ 水煮の汁」のたんぱく質・脂質だけ。
+- 上記以外の表記が見つかったら取込を止める(黙って 0 にしない)。
+- 2026-03-27 正誤表の値の訂正が反映済みであることを照合済み(トマトケチャップ 116 kcal など)。
+- テスト:`packages/nutrition/src/sfct8-columns.test.ts`(公式ファイルから `scripts/sfct/extract_sfct8.py` が SHA-256 照合のうえ取り出したデータを使う)。
 
 #### 3.4.1 版の管理と更新(最新データを保つための仕組み)
 
@@ -231,14 +267,15 @@ create table public.meal_items (
   intake_percent smallint not null check (intake_percent between 0 and 100),   -- 食べた割合(%、整数)
   consumed_g numeric(8,2) generated always as (served_g * intake_percent / 100.0) stored, -- 摂取量
   per100_energy_kcal numeric(7,2) not null,                      -- 計算時点の成分値スナップショット
-  per100_protein_g numeric(7,2) not null,
-  per100_fat_g numeric(7,2) not null,
-  per100_carbohydrate_g numeric(7,2) not null,
+  per100_protein_g numeric(7,2),
+  per100_fat_g numeric(7,2),
+  per100_carbohydrate_g numeric(7,2),
   food_source_version text not null,
+  nutrition_rules_version text not null,                         -- 計算規則の版(packages/nutrition の NUTRITION_RULES_VERSION)
   energy_kcal numeric(9,2) not null,
-  protein_g numeric(9,2) not null,
-  fat_g numeric(9,2) not null,
-  carbohydrate_g numeric(9,2) not null,
+  protein_g numeric(9,2),                                        -- null = 成分表で未測定(合計では「一部の値なし」)
+  fat_g numeric(9,2),
+  carbohydrate_g numeric(9,2),
   check (origin = 'manual' or ai_estimated_served_g is not null)
 );
 ```
@@ -390,14 +427,25 @@ authz.can_write_body(member uuid)  = auth.uid() = member or authz.staff_can(memb
 
 ## 6. 計算規則(決定論的)
 
+規則の定義は **`packages/nutrition`(独立モジュール)** にまとめる(安全要件 8:将来、管理栄養士が監修・変更できるように、画面・DB・AI から切り離す)。
+
+| ファイル | 内容 |
+|---|---|
+| `source.ts` | 出典・版・正誤表・出典表記(画面に表示) |
+| `sfct8-columns.ts` | 公式 Excel の列との対応(§3.4.2) |
+| `value.ts` | 表記(`Tr`・`(数値)`・`-` 等)の解釈 |
+| `calc.ts` | 摂取量・成分量・合計・丸め、規則の版 `NUTRITION_RULES_VERSION` |
+| `daily.ts` | 1 日の表示(不完全な日を 1 日の総摂取量として見せない) |
+
 ```
 consumed_g           = served_g × intake_percent / 100
-item.energy_kcal     = per100_energy_kcal × consumed_g / 100   (P/F/C も同様)
-meal.total_*         = Σ item.*(丸め前の値で合計)
+item.energy_kcal     = per100_energy_kcal(成分表の公表値)× consumed_g / 100   ※ P/F/C から再計算しない
+item.protein_g 等     = per100 × consumed_g / 100(per100 が null なら null)
+meal.total_*         = Σ item.*(丸め前の値で合計。null を含めば「一部の値なし」)
 「記録された食事の合計」 = Σ その日の meal.total_*   ※ 未記録の区分は含めず 0 ともみなさない
 ```
-- DB は numeric で計算し、保存は小数第 2 位。表示はエネルギー整数 kcal、P/F/C 小数第 1 位。
-- TS(表示用)と SQL(保存用)が同じケース表で同じ結果になることをテストで保証。
+- 内部は整数(100 g あたり値は 0.1 単位、量は 0.01 g 単位)で計算し、保存は小数第 2 位。表示はエネルギー整数 kcal、P/F/C 小数第 1 位(四捨五入)。
+- 保存値の計算はサーバー側。SQL で実装する場合は、`packages/nutrition` の計算ケース表を SQL にも流して同じ結果になることをテストで保証する(Sprint 2)。規則を変えたら `NUTRITION_RULES_VERSION` を上げ、過去の明細は計算時の版のまま残す。
 
 ## 7. 保持・削除
 

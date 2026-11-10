@@ -9,15 +9,16 @@
   },
   "workspaces": [
     "packages/shared",
+    "packages/nutrition",
     "app"
   ],
   "scripts": {
     "build": "npm run build -w app",
-    "typecheck": "npm run typecheck -w packages/shared && npm run typecheck -w app && tsc -p tests/integration --noEmit",
+    "typecheck": "npm run typecheck -w packages/shared && npm run typecheck -w packages/nutrition && npm run typecheck -w app && tsc -p tests/integration --noEmit",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "npm run test -w packages/shared && npm run test -w app",
+    "test": "npm run test -w packages/shared && npm run test -w packages/nutrition && npm run test -w app",
     "test:integration": "vitest run --config tests/integration/vitest.config.ts",
     "test:db": "supabase test db",
     "test:e2e": "npm run test:e2e -w app",
@@ -27,7 +28,8 @@
     "check:secrets": "node scripts/check-secrets.mjs",
     "seed:dev-users": "node scripts/seed-dev-users.mjs",
     "test:functions": "deno test --config supabase/functions/deno.json supabase/functions/_shared/",
-    "lint:functions": "deno lint --config supabase/functions/deno.json supabase/functions && deno check --config supabase/functions/deno.json supabase/functions/admin-invite-user/index.ts"
+    "lint:functions": "deno lint --config supabase/functions/deno.json supabase/functions && deno check --config supabase/functions/deno.json supabase/functions/admin-invite-user/index.ts",
+    "sfct:extract": "python3 -I scripts/sfct/extract_sfct8.py"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

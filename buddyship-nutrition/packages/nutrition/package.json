@@ -1,0 +1,14 @@
+{
+  "name": "@buddyship/nutrition",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "栄養計算ルール(食品成分表の値の解釈・計算・丸め・出典)。管理栄養士が監修できるよう、画面・DB から独立させる",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  }
+}

@@ -6,6 +6,7 @@ import { applyFontScale, FONT_SCALE_LABELS } from '@/lib/font.ts';
 import { Button } from '@/components/ui/button.tsx';
 import { Card, CardTitle } from '@/components/ui/card.tsx';
 import { ErrorNotice } from '@/components/ErrorNotice.tsx';
+import { AboutApp } from '@/components/AboutApp.tsx';
 import { cn } from '@/lib/utils.ts';
 
 export function SettingsPage() {
@@ -49,6 +50,7 @@ export function SettingsPage() {
         </div>
       </Card>
       <ErrorNotice error={error} />
+      <AboutApp />
       <Button variant="quiet" onClick={() => void signOut()}>
         ログアウト
       </Button>

@@ -5,3 +5,4 @@ supabase/functions/deno.lock
 package-lock.json
 docs
 app/tests/e2e/.accounts.json
+packages/nutrition/src/fixtures/*.json

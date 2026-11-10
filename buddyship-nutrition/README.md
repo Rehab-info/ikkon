@@ -11,6 +11,8 @@
 ```
 app/               PWA(React + TypeScript + Vite + Tailwind CSS + shadcn/ui 形式の部品)
 packages/shared/   Zod スキーマ・エラーコード・同意スコープの表示(画面と共通)
+packages/nutrition/ 栄養計算ルール(食品成分表の列の対応・値の解釈・計算・丸め・1 日の表示・出典)。管理栄養士が監修できるよう独立させている
+scripts/sfct/      公式 Excel から成分表の値を取り出すスクリプト(SHA-256 照合)
 supabase/
   migrations/      DB マイグレーション(RLS・認可関数・RPC・監査ログ)
   tests/           pgTAP(RLS・権限・カタログ検査・利用量上限)
