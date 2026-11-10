@@ -55,5 +55,27 @@ export default async function globalSetup(): Promise<void> {
       select '${mealMember.id}', '${mealStaff.id}', s::public.consent_scope, (select id from public.consent_documents where kind = 'staff_sharing')
       from unnest(array['meals:read', 'meals:write']) s;`;
   execFileSync('psql', [sb.db, '-v', 'ON_ERROR_STOP=1', '-qc', sql2]);
-  writeFileSync(ACCOUNTS_FILE, JSON.stringify({ admin, staff, member, mealMember, mealStaff, tag }));
+  // 体組成の E2E 用(Sprint 3):体の測定の閲覧・代理入力と食事の閲覧の同意があるスタッフ、担当外のスタッフ
+  const bodyMember = await create('body-member');
+  const bodyStaff = await create('body-staff');
+  const otherStaff = await create('other-staff');
+  const sql3 = `
+    insert into public.profiles(user_id, organization_id, facility_id, display_name) values
+      ('${bodyMember.id}', '${ORG}', '${FACILITY}', '体テスト利用者-${tag}'),
+      ('${bodyStaff.id}', '${ORG}', '${FACILITY}', '体テストスタッフ-${tag}'),
+      ('${otherStaff.id}', '${ORG}', '${FACILITY}', '担当外スタッフ-${tag}');
+    insert into public.user_roles(user_id, organization_id, role) values
+      ('${bodyMember.id}', '${ORG}', 'member'), ('${bodyStaff.id}', '${ORG}', 'staff'), ('${otherStaff.id}', '${ORG}', 'staff');
+    insert into public.staff_assignments(organization_id, staff_id, member_id, created_by)
+      values ('${ORG}', '${bodyStaff.id}', '${bodyMember.id}', '${admin.id}');
+    insert into public.user_agreements(user_id, document_id)
+      select u, d.id from unnest(array['${bodyMember.id}', '${bodyStaff.id}', '${otherStaff.id}']::uuid[]) u, public.consent_documents d;
+    insert into public.staff_access_consents(member_id, staff_id, scope, document_id)
+      select '${bodyMember.id}', '${bodyStaff.id}', s::public.consent_scope, (select id from public.consent_documents where kind = 'staff_sharing')
+      from unnest(array['meals:read', 'body:read', 'body:write']) s;`;
+  execFileSync('psql', [sb.db, '-v', 'ON_ERROR_STOP=1', '-qc', sql3]);
+  writeFileSync(
+    ACCOUNTS_FILE,
+    JSON.stringify({ admin, staff, member, mealMember, mealStaff, bodyMember, bodyStaff, otherStaff, tag }),
+  );
 }

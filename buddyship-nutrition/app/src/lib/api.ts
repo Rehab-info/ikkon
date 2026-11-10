@@ -12,6 +12,10 @@ import {
   SavedMeal,
   SavedMeals,
   parseRpcResult,
+  BodyHistory,
+  BodyRecords,
+  BodySaved,
+  type BodyPayload,
   type MealSlot,
   type SaveMealPayload,
   type ConsentScope,
@@ -95,6 +99,16 @@ export const api = {
   },
   setSlotStatus: (memberId: string, date: string, slot: MealSlot, status: 'skipped' | 'dayservice' | null) =>
     call('set_slot_status', NullData, { p_member_id: memberId, p_eaten_on: date, p_slot: slot, p_status: status }),
+
+  // ---- 体組成(InBody。Sprint 3) ----
+  getBodyRecords: (memberId: string, from: string, to: string) =>
+    call('get_body_compositions', BodyRecords, { p_member_id: memberId, p_from: from, p_to: to }),
+  getBodyHistory: (id: string) => call('get_body_composition_history', BodyHistory, { p_id: id }),
+  saveBody: (memberId: string, payload: BodyPayload) =>
+    call('save_body_composition', BodySaved, { p_member_id: memberId, p_payload: payload }),
+  updateBody: (id: string, payload: BodyPayload) =>
+    call('update_body_composition', BodySaved, { p_id: id, p_payload: payload }),
+  deleteBody: (id: string) => call('delete_body_composition', NullData, { p_id: id }),
 
   /** 食事の写真をアップロード(本人のフォルダ。代理のときは利用者のフォルダ。Storage のポリシーで制御) */
   async uploadMealImage(memberId: string, blob: Blob): Promise<string> {

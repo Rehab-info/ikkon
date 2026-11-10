@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router';
 import { AppError, SLOT_LABELS, type MealSlot } from '@buddyship/shared';
 import { api } from '@/lib/api.ts';
 import { addDays, BACKFILL_DAYS, formatDateJa, todayJst } from '@/lib/date.ts';
-import { prepareMealPhoto } from '@/lib/image.ts';
+import { PhotoError, photoErrorText, prepareMealPhoto } from '@/lib/image.ts';
 import { WizardStep } from '@/components/WizardStep.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import { ErrorNotice, Loading } from '@/components/ErrorNotice.tsx';
@@ -201,7 +201,18 @@ export function RecordMealPage() {
                 onChange={(e) => void onPhoto(e.target.files?.[0])}
               />
             </label>
-            <ErrorNotice error={error} />
+            {error instanceof PhotoError ? (
+              <p
+                role="alert"
+                data-testid="photo-error"
+                className="my-4 rounded-xl border-2 border-alert bg-surface p-4 text-lg font-bold text-alert"
+              >
+                <span aria-hidden="true">⚠ </span>
+                {photoErrorText(error)}
+              </p>
+            ) : (
+              <ErrorNotice error={error} />
+            )}
           </WizardStep>
         </div>
       );

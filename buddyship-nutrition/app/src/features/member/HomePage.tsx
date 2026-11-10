@@ -61,6 +61,12 @@ export function HomePage() {
       <Button asChild variant="secondary">
         <Link to="/meals">これまでの記録</Link>
       </Button>
+      <Button asChild variant="secondary">
+        <Link to="/body/new">体の測定を記録する</Link>
+      </Button>
+      <Button asChild variant="secondary">
+        <Link to="/body">体の変化を見る</Link>
+      </Button>
       <Button asChild variant="quiet">
         <Link to="/sharing">担当スタッフに見せる情報を決める</Link>
       </Button>
