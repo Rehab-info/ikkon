@@ -162,7 +162,8 @@ create table public.food_aliases  (food_id uuid not null references public.foods
 create table public.food_portions (                                  -- 目安単位(お茶わん1杯 等)D-19
   id uuid primary key default gen_random_uuid(),
   food_id uuid not null references public.foods(id) on delete cascade,
-  label text not null, grams numeric(7,1) not null check (grams > 0)
+  label text not null, grams numeric(7,1) not null check (grams > 0),
+  source_note text not null                                       -- 目安量の出典(成分表の備考など)。出典のない値は入れない
 );
 ```
 
@@ -207,10 +208,10 @@ create table public.food_portions (                                  -- 目安�
 | 取込元 | 公式ページ https://www.mext.go.jp/a_menu/syokuhinseibun/mext_00001.html の「第2章(データ)」Excel:`https://www.mext.go.jp/content/20260327-mxt_kagsei-mext-000029402_02.xlsx`(2026-11-10 取得、SHA-256 `0d5a77077dd6cd91cbc2e6e317b8b218a38728c409eed452f1c10635a0d3099c`、2,538 食品、シート「表全体」、12 行目に成分識別子)。**このファイルには 2026-03-27 の正誤表が反映済み**(正誤表の値の変更 6 件を照合して確認)。正誤表 Excel(`..._16.xlsx`)は取込後の照合にだけ使う。ファイルの SHA-256・取得日・取得元 URL を取込記録(`private.food_imports`、Sprint 2 で追加)に残す |
 | 取込スクリプト | 何度でも実行できる(冪等)。同じ食品番号の行は新しい版で置き換えず**新しい行として追加**し、古い版の行は `is_active = false` にする |
 | 過去の記録 | 食事明細は計算時の成分値と `food_source_version` をスナップショットで持つため、成分表を更新しても過去の記録の値は変わらない |
-| 差分の確認 | 取込前に旧版との差分(追加・削除・値の変わった食品)を一覧にし、管理栄養士の確認を経てから有効化する |
+| 差分の確認 | 取込前に旧版との差分(追加・削除・値の変わった食品・表記の変わった値)を一覧にし、外部管理栄養士のスポット監修(D-33)の確認と運営責任者の承認を経てから有効化する |
 | 更新の確認 | 文部科学省の新着(増補・正誤表)を四半期ごとに確認する運用とし、運用手順書(S4-08)に記載する。確認先:公式ページと「公表履歴、今後の収載予定」https://www.mext.go.jp/a_menu/syokuhinseibun/mext_02092.html (2026-11-10 時点で「更新予定の収載値(案)等のデータはありません」)|
 | 出典表示 | アプリ内に版名と出典を表示する(D-23)。表記は文部科学省の案内どおり「日本食品標準成分表(八訂)増補2023年から引用(又は出典)」(公式ページで確認済み。食品成分データは自由に利用できる、アプリ等の二次利用時はこの表記で出典を明らかにする、と案内されている)|
-- 料理マスター・目安単位の範囲は **[未決 D-19]**。嚥下調整食(きざみ・ミキサー等)の扱いは **[未決 D-32]**。
+- **独自の料理マスターは作らない(D-19 決定)**。複合料理は構成食材ごとに `meal_items` の行として記録し、成分表の食品コードに対応付ける(§3.5.1)。`food_portions`(目安単位)は成分表の備考など出典のある値だけを入れ、出典を列に残す。嚥下調整食(きざみ・ミキサー等)の扱いは **[未決 D-32]**。
 
 ### 3.5 食事
 
@@ -245,10 +246,16 @@ create table public.meals (
   analysis_id uuid references public.meal_analyses(id) on delete set null,
   image_path text,
   image_expires_at timestamptz,
+  -- 合計は「確定」した明細だけ。要確認の明細は含めない(§3.5.1)
   total_energy_kcal numeric(9,2) not null,
   total_protein_g numeric(9,2) not null,
   total_fat_g numeric(9,2) not null,
   total_carbohydrate_g numeric(9,2) not null,
+  -- 合計の注記(packages/nutrition の sumNutrients / summarizeMeal の結果)。例 {"protein_g":{"incomplete":true,"includesTrace":false,...}}
+  total_flags jsonb not null default '{}'::jsonb,
+  display_precision text not null default 'normal' check (display_precision in ('normal','approximate')),
+  needs_review_count smallint not null default 0 check (needs_review_count >= 0),
+  nutrition_rules_version text not null,
   check ((eaten_at_precision = 'slot_only') = (eaten_at is null)),
   check (eaten_on <= (recorded_at at time zone 'Asia/Tokyo')::date + 1)  -- 未来日の拒否(タイムゾーンは profiles を参照する関数で実装)
 );
@@ -259,7 +266,15 @@ create table public.meal_items (
   meal_id uuid not null references public.meals(id) on delete cascade,
   member_id uuid not null references public.profiles(user_id) on delete cascade,
   position smallint not null,
-  food_id uuid not null references public.foods(id),
+  -- D-19:料理は構成食材ごとの行にする。同じ料理の行は dish_group_id が同じ
+  role text not null check (role in ('food','ingredient','cooking_oil','seasoning')),
+  dish_group_id uuid,
+  dish_label text check (char_length(dish_label) <= 100),        -- 料理名(例:肉じゃが)。表示用
+  dish_composition_known boolean,                                -- 構成食材がわかっているか(false なら表示をおおよそにする)
+  -- 食品コードの対応付け。確実でなければ needs_review のまま確定しない(要確認の間は food_id は null、候補は candidate_food_ids)
+  match_status text not null check (match_status in ('confirmed','needs_review')),
+  food_id uuid references public.foods(id),
+  candidate_food_ids uuid[] not null default '{}',               -- 要確認のときに画面で選んでもらう候補
   origin text not null check (origin in ('ai','ai_corrected','manual')),
   ai_label text check (char_length(ai_label) <= 100),
   ai_estimated_served_g numeric(7,1),                            -- 写真からの AI 推定提供量(上書きしない)
@@ -270,15 +285,32 @@ create table public.meal_items (
   per100_protein_g numeric(7,2),
   per100_fat_g numeric(7,2),
   per100_carbohydrate_g numeric(7,2),
-  food_source_version text not null,
+  -- 成分表の元の表記と種類のスナップショット(追加要件 1・2)。例 {"PROT-":{"raw":"Tr","kind":"trace","traceAsZero":true}}
+  per100_notation jsonb,
+  food_source_version text,
   nutrition_rules_version text not null,                         -- 計算規則の版(packages/nutrition の NUTRITION_RULES_VERSION)
-  energy_kcal numeric(9,2) not null,
+  energy_kcal numeric(9,2),
   protein_g numeric(9,2),                                        -- null = 成分表で未測定(合計では「一部の値なし」)
   fat_g numeric(9,2),
   carbohydrate_g numeric(9,2),
-  check (origin = 'manual' or ai_estimated_served_g is not null)
+  check (origin = 'manual' or ai_estimated_served_g is not null),
+  -- 確定した行だけが成分値を持つ。要確認の行は成分値・スナップショットを持たない(合計に入らない)
+  check ((match_status = 'confirmed') = (food_id is not null and energy_kcal is not null and per100_notation is not null and food_source_version is not null)),
+  check ((role = 'food') = (dish_group_id is null)),
+  check (dish_group_id is null or (dish_label is not null and dish_composition_known is not null))
 );
 ```
+
+#### 3.5.1 複合料理と「要確認」(D-19)
+
+| 項目 | 規則 |
+|---|---|
+| 料理マスター | 作らない。料理は構成食材(`role = ingredient`)・調理油(`cooking_oil`)・調味料(`seasoning`)の行に分けて記録する |
+| 候補 | AI が料理の構成食材の候補(食材名・提供量)を出し、サーバーが成分表の食品コードと照合する |
+| 確定の条件 | `packages/nutrition` の `initialMatchStatus`:候補がちょうど 1 つ、名前(成分表の食品名または別名辞書)が完全一致、AI の確からしさが低くない、のすべてを満たすときだけ `confirmed`。それ以外は `needs_review` |
+| 確認・修正 | 食材の種類・重量・調理油・調味料は、利用者またはスタッフ(`meals:write`)が追加・削除・変更できる。要確認の行は候補から選ぶか、食品検索で選ぶと `confirmed` になる |
+| 要確認の行の扱い | 合計に入れない(`needs_review_count` に数える)。保存はできるが、画面で「確認が済んでいない食品があります」と示す |
+| おおよその表示 | 要確認の行がある、または構成食材が不明な料理(`dish_composition_known = false`)を含む食事は、`display_precision = approximate`(エネルギー 10 kcal 単位、P/F/C 1 g 単位、「約」付き) |
 
 - `meal_items.member_id` は RLS 簡素化のための非正規化。トリガーで `meals.member_id` との一致を強制。
 - 栄養値・合計・`recorded_at`・`entered_by`・`entry_source` は**クライアントから受け取らない**。`save_meal` / `update_meal` RPC 内で決める。テーブルへの直接 INSERT/UPDATE は不可。
@@ -434,17 +466,21 @@ authz.can_write_body(member uuid)  = auth.uid() = member or authz.staff_can(memb
 | `source.ts` | 出典・版・正誤表・出典表記(画面に表示) |
 | `sfct8-columns.ts` | 公式 Excel の列との対応(§3.4.2) |
 | `value.ts` | 表記(`Tr`・`(数値)`・`-` 等)の解釈 |
-| `calc.ts` | 摂取量・成分量・合計・丸め、規則の版 `NUTRITION_RULES_VERSION` |
-| `daily.ts` | 1 日の表示(不完全な日を 1 日の総摂取量として見せない) |
+| `calc.ts` | 摂取量・成分量・合計・丸め(通常/おおよそ)、元の表記と Tr の区別、規則の版 `NUTRITION_RULES_VERSION`(現在 `sfct8-standard-v2`) |
+| `composition.ts` | 複合料理の構成食材・調理油・調味料、食品コードの対応付け(確定/要確認)、食事の集計と表示精度(D-19) |
+| `daily.ts` | 集計名「記録済みの自宅食事の推定摂取量」と注記(不完全な日を 1 日の総摂取量として見せない) |
 
 ```
 consumed_g           = served_g × intake_percent / 100
 item.energy_kcal     = per100_energy_kcal(成分表の公表値)× consumed_g / 100   ※ P/F/C から再計算しない
 item.protein_g 等     = per100 × consumed_g / 100(per100 が null なら null)
-meal.total_*         = Σ item.*(丸め前の値で合計。null を含めば「一部の値なし」)
-「記録された食事の合計」 = Σ その日の meal.total_*   ※ 未記録の区分は含めず 0 ともみなさない
+meal.total_*         = Σ 確定した item.*(丸め前の値で合計。null を含めば「一部の値なし」。要確認の行は含めない)
+記録済みの自宅食事の推定摂取量 = Σ その日の meal.total_*   ※ 未記録の区分は含めず 0 ともみなさない
 ```
-- 内部は整数(100 g あたり値は 0.1 単位、量は 0.01 g 単位)で計算し、保存は小数第 2 位。表示はエネルギー整数 kcal、P/F/C 小数第 1 位(四捨五入)。
+- 内部は整数(100 g あたり値は 0.1 単位、量は 0.01 g 単位)で計算し、保存は小数第 2 位。表示はエネルギー整数 kcal、P/F/C 小数第 1 位(四捨五入)。おおよその表示(§3.5.1)は 10 kcal 単位・1 g 単位で「約」を付ける。
+- **元の表記の保持**:`foods.raw_values` と `meal_items.per100_notation` に成分表の表記(`Tr`・`(Tr)`・`(9.7)`・`-` など)と種類を残す。
+- **Tr と測定上のゼロの区別**:`Tr`・`(Tr)` は計算上 0 として扱うが `traceAsZero = true` を残し、表示は「微量」。`0`・`(0)` は測定上・推定上のゼロとして「0.0」。合計が Tr だけでできた 0 なら「微量」と表示する。
+- **集計名**:「記録済みの自宅食事の推定摂取量」(`packages/nutrition` の `AGGREGATE_LABEL`)。記録状況に応じた注記を必ず添える。
 - 保存値の計算はサーバー側。SQL で実装する場合は、`packages/nutrition` の計算ケース表を SQL にも流して同じ結果になることをテストで保証する(Sprint 2)。規則を変えたら `NUTRITION_RULES_VERSION` を上げ、過去の明細は計算時の版のまま残す。
 
 ## 7. 保持・削除

@@ -64,7 +64,11 @@ select tests.login('admin');
 select is((select array_agg(distinct k order by k) from jsonb_array_elements(public.admin_list_users() -> 'data') e,
                  jsonb_object_keys(e) k),
           array['display_name', 'facility_id', 'roles', 'user_id'], 'admin user list contains only account fields');
-select is(jsonb_array_length(public.admin_list_users() -> 'data'), 6, 'admin lists own organization only');
+select is(jsonb_array_length(public.admin_list_users() -> 'data'),
+          (select count(*)::int from public.profiles where organization_id = tests.org_a()),
+          'admin lists own organization only');
+select is((select count(*)::int from jsonb_array_elements(public.admin_list_users() -> 'data') e
+           where (e ->> 'user_id')::uuid = tests.u('b_member')), 0, 'other organization users are not listed');
 
 -- ===========================================================================
 -- 利用者:同意の付与・撤回

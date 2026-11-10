@@ -123,8 +123,13 @@ select is((select count(*) from public.staff_access_consents where staff_id <> t
           'staff sees only consents given to self');
 select is((select count(*) from public.profiles), 1::bigint, 'staff cannot read member profiles directly (RPC only)');
 
+-- 期待値は DB に既にあるデータも含めて数える(結合テスト・E2E の後でも通るように)
+reset role;
+create temp table expected_a as select count(*) as n from public.profiles where organization_id = tests.org_a();
+grant select on expected_a to authenticated;
 select tests.login('admin');
-select is((select count(*) from public.profiles), 6::bigint, 'admin (aal2) sees profiles of own organization only');
+select is((select count(*) from public.profiles), (select n from expected_a), 'admin (aal2) sees profiles of own organization only');
+select is((select count(*) from public.profiles where organization_id <> tests.org_a()), 0::bigint, 'admin sees no profiles of other organizations');
 select is((select count(*) from public.staff_access_consents), 0::bigint, 'admin cannot read consents');
 select is((select count(*) from public.staff_assignments where organization_id = tests.org_b()), 0::bigint,
           'admin cannot see other organization assignments');

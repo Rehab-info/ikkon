@@ -57,10 +57,15 @@ select is(tests.err(public.consume_ai_quota(tests.u('m2'))), 'ai_disabled', 'AI 
 -- 組織の月次上限
 reset role;
 update private.settings set value = 'true' where key = 'ai_enabled';
-update private.settings set value = '7' where key = 'ai_org_month_limit';
+-- 今月すでに使った回数(結合テスト等の分を含む)+ 2 を上限にする
+update private.settings set value = to_jsonb(coalesce((
+  select count from private.usage_counters
+  where counter = 'ai_org_month' and subject_id = tests.org_a()
+    and period_start = date_trunc('month', now() at time zone 'Asia/Tokyo')), 0) + 2)
+where key = 'ai_org_month_limit';
 select tests.login('m2', 'aal1');
-select is(tests.err(public.consume_ai_quota(tests.u('m2'))), null, 'org month call 6 ok');
-select is(tests.err(public.consume_ai_quota(tests.u('m2'))), null, 'org month call 7 ok');
+select is(tests.err(public.consume_ai_quota(tests.u('m2'))), null, 'org month: limit - 1 ok');
+select is(tests.err(public.consume_ai_quota(tests.u('m2'))), null, 'org month: limit ok');
 select is(tests.err(public.consume_ai_quota(tests.u('m2'))), 'quota_exceeded', 'organization monthly limit');
 
 reset role;

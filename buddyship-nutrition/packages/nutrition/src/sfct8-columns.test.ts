@@ -166,7 +166,7 @@ describe('エネルギーは公表値を使い、P/F/C から再計算しない'
   it('100 g なら公表値そのもの', () => {
     for (const code of ['01001', '17036', '11183']) {
       const n = itemNutrients(per100(code), 100_00);
-      expect(displayValue('energy_kcal', n.energy_kcal!)).toBe(String(per100(code).energy_kcal.value));
+      expect(displayValue('energy_kcal', n.energy_kcal.hundredths!)).toBe(String(per100(code).energy_kcal.value));
     }
   });
 
@@ -174,10 +174,48 @@ describe('エネルギーは公表値を使い、P/F/C から再計算しない'
     const p = per100('01001');
     const recomputed = p.protein_g.value! * 4 + p.fat_g.value! * 9 + p.carbohydrate_g.value! * 4;
     expect(recomputed).toBeCloseTo(364.4, 5);
-    expect(itemNutrients(p, 100_00).energy_kcal).toBe(343_00);
+    expect(itemNutrients(p, 100_00).energy_kcal.hundredths).toBe(343_00);
   });
 
   it('計算に使う成分は 4 つだけ', () => {
     expect([...NUTRIENTS]).toEqual(['energy_kcal', 'protein_g', 'fat_g', 'carbohydrate_g']);
+  });
+});
+
+describe('元の表記の保持と Tr・ゼロの区別(追加要件 1・2、実データ)', () => {
+  it('Tr・(Tr)・推定値・未測定の元の表記が残る', () => {
+    expect(per100('02061').protein_g).toMatchObject({ raw: 'Tr', kind: 'trace', value: 0, traceAsZero: true });
+    expect(per100('15015').protein_g).toMatchObject({
+      raw: '(Tr)',
+      kind: 'estimated_trace',
+      value: 0,
+      traceAsZero: true,
+    });
+    expect(per100('01176').protein_g).toMatchObject({
+      raw: '(9.7)',
+      kind: 'estimated',
+      value: 9.7,
+      traceAsZero: false,
+    });
+    expect(per100('09059').protein_g).toMatchObject({ raw: '-', kind: 'not_determined', value: null });
+  });
+
+  it('全食品で、計算値 0 のうち Tr 由来と測定上のゼロが区別される', () => {
+    let trace = 0;
+    let zero = 0;
+    for (const f of fx.foods)
+      for (const c of SFCT8_COLUMNS) {
+        const v = parseSfctValue(f.values[c.identifier]);
+        if (v.value !== 0) continue;
+        if (v.traceAsZero) {
+          trace++;
+          expect(v.raw).toMatch(/^\(?Tr\)?$/);
+        } else {
+          zero++;
+          expect(v.raw).toMatch(/^\(?0\)?$/);
+        }
+      }
+    expect(trace).toBe(17 + 5 + 76 + 1 + 80);
+    expect(zero).toBeGreaterThan(0);
   });
 });

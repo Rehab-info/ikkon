@@ -16,10 +16,29 @@ export type ValueKind = 'measured' | 'estimated' | 'trace' | 'estimated_trace' |
 
 export interface ParsedValue {
   kind: ValueKind;
-  /** 計算に使う値。未測定は null */
+  /** 計算に使う値。未測定は null。Tr・(Tr) は 0 */
   value: number | null;
-  /** 元の表記 */
+  /** 成分表の元の表記(Tr・(Tr)・(9.7)・- など。保存・表示のために必ず残す) */
   raw: string;
+  /**
+   * Tr・(Tr) を計算上 0 として扱ったか。測定上のゼロ(`0`・`(0)`)は false。
+   * 「0 g」と「微量」を区別するために使う(追加要件 2)
+   */
+  traceAsZero: boolean;
+}
+
+/** 表記の種類の説明(画面・エクスポート用) */
+export const VALUE_KIND_LABELS: Record<ValueKind, string> = {
+  measured: '成分値',
+  estimated: '推定値',
+  trace: '微量(Tr)',
+  estimated_trace: '推定で微量((Tr))',
+  not_determined: '未測定(-)',
+};
+
+/** 測定上・推定上のゼロ(`0`・`(0)`)か。Tr は含まない */
+export function isRecordedZero(v: ParsedValue): boolean {
+  return v.value === 0 && !v.traceAsZero;
 }
 
 const NUMBER = /^\d+(?:\.\d+)?$/;
@@ -34,15 +53,15 @@ export class UnknownValueFormatError extends Error {
 export function parseSfctValue(raw: unknown): ParsedValue {
   if (typeof raw === 'number') {
     if (!Number.isFinite(raw) || raw < 0) throw new UnknownValueFormatError(raw);
-    return { kind: 'measured', value: raw, raw: String(raw) };
+    return { kind: 'measured', value: raw, raw: String(raw), traceAsZero: false };
   }
   if (typeof raw !== 'string') throw new UnknownValueFormatError(raw);
   const s = raw.trim();
-  if (s === '-') return { kind: 'not_determined', value: null, raw: s };
-  if (s === 'Tr') return { kind: 'trace', value: 0, raw: s };
-  if (s === '(Tr)') return { kind: 'estimated_trace', value: 0, raw: s };
-  if (NUMBER.test(s)) return { kind: 'measured', value: Number(s), raw: s };
+  if (s === '-') return { kind: 'not_determined', value: null, raw: s, traceAsZero: false };
+  if (s === 'Tr') return { kind: 'trace', value: 0, raw: s, traceAsZero: true };
+  if (s === '(Tr)') return { kind: 'estimated_trace', value: 0, raw: s, traceAsZero: true };
+  if (NUMBER.test(s)) return { kind: 'measured', value: Number(s), raw: s, traceAsZero: false };
   const est = /^\((\d+(?:\.\d+)?)\)$/.exec(s);
-  if (est?.[1] !== undefined) return { kind: 'estimated', value: Number(est[1]), raw: s };
+  if (est?.[1] !== undefined) return { kind: 'estimated', value: Number(est[1]), raw: s, traceAsZero: false };
   throw new UnknownValueFormatError(raw);
 }

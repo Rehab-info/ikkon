@@ -26,19 +26,21 @@ export function dayLabelKind(day: DayStatus): DayLabelKind {
   return 'home_complete';
 }
 
+/** 食事記録の集計名(追加要件 3)。どの日もこの名前だけを使い、「1 日の総摂取量」などとは書かない */
+export const AGGREGATE_LABEL = '記録済みの自宅食事の推定摂取量';
+
 /**
- * 合計の見出し。どの場合も「1 日の総摂取量」「1 日の合計」とは書かない。
- * 推定値であり誤差があることも必ず添える(安全要件 6)。
+ * 集計の見出しと注記。推定値であり誤差があることも必ず添える(安全要件 6)。
  */
 export function dayTotalHeading(day: DayStatus): { heading: string; note: string } {
   const ESTIMATE = '写真や入力をもとにした推定で、実際とは差があります。';
   switch (dayLabelKind(day)) {
     case 'home_complete':
-      return { heading: '記録したご自宅の食事の合計(推定)', note: ESTIMATE };
+      return { heading: AGGREGATE_LABEL, note: ESTIMATE };
     case 'home_complete_except_dayservice':
-      return { heading: '記録したご自宅の食事の合計(推定)', note: `デイサービスで食べた食事は含みません。${ESTIMATE}` };
+      return { heading: AGGREGATE_LABEL, note: `デイサービスで食べた食事は含みません。${ESTIMATE}` };
     case 'partial':
-      return { heading: '記録した食事だけの合計(推定)', note: `まだ記録していない食事は含みません。${ESTIMATE}` };
+      return { heading: AGGREGATE_LABEL, note: `まだ記録していない食事は含みません。${ESTIMATE}` };
   }
 }
 

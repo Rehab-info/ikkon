@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { dayLabelKind, dayTotalHeading, isCountableDay, type DayStatus, type SlotStatus } from './daily.ts';
+import {
+  AGGREGATE_LABEL,
+  dayLabelKind,
+  dayTotalHeading,
+  isCountableDay,
+  type DayStatus,
+  type SlotStatus,
+} from './daily.ts';
 import { sourceNotice, FOOD_COMPOSITION_SOURCE } from './source.ts';
 
 const STATES: SlotStatus[] = ['recorded', 'skipped', 'dayservice', null];
@@ -42,5 +49,12 @@ describe('出典と版の表示(安全要件 7)', () => {
     expect(s).toContain('2026年3月27日 正誤表 反映済み');
     expect(s).toContain('推定値');
     expect(FOOD_COMPOSITION_SOURCE.publisher).toBe('文部科学省');
+  });
+});
+
+describe('集計名(追加要件 3)', () => {
+  it('すべての記録状況で「記録済みの自宅食事の推定摂取量」', () => {
+    for (const day of ALL) expect(dayTotalHeading(day).heading).toBe(AGGREGATE_LABEL);
+    expect(AGGREGATE_LABEL).toBe('記録済みの自宅食事の推定摂取量');
   });
 });

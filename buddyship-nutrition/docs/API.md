@@ -79,17 +79,35 @@ Response 200
 
 AI 出力スキーマ(プロバイダ共通)
 ```ts
-const AiMealItem = z.object({
-  label: z.string().min(1).max(100),
+const AiComponent = z.object({
+  label: z.string().min(1).max(100),           // 食材名(成分表の食品コードとの照合はサーバーが行う)
   served_g: z.number().positive().max(2000),   // 皿に盛られた提供量。食べた量ではない
+  role: z.enum(['ingredient', 'cooking_oil', 'seasoning']),
   confidence: z.enum(['low', 'medium', 'high']),
-  kind: z.enum(['dish', 'ingredient']),
 }).strict();
+const AiMealItem = z.discriminatedUnion('kind', [
+  // 単品の食品(ごはん・バナナ など)
+  z.object({
+    kind: z.literal('food'),
+    label: z.string().min(1).max(100),
+    served_g: z.number().positive().max(2000),
+    confidence: z.enum(['low', 'medium', 'high']),
+  }).strict(),
+  // 複合料理(D-19):独自の料理マスターは使わず、構成食材・調理油・調味料の候補を出す
+  z.object({
+    kind: z.literal('dish'),
+    label: z.string().min(1).max(100),           // 料理名(表示用)
+    composition_known: z.boolean(),              // 構成を推定できたか。false なら表示をおおよそにする
+    components: z.array(AiComponent).max(15),
+  }).strict(),
+]);
 const AiMealResult = z.object({
   is_food_image: z.boolean(),
   items: z.array(AiMealItem).max(20),
 }).strict();
 ```
+- サーバーは各食品・構成食材を成分表と照合し、`packages/nutrition` の `initialMatchStatus` で「確定/要確認」を決める。確実でなければ「要確認」として候補を返し、確定しない(D-19)。
+- 応答の各明細に `match_status`(`confirmed`/`needs_review`)と `candidates` を付ける。
 - 栄養値のキーはスキーマにない(`.strict()` で拒否)。
 - 「食べ残し」の推定は AI に求めない。食べた割合は利用者/スタッフが入力する(写真が食後の場合の扱いは **[未決 D-27]**)。
 
