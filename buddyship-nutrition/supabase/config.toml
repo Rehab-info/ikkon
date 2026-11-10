@@ -71,7 +71,7 @@ schema_paths = []
 enabled = true
 # Specifies an ordered list of seed files to load during db reset.
 # Supports glob patterns relative to supabase directory: "./seeds/*.sql"
-sql_paths = ["./seed.sql"]
+sql_paths = ["./seed.sql", "./seeds/*.sql"]
 
 [db.network_restrictions]
 # Enable management of network restrictions.
@@ -402,6 +402,8 @@ deno_version = 2
 LOG_HASH_SALT = "env(BUDDYSHIP_LOG_HASH_SALT)"
 SITE_URL = "env(BUDDYSHIP_SITE_URL)"
 ALLOWED_ORIGINS = "env(BUDDYSHIP_ALLOWED_ORIGINS)"
+# 解析に使う AI(D-01 決定までは mock のみ。実際の AI を呼ぶ値はまだない)
+AI_PROVIDER = "env(BUDDYSHIP_AI_PROVIDER)"
 
 [analytics]
 enabled = false
@@ -433,4 +435,10 @@ enabled = true
 
 # Buddyship: 関数は JWT 検証を必ず有効にする(関数内でも auth.getUser で再確認)
 [functions.admin-invite-user]
+verify_jwt = true
+
+[functions.analyze-meal]
+verify_jwt = true
+
+[functions.meal-image]
 verify_jwt = true

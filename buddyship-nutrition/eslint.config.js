@@ -46,7 +46,7 @@ export default tseslint.config(
   },
   {
     // 開発・CI 用のスクリプト(Node で実行。結果を標準出力に出す)
-    files: ['scripts/**/*.mjs', '*.js'],
+    files: ['scripts/**/*.mjs', 'scripts/**/*.ts', '*.js'],
     languageOptions: { globals: { ...globals.node } },
     rules: { 'no-console': 'off' },
   },

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   AGGREGATE_LABEL,
+  AGGREGATE_SUBTOTAL_LABEL,
   dayLabelKind,
   dayTotalHeading,
   isCountableDay,
@@ -56,5 +57,25 @@ describe('集計名(追加要件 3)', () => {
   it('すべての記録状況で「記録済みの自宅食事の推定摂取量」', () => {
     for (const day of ALL) expect(dayTotalHeading(day).heading).toBe(AGGREGATE_LABEL);
     expect(AGGREGATE_LABEL).toBe('記録済みの自宅食事の推定摂取量');
+  });
+});
+
+describe('要確認の食品がある日(Sprint 2 表示ルール)', () => {
+  it('64 通りすべてで、要確認があれば「確認済み食品のみの小計」と「未確認の食品は含まれていません」', () => {
+    for (const day of ALL) {
+      const h = dayTotalHeading(day, 3);
+      expect(h.heading).toBe(AGGREGATE_SUBTOTAL_LABEL);
+      expect(h.heading).toBe('記録済みの自宅食事の確認済み食品のみの小計');
+      expect(h.note).toContain('未確認の食品は含まれていません。(未確認 3 品)');
+      expect(h.note).toContain('差があります');
+      expect(isCountableDay(day, 3)).toBe(false);
+    }
+  });
+
+  it('要確認がなければ従来どおり「記録済みの自宅食事の推定摂取量」', () => {
+    for (const day of ALL) {
+      expect(dayTotalHeading(day, 0).heading).toBe(AGGREGATE_LABEL);
+      expect(dayTotalHeading(day).note).not.toContain('未確認');
+    }
   });
 });

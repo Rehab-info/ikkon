@@ -9,6 +9,7 @@ export const STAFF_IDLE_MS = 15 * 60 * 1000; // スタッフ・管理者の自�
 
 const NAV: { to: string; label: string; role: AppRole }[] = [
   { to: '/', label: 'ホーム', role: 'member' },
+  { to: '/meals', label: '記録', role: 'member' },
   { to: '/sharing', label: '見せる情報', role: 'member' },
   { to: '/staff', label: '担当の利用者', role: 'staff' },
   { to: '/admin', label: '利用者とスタッフ', role: 'admin' },

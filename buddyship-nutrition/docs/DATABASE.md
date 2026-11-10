@@ -513,3 +513,15 @@ meal.total_*         = Σ 確定した item.*(丸め前の値で合計。null �
 | 管理者による自分のロール変更 | 規定なし | 禁止(`admin_set_role` で自分を対象にできない) | 管理者が自分をスタッフにして担当になる抜け道を防ぐ(DECISIONS §3-9) |
 | `profiles.timezone` | 既定 Asia/Tokyo | Asia/Tokyo のみ許可 | Phase 1 は国内のみ。将来の拡張時に制約を外す |
 | API の既定公開 | — | `auto_expose_new_tables = false`、関数・表の既定権限を取り消し、明示的に GRANT したものだけ公開 | 付け忘れで公開されることを防ぐ |
+
+## 10. Sprint 2 実装での設計からの差分・補足
+
+| 項目 | 内容 |
+|---|---|
+| 食事のテーブル | `meals`・`meal_items`・`meal_slot_status`・`meal_analyses` は**誰にもテーブル権限を与えない**(本人も含めて RPC 経由のみ)。RLS は有効でポリシーなし |
+| 食品マスター | `supabase/seeds/foods.sql`(2,538 食品)と別名辞書 61 件(`supabase/seed-data/food-aliases.json`、開発用)を `scripts/sfct/build-foods-seed.ts` が生成。値の解釈は `packages/nutrition` の `parseSfctValue`。CI で生成物が最新か確かめる。**本番への取込は別途承認** |
+| 計算 | SQL(`private.consumed_g`・`private.nutrient_amount`)は `packages/nutrition` と同じ四捨五入。無作為の 300 件で一致を結合テストで確認 |
+| 明細の名前 | `meal_items.label`(確定は成分表のやさしい名前、要確認は AI のラベル)を追加 |
+| 画像 | Storage `meal-images`(非公開、5 MB、JPEG/WebP)。アップロード:本人または `meals:write` のスタッフ(パス形式を検査)。読み出し:本人、または自分がアップロードした画像で `meals:write` が有効なスタッフ(解析のため)。削除:本人のみ。上書き不可。閲覧画面は `meal-image` 関数(本人のみ・監査あり) |
+| 期限 | `meals.image_expires_at` = 保存から 30 日(D-09)。期限後は閲覧不可。**自動削除の処理は未実装** |
+| 代理入力の閲覧 | `meals:write` だけのスタッフは、自分が入力した記録だけ見える(D-07 ①)。日別の集計は `meals:read` が必要 |

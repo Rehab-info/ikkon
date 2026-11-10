@@ -37,5 +37,23 @@ export default async function globalSetup(): Promise<void> {
     insert into public.staff_assignments(organization_id, staff_id, member_id, created_by)
       values ('${ORG}', '${staff.id}', '${member.id}', '${admin.id}');`;
   execFileSync('psql', [sb.db, '-v', 'ON_ERROR_STOP=1', '-qc', sql]);
-  writeFileSync(ACCOUNTS_FILE, JSON.stringify({ admin, staff, member, tag }));
+
+  // 食事記録の E2E 用(Sprint 2):規約に同意済みの利用者と、食事の閲覧・代理入力の同意がある担当スタッフ
+  const mealMember = await create('meal-member');
+  const mealStaff = await create('meal-staff');
+  const sql2 = `
+    insert into public.profiles(user_id, organization_id, facility_id, display_name) values
+      ('${mealMember.id}', '${ORG}', '${FACILITY}', '食事テスト利用者-${tag}'),
+      ('${mealStaff.id}', '${ORG}', '${FACILITY}', '食事テストスタッフ-${tag}');
+    insert into public.user_roles(user_id, organization_id, role) values
+      ('${mealMember.id}', '${ORG}', 'member'), ('${mealStaff.id}', '${ORG}', 'staff');
+    insert into public.staff_assignments(organization_id, staff_id, member_id, created_by)
+      values ('${ORG}', '${mealStaff.id}', '${mealMember.id}', '${admin.id}');
+    insert into public.user_agreements(user_id, document_id)
+      select u, d.id from unnest(array['${mealMember.id}', '${mealStaff.id}']::uuid[]) u, public.consent_documents d;
+    insert into public.staff_access_consents(member_id, staff_id, scope, document_id)
+      select '${mealMember.id}', '${mealStaff.id}', s::public.consent_scope, (select id from public.consent_documents where kind = 'staff_sharing')
+      from unnest(array['meals:read', 'meals:write']) s;`;
+  execFileSync('psql', [sb.db, '-v', 'ON_ERROR_STOP=1', '-qc', sql2]);
+  writeFileSync(ACCOUNTS_FILE, JSON.stringify({ admin, staff, member, mealMember, mealStaff, tag }));
 }

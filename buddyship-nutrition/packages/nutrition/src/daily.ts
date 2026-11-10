@@ -26,25 +26,31 @@ export function dayLabelKind(day: DayStatus): DayLabelKind {
   return 'home_complete';
 }
 
+import { ESTIMATE_NOTE, SUBTOTAL_LABEL, UNCONFIRMED_NOTE } from './labels.ts';
+
 /** 食事記録の集計名(追加要件 3)。どの日もこの名前だけを使い、「1 日の総摂取量」などとは書かない */
 export const AGGREGATE_LABEL = '記録済みの自宅食事の推定摂取量';
+/** その日に要確認の食品があるときの集計名(確定済み食品だけの小計であることを明示) */
+export const AGGREGATE_SUBTOTAL_LABEL = `記録済みの自宅食事の${SUBTOTAL_LABEL}`;
 
 /**
  * 集計の見出しと注記。推定値であり誤差があることも必ず添える(安全要件 6)。
+ * unconfirmedCount:その日の要確認の食品の数。1 以上なら「確認済み食品のみの小計」として見せる。
  */
-export function dayTotalHeading(day: DayStatus): { heading: string; note: string } {
-  const ESTIMATE = '写真や入力をもとにした推定で、実際とは差があります。';
+export function dayTotalHeading(day: DayStatus, unconfirmedCount = 0): { heading: string; note: string } {
+  const unconfirmed = unconfirmedCount > 0 ? `${UNCONFIRMED_NOTE}(未確認 ${unconfirmedCount} 品)` : '';
+  const heading = unconfirmedCount > 0 ? AGGREGATE_SUBTOTAL_LABEL : AGGREGATE_LABEL;
   switch (dayLabelKind(day)) {
     case 'home_complete':
-      return { heading: AGGREGATE_LABEL, note: ESTIMATE };
+      return { heading, note: `${unconfirmed}${ESTIMATE_NOTE}` };
     case 'home_complete_except_dayservice':
-      return { heading: AGGREGATE_LABEL, note: `デイサービスで食べた食事は含みません。${ESTIMATE}` };
+      return { heading, note: `${unconfirmed}デイサービスで食べた食事は含みません。${ESTIMATE_NOTE}` };
     case 'partial':
-      return { heading: AGGREGATE_LABEL, note: `まだ記録していない食事は含みません。${ESTIMATE}` };
+      return { heading, note: `${unconfirmed}まだ記録していない食事は含みません。${ESTIMATE_NOTE}` };
   }
 }
 
-/** 平均などの集計に使ってよい日か(未記録の食事がない日だけ) */
-export function isCountableDay(day: DayStatus): boolean {
-  return dayLabelKind(day) !== 'partial';
+/** 平均などの集計に使ってよい日か(未記録の食事がなく、要確認の食品もない日だけ) */
+export function isCountableDay(day: DayStatus, unconfirmedCount = 0): boolean {
+  return dayLabelKind(day) !== 'partial' && unconfirmedCount === 0;
 }

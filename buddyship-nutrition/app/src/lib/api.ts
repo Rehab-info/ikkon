@@ -6,7 +6,14 @@ import {
   MyStaff,
   NullData,
   StaffDashboard,
+  AnalyzeResponse,
+  DailySummary,
+  FoodList,
+  SavedMeal,
+  SavedMeals,
   parseRpcResult,
+  type MealSlot,
+  type SaveMealPayload,
   type ConsentScope,
   type InviteUserRequest,
   isErrorCode,
@@ -62,24 +69,85 @@ export const api = {
   },
 
   /** 管理者による招待(Edge Function admin-invite-user) */
-  async adminInvite(input: InviteUserRequest): Promise<{ user_id: string }> {
-    const { data } = await supabase.auth.getSession();
-    const token = data.session?.access_token;
-    if (!token) throw new AppError('unauthenticated');
-    const res = await fetch(`${env.VITE_SUPABASE_URL}/functions/v1/admin-invite-user`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-        apikey: env.VITE_SUPABASE_ANON_KEY,
-      },
-      body: JSON.stringify(input),
+  adminInvite: (input: InviteUserRequest) =>
+    callFunction('admin-invite-user', z.object({ user_id: z.uuid() }), { method: 'POST', body: input }),
+
+  // ---- 食事記録(Sprint 2) ----
+  searchFoods: (q: string) => call('search_foods', FoodList, { p_query: q, p_limit: 20 }),
+  getMeals: (memberId: string, from: string, to: string) =>
+    call('get_meals', SavedMeals, { p_member_id: memberId, p_from: from, p_to: to }),
+  getMeal: (mealId: string) => call('get_meal', SavedMeal, { p_meal_id: mealId }),
+  getDailySummary: (memberId: string, from: string, to: string) =>
+    call('get_daily_summary', DailySummary, { p_member_id: memberId, p_from: from, p_to: to }),
+  saveMeal: (memberId: string, payload: SaveMealPayload) =>
+    call('save_meal', z.object({ meal_id: z.uuid() }), { p_member_id: memberId, p_payload: payload }),
+  updateMeal: (mealId: string, payload: SaveMealPayload) =>
+    call('update_meal', z.object({ meal_id: z.uuid() }), { p_meal_id: mealId, p_payload: payload }),
+  /** 食事を消す(本人だけ)。写真があれば Storage からも消す(本人のフォルダは本人が消せる) */
+  async deleteMeal(mealId: string): Promise<void> {
+    const { image_path } = await call('delete_meal', z.object({ image_path: z.string().nullable() }), {
+      p_meal_id: mealId,
     });
-    const json: unknown = await res.json().catch(() => null);
-    if (!res.ok) {
-      const code = z.object({ error: z.object({ code: z.string() }) }).safeParse(json);
-      throw new AppError(code.success && isErrorCode(code.data.error.code) ? code.data.error.code : 'internal');
+    if (image_path) {
+      const { error } = await supabase.storage.from('meal-images').remove([image_path]);
+      if (error) throw new AppError('internal');
     }
-    return z.object({ user_id: z.uuid() }).parse(json);
+  },
+  setSlotStatus: (memberId: string, date: string, slot: MealSlot, status: 'skipped' | 'dayservice' | null) =>
+    call('set_slot_status', NullData, { p_member_id: memberId, p_eaten_on: date, p_slot: slot, p_status: status }),
+
+  /** 食事の写真をアップロード(本人のフォルダ。代理のときは利用者のフォルダ。Storage のポリシーで制御) */
+  async uploadMealImage(memberId: string, blob: Blob): Promise<string> {
+    const path = `${memberId}/${new Date().getFullYear()}/${crypto.randomUUID()}.jpg`;
+    const { error } = await supabase.storage
+      .from('meal-images')
+      .upload(path, blob, { contentType: 'image/jpeg', upsert: false });
+    if (error) throw new AppError('forbidden');
+    return path;
+  },
+  analyzeMeal: (memberId: string, imagePath: string) =>
+    callFunction('analyze-meal', AnalyzeResponse, {
+      method: 'POST',
+      body: { member_id: memberId, image_path: imagePath },
+    }),
+  /** 食事の写真(本人だけ)。端末に保存しないよう、表示用の一時 URL にする */
+  async mealImageUrl(mealId: string): Promise<string> {
+    const res = await functionFetch(`meal-image?meal_id=${encodeURIComponent(mealId)}`, { method: 'GET' });
+    if (!res.ok) throw new AppError(await errorCodeOf(res));
+    return URL.createObjectURL(await res.blob());
   },
 };
+
+async function functionFetch(path: string, init: { method: 'GET' | 'POST'; body?: unknown }): Promise<Response> {
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
+  if (!token) throw new AppError('unauthenticated');
+  return fetch(`${env.VITE_SUPABASE_URL}/functions/v1/${path}`, {
+    method: init.method,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      apikey: env.VITE_SUPABASE_ANON_KEY,
+      ...(init.body === undefined ? {} : { 'Content-Type': 'application/json' }),
+    },
+    ...(init.body === undefined ? {} : { body: JSON.stringify(init.body) }),
+  });
+}
+
+async function errorCodeOf(res: Response) {
+  const json: unknown = await res.json().catch(() => null);
+  const code = z.object({ error: z.object({ code: z.string() }) }).safeParse(json);
+  return code.success && isErrorCode(code.data.error.code) ? code.data.error.code : 'internal';
+}
+
+/** Edge Function の呼び出し(エラーは AppError に。応答は Zod で検証) */
+async function callFunction<T extends z.ZodType>(
+  name: string,
+  schema: T,
+  init: { method: 'GET' | 'POST'; body?: unknown },
+): Promise<z.output<T>> {
+  const res = await functionFetch(name, init);
+  if (!res.ok) throw new AppError(await errorCodeOf(res));
+  const parsed = schema.safeParse(await res.json().catch(() => null));
+  if (!parsed.success) throw new AppError('internal');
+  return parsed.data;
+}

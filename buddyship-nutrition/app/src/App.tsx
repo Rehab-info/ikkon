@@ -13,6 +13,9 @@ import { SettingsPage } from '@/features/profile/SettingsPage.tsx';
 import { StaffDashboardPage } from '@/features/staff/StaffDashboardPage.tsx';
 import { AdminUsersPage } from '@/features/admin/AdminUsersPage.tsx';
 import { AdminAssignmentsPage } from '@/features/admin/AdminAssignmentsPage.tsx';
+import { RecordMealPage } from '@/features/meals/RecordMealPage.tsx';
+import { MealDetailPage } from '@/features/meals/MealDetailPage.tsx';
+import { MealHistoryPage } from '@/features/meals/MealHistoryPage.tsx';
 
 function Gate() {
   const { loading, session, context } = useSession();
@@ -36,7 +39,12 @@ function Gate() {
           <Routes>
             {has('member') && <Route path="/" element={<HomePage />} />}
             {has('member') && <Route path="/sharing" element={<ConsentPage />} />}
+            {has('member') && <Route path="/meals" element={<MealHistoryPage />} />}
+            {has('member') && <Route path="/meals/new" element={<RecordMealPage />} />}
+            {(has('member') || has('staff')) && <Route path="/meals/:mealId" element={<MealDetailPage />} />}
             {has('staff') && <Route path="/staff" element={<StaffDashboardPage />} />}
+            {has('staff') && <Route path="/members/:memberId/meals" element={<MealHistoryPage />} />}
+            {has('staff') && <Route path="/members/:memberId/meals/new" element={<RecordMealPage />} />}
             {has('admin') && <Route path="/admin" element={<AdminUsersPage />} />}
             {has('admin') && <Route path="/admin/assignments" element={<AdminAssignmentsPage />} />}
             <Route path="/settings" element={<SettingsPage />} />

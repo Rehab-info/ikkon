@@ -6,6 +6,14 @@
  * 食品コードを確実に対応付けられないときは、無理に確定せず「要確認」にする。
  */
 import { sumNutrients, type DisplayPrecision, type ItemNutrients, type Totals } from './calc.ts';
+import {
+  ESTIMATE_NOTE,
+  MEAL_ESTIMATE_LABEL,
+  SUBTOTAL_LABEL,
+  UNCONFIRMED_NOTE,
+  scopeOf,
+  type TotalScope,
+} from './labels.ts';
 
 /** 明細の役割:単品の食品 / 料理の構成食材 / 調理油 / 調味料 */
 export type ComponentRole = 'food' | 'ingredient' | 'cooking_oil' | 'seasoning';
@@ -53,7 +61,10 @@ export interface MealLine {
 export type ApproximateReason = 'needs_review' | 'unknown_composition';
 
 export interface MealSummary {
+  /** 確定した明細だけの合計 */
   totals: Totals;
+  /** すべて確認済みの推定摂取量か、確認済み食品のみの小計か */
+  scope: TotalScope;
   /** 精密な値として見せてよいか */
   precision: DisplayPrecision;
   reasons: ApproximateReason[];
@@ -62,13 +73,14 @@ export interface MealSummary {
 }
 
 export const APPROXIMATE_REASON_TEXT: Record<ApproximateReason, string> = {
-  needs_review: '確認が済んでいない食品があり、その分は合計に入っていません。',
+  needs_review: '確認が済んでいない食品があり、その分は小計に入っていません。',
   unknown_composition: '料理の中身(材料や量)がはっきりしないため、おおよその値です。',
 };
 
 /**
- * 食事の集計。要確認の明細は合計に入れず、構成食材が不明な料理や要確認の明細があれば
- * 表示を「おおよそ」(approximate)にする(追加要件 4)。
+ * 食事の集計。
+ *  - 要確認の明細は合計に入れない。要確認が 1 つでもあれば scope = confirmed_only_subtotal(「確認済み食品のみの小計」)
+ *  - 構成食材が不明な料理を含めば、表示を「おおよそ」(approximate)にする(追加要件 4)
  */
 export function summarizeMeal(lines: readonly MealLine[]): MealSummary {
   const confirmed = lines.filter((l) => l.matchStatus === 'confirmed' && l.nutrients !== null);
@@ -78,8 +90,24 @@ export function summarizeMeal(lines: readonly MealLine[]): MealSummary {
   if (lines.some((l) => l.dish && !l.dish.compositionKnown)) reasons.push('unknown_composition');
   return {
     totals: sumNutrients(confirmed.map((l) => l.nutrients as ItemNutrients)),
-    precision: reasons.length > 0 ? 'approximate' : 'normal',
+    scope: scopeOf(needsReviewCount),
+    precision: reasons.includes('unknown_composition') ? 'approximate' : 'normal',
     reasons,
     needsReviewCount,
   };
+}
+
+/**
+ * 食事 1 回分の見出しと注記。要確認の食品があれば、確定済み食品の数値を食事全体の推定摂取量として見せない。
+ */
+export function mealTotalHeading(summary: Pick<MealSummary, 'scope' | 'needsReviewCount' | 'reasons'>): {
+  heading: string;
+  notes: string[];
+} {
+  const notes: string[] = [];
+  if (summary.scope === 'confirmed_only_subtotal')
+    notes.push(`${UNCONFIRMED_NOTE}(未確認 ${summary.needsReviewCount} 品)`);
+  if (summary.reasons.includes('unknown_composition')) notes.push(APPROXIMATE_REASON_TEXT.unknown_composition);
+  notes.push(ESTIMATE_NOTE);
+  return { heading: summary.scope === 'confirmed_only_subtotal' ? SUBTOTAL_LABEL : MEAL_ESTIMATE_LABEL, notes };
 }

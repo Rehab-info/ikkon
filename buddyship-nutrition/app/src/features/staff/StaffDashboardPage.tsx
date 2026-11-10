@@ -1,3 +1,4 @@
+import { Link } from 'react-router';
 import { SCOPE_LABELS, SCOPE_ORDER } from '@buddyship/shared';
 import { useLoader } from '@/lib/useLoader.ts';
 import { api } from '@/lib/api.ts';
@@ -32,9 +33,21 @@ export function StaffDashboardPage() {
               ))}
             </ul>
           )}
+          <div className="mt-3 flex flex-col gap-2">
+            {(r.scopes.includes('meals:read') || r.scopes.includes('meals:write')) && (
+              <Button asChild variant="secondary">
+                <Link to={`/members/${r.member_id}/meals`}>食事の記録を見る</Link>
+              </Button>
+            )}
+            {r.scopes.includes('meals:write') && (
+              <Button asChild>
+                <Link to={`/members/${r.member_id}/meals/new`}>食事を代わりに記録する</Link>
+              </Button>
+            )}
+          </div>
         </Card>
       ))}
-      <Button variant="secondary" onClick={reload}>
+      <Button variant="secondary" onClick={() => reload()}>
         最新の状態にする
       </Button>
     </div>

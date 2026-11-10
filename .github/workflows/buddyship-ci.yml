@@ -57,11 +57,13 @@ jobs:
       - name: Unit tests (shared + app)
         run: npm test
 
+      - name: Generated files are up to date (nutrition copy for Edge Functions, foods seed)
+        run: npm run check:generated
+
       - name: Edge Functions lint, typecheck and tests (Deno)
         run: |
-          npx deno lint --config supabase/functions/deno.json supabase/functions
-          npx deno check --config supabase/functions/deno.json supabase/functions/admin-invite-user/index.ts
-          npx deno test --config supabase/functions/deno.json supabase/functions/_shared/
+          npm run lint:functions
+          npm run test:functions
 
       - name: Start local Supabase
         run: |

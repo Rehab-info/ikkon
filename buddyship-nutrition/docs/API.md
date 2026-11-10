@@ -120,6 +120,14 @@ const AiMealResult = z.object({
 ### POST `/functions/v1/admin-invite-user`
 管理者(aal2)のみ。`{ "email": "...", "display_name": "...", "role": "member" | "staff", "facility_id": "uuid" }`。ログイン方式(D-04)に合わせて招待を送り、`profiles`・`user_roles` を作成。
 
+### GET `/functions/v1/meal-image?meal_id=...`(Sprint 2 で追加)
+本人だけ(D-09)。呼出者の JWT で `authorize_meal_image` を呼び(許可・拒否を監査に残す)、Storage のポリシーの下で画像を取得してそのまま返す(`Cache-Control: no-store`)。署名付き URL は発行しない。スタッフ・他人は 403。
+
+### Sprint 2 の実装メモ
+- `analyze-meal` の AI は **開発用の仮解析(`AI_PROVIDER=mock`)だけ**。画像の中身は見ず、決まった家庭の食事(要確認になる例を含む)を返す。応答の `provider` が `mock` のとき、画面に「開発用の仮の解析です」と表示する。実際の AI は D-01 の決定と承認の後に追加する。
+- 照合の結果(確定/要確認)は `packages/nutrition` の `initialMatchStatus` で決める。Edge Functions からは `scripts/sync-nutrition.mjs` で写したもの(`supabase/functions/_shared/nutrition`)を使い、CI で写しが最新か確かめる。
+- 実装した RPC:`search_foods`・`match_foods`・`authorize_meal_write`・`record_meal_analysis`・`save_meal`・`update_meal`・`delete_meal`・`set_slot_status`・`get_meals`・`get_meal`・`get_daily_summary`・`authorize_meal_image`。`update_meal` は解析記録と画像をクライアントの値で付け替えない(保存済みの値を使う)。
+
 ### `purge-expired-images`
 pg_cron から起動する内部処理。呼出元の検証は専用シークレット(Edge Function の JWT 検証は無効にしない)。
 
