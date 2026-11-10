@@ -1,0 +1,36 @@
+{
+  "version": "sample-0.1(架空。形式の確認用。評価には使わない)",
+  "contains_member_data": false,
+  "meals": [
+    {
+      "id": "sample-dinner-1",
+      "image": "images/sample-dinner-1.jpg",
+      "slot": "dinner",
+      "conditions": ["室内灯", "白い器", "斜め上"],
+      "items": [
+        { "label": "ごはん", "food_code": "01088", "weighed_g": 162, "role": "food", "dish": null },
+        { "label": "じゃがいも", "food_code": "02017", "weighed_g": 72, "role": "ingredient", "dish": "肉じゃが" },
+        { "label": "たまねぎ", "food_code": "06153", "weighed_g": 35, "role": "ingredient", "dish": "肉じゃが" },
+        { "label": "にんじん", "food_code": "06214", "weighed_g": 18, "role": "ingredient", "dish": "肉じゃが" },
+        { "label": "豚ロース", "food_code": "11123", "weighed_g": 45, "role": "ingredient", "dish": "肉じゃが" },
+        { "label": "サラダ油", "food_code": "14006", "weighed_g": 4, "role": "cooking_oil", "dish": "肉じゃが" },
+        { "label": "しょうゆ", "food_code": "17007", "weighed_g": 8, "role": "seasoning", "dish": "肉じゃが" },
+        { "label": "砂糖", "food_code": "03003", "weighed_g": 5, "role": "seasoning", "dish": "肉じゃが" },
+        { "label": "木綿豆腐", "food_code": "04032", "weighed_g": 28, "role": "ingredient", "dish": "みそ汁" },
+        { "label": "わかめ", "food_code": "09058", "weighed_g": 4, "role": "ingredient", "dish": "みそ汁" },
+        { "label": "みそ", "food_code": "17045", "weighed_g": 11, "role": "seasoning", "dish": "みそ汁" }
+      ]
+    },
+    {
+      "id": "sample-breakfast-1",
+      "image": "images/sample-breakfast-1.jpg",
+      "slot": "breakfast",
+      "conditions": ["自然光", "木の器", "真上"],
+      "items": [
+        { "label": "食パン", "food_code": "01026", "weighed_g": 60, "role": "food", "dish": null },
+        { "label": "バナナ", "food_code": "07107", "weighed_g": 90, "role": "food", "dish": null },
+        { "label": "牛乳", "food_code": "13003", "weighed_g": 206, "role": "food", "dish": null }
+      ]
+    }
+  ]
+}

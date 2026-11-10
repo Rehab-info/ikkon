@@ -1,0 +1,17 @@
+{
+  "_note": "例の形式だけを示す。数値は 0 のまま。実行する人が各社の公式の料金表を確認して別ファイル(prices.json、コミットしない)に書く",
+  "prices": [
+    {
+      "provider": "example-provider",
+      "model": "example-model",
+      "usd_per_million_input_tokens": 0,
+      "usd_per_million_output_tokens": 0,
+      "input_tokens_per_image": 1,
+      "text_input_tokens_per_call": 0,
+      "output_tokens_per_call": 1,
+      "jpy_per_usd": 1,
+      "checked_on": "2026-11-10",
+      "source_url": "https://example.com/pricing"
+    }
+  ]
+}

@@ -10,3 +10,7 @@ playwright-report/
 !.env.example
 *.log
 .DS_Store
+# AI 評価(scripts/ai-eval):料金の設定・データセットの画像・結果はコミットしない
+scripts/ai-eval/prices.json
+scripts/ai-eval/data/
+scripts/ai-eval/results/

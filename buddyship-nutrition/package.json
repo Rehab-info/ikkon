@@ -14,11 +14,11 @@
   ],
   "scripts": {
     "build": "npm run build -w app",
-    "typecheck": "npm run typecheck -w packages/shared && npm run typecheck -w packages/nutrition && npm run typecheck -w app && tsc -p tests/integration --noEmit",
+    "typecheck": "npm run typecheck -w packages/shared && npm run typecheck -w packages/nutrition && npm run typecheck -w app && tsc -p tests/integration --noEmit && tsc -p scripts/ai-eval --noEmit",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "npm run test -w packages/shared && npm run test -w packages/nutrition && npm run test -w app",
+    "test": "npm run test -w packages/shared && npm run test -w packages/nutrition && npm run test -w app && vitest run scripts/ai-eval",
     "test:integration": "vitest run --config tests/integration/vitest.config.ts",
     "test:db": "supabase test db",
     "test:e2e": "npm run test:e2e -w app",
@@ -31,6 +31,7 @@
     "lint:functions": "deno lint --config supabase/functions/deno.json supabase/functions && deno check --config supabase/functions/deno.json supabase/functions/admin-invite-user/index.ts supabase/functions/analyze-meal/index.ts supabase/functions/meal-image/index.ts supabase/functions/purge-expired-images/index.ts",
     "sfct:extract": "python3 -I scripts/sfct/extract_sfct8.py",
     "sync:nutrition": "node scripts/sync-nutrition.mjs",
+    "ai-eval": "node scripts/ai-eval/run.ts",
     "check:generated": "node scripts/sync-nutrition.mjs --check && node scripts/sfct/build-foods-seed.ts --check"
   },
   "devDependencies": {
