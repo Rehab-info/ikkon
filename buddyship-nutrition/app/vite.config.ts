@@ -32,7 +32,14 @@ export default defineConfig({
     }),
   ],
   resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
-  server: { port: 5173, strictPort: true },
+  server: {
+    port: 5173,
+    strictPort: true,
+    // 開発時だけ:VITE_SUPABASE_URL=same-origin のとき、ローカルの Supabase へ中継する
+    proxy: Object.fromEntries(
+      ['/auth/v1', '/rest/v1', '/functions/v1', '/storage/v1'].map((p) => [p, { target: 'http://127.0.0.1:54321' }]),
+    ),
+  },
   preview: { port: 4173, strictPort: true },
   build: { sourcemap: false },
 });
