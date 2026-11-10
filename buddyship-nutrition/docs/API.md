@@ -106,8 +106,8 @@ const AiMealResult = z.object({
   items: z.array(AiMealItem).max(20),
 }).strict();
 ```
-- サーバーは各食品・構成食材を成分表と照合し、`packages/nutrition` の `initialMatchStatus` で「確定/要確認」を決める。確実でなければ「要確認」として候補を返し、確定しない(D-19)。
-- 応答の各明細に `match_status`(`confirmed`/`needs_review`)と `candidates` を付ける。
+- サーバーは各食品・構成食材を成分表と照合する。**AI が生成した食品候補は自動的に確定しない(Sprint 3)**:応答の明細はすべて `match_status: "needs_review"` で、利用者・スタッフが画面で確かめたときだけ確定する(D-19)。
+- 応答の各明細に `match_status`(常に `needs_review`)、`suggestion_strength`(`suggested`/`ambiguous`/`none`)、`suggested`(先頭に示す「AI の候補」。1 つだけ完全一致し、確からしさが低くないときだけ。確定ではない)、`candidates` を付ける。決め方は `packages/nutrition` の `suggestionOf`。
 - 栄養値のキーはスキーマにない(`.strict()` で拒否)。
 - 「食べ残し」の推定は AI に求めない。食べた割合は利用者/スタッフが入力する(写真が食後の場合の扱いは **[未決 D-27]**)。
 
@@ -128,8 +128,12 @@ const AiMealResult = z.object({
 - 照合の結果(確定/要確認)は `packages/nutrition` の `initialMatchStatus` で決める。Edge Functions からは `scripts/sync-nutrition.mjs` で写したもの(`supabase/functions/_shared/nutrition`)を使い、CI で写しが最新か確かめる。
 - 実装した RPC:`search_foods`・`match_foods`・`authorize_meal_write`・`record_meal_analysis`・`save_meal`・`update_meal`・`delete_meal`・`set_slot_status`・`get_meals`・`get_meal`・`get_daily_summary`・`authorize_meal_image`。`update_meal` は解析記録と画像をクライアントの値で付け替えない(保存済みの値を使う)。
 
-### `purge-expired-images`
-pg_cron から起動する内部処理。呼出元の検証は専用シークレット(Edge Function の JWT 検証は無効にしない)。
+### POST `/functions/v1/purge-expired-images`(Sprint 3 で実装)
+定期実行用の内部処理。利用者の画面からは呼ばない。
+- 認可:`x-purge-secret` ヘッダ(環境変数 `PURGE_JOB_SECRET`、32 文字以上、定数時間で比較)。利用者の JWT では実行できない(Edge Function の JWT 検証は有効のまま。呼び出しには anon キーなどの JWT も必要)。
+- 処理:`claim_image_purge` で対象(30 日を過ぎた食事の画像、食事に保存されずに 24 時間たった画像)を最大 50 件ずつ取り出し → service role で Storage から削除 → `report_image_purge` で結果を記録(成功は食事の画像の参照を外し、監査 `meal_image.purge`)。失敗は 1・2・4・8 分後に再試行し、5 回で `failed`(監査に `error`)。1 回の実行で最大 1,000 件。
+- 応答:`{ "data": { "enqueued", "claimed", "done", "retry", "failed" } }`(件数だけ。画像のパスは返さない・ログに出さない)。
+- **定期実行の設定(pg_cron + pg_net、または外部のスケジューラ)は staging 構築時に行う(承認後。Sprint 4)**。それまでは手動または CI のテストでのみ動かす。
 
 ## 3. RPC
 
@@ -184,11 +188,30 @@ const SaveMeal = z.object({
 | `list_my_staff()` | 担当スタッフと付与中のスコープ |
 | `update_my_profile(display_name, font_scale)` | |
 
+### 体組成(InBody。Sprint 3)
+
+指示の `inbody.read` / `inbody.write` は、同意スコープ `body:read` / `body:write` に対応する(D-35)。
+
+| 関数 | 誰が | 説明 |
+|---|---|---|
+| `save_body_composition(member_id, payload)` | 本人(member)、`body:write` の担当スタッフ(aal2) | 追加。`payload` = `measured_at`・`weight_kg`・`skeletal_muscle_kg`・`body_fat_kg`・`body_fat_pct`(JSON の数、小数 1 桁)・`device_model`・`condition`(`before_meal`/`after_meal`/`unknown`)。余分なキーは拒否。範囲外 `out_of_range`、骨格筋量 + 体脂肪量 ≥ 体重 `inconsistent`、未来・1 年より前の測定日時 `invalid_request`。応答 `{ id, warnings }`(`fat_pct_mismatch`:体脂肪量 ÷ 体重 × 100 と体脂肪率の差が 1.5 ポイント超。保存は行う) |
+| `update_body_composition(id, payload)` | 本人は全件、スタッフは `body:write` かつ自分の代理入力かつ 7 日以内 | 修正。変更前後の値は履歴に残る |
+| `delete_body_composition(id)` | 本人のみ | 削除。削除前の値は履歴に残る(本人だけが見られる) |
+| `get_body_compositions(member_id, from, to)` | 本人、`body:read` のスタッフ(全件)、`body:write` だけのスタッフ(自分の入力だけ) | 期間(最大 400 日)の記録。入力者は表示名だけ(ID は返さない)。スタッフの閲覧は監査 |
+| `get_body_composition_history(id)` | 記録が見える人。削除済みの記録は本人だけ | 変更の履歴(記録・修正・削除と値のスナップショット) |
+
 ### スタッフのみ
 
 | 関数 | 説明 |
 |---|---|
-| `staff_dashboard()` | 担当利用者の一覧。各列はスコープがある場合のみ値を返し、ない場合は `null` と `"no_consent"` |
+| `staff_dashboard()` | 担当利用者の一覧。`meals`:`meals:read` があれば `{ last_meal_on, last_7_days: [{date, breakfast, lunch, dinner}] }`、なければ `null`(同意なし。データを取得しない)。`body`:`body:read` があれば `{ last_measured_at }`、なければ `null`。日付が `null` なら未記録。体重などの値は返さない(D-15) |
+
+### 定期処理(service_role のみ。Edge Function `purge-expired-images` から)
+
+| 関数 | 説明 |
+|---|---|
+| `claim_image_purge(limit)` | 削除の対象を積み、処理する分を取り出す(次の試行時刻を先に進める)。条件を満たさなくなったもの(食事から参照された等)は取り消す。90 日を過ぎた解析記録の削除も行う |
+| `report_image_purge(results)` | `[{name, ok, error?}]` を記録。成功は食事の画像の参照を外し監査、失敗は再試行または `failed` |
 
 ### 管理者のみ(admin かつ aal2)
 

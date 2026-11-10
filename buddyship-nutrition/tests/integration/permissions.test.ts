@@ -111,7 +111,11 @@ describe('consent lifecycle with real sessions', () => {
 
   it('staff sees the member without scopes until consent is granted', async () => {
     const before = await rpc(staff.client, 'staff_dashboard');
-    expect(before).toEqual({ ok: true, data: [{ member_id: member.id, display_name: '利用者', scopes: [] }] });
+    // 同意がない列(食事・体の測定)は null = データを取得しない(Sprint 3 で列を追加)
+    expect(before).toEqual({
+      ok: true,
+      data: [{ member_id: member.id, display_name: '利用者', scopes: [], meals: null, body: null }],
+    });
 
     expect(
       (

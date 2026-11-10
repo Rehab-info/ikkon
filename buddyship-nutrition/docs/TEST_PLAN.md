@@ -160,3 +160,15 @@
 | 結合 | 写真 → 解析 → 照合 → 保存 → 再表示、計算の一致(300 件)、画像の閲覧(本人のみ・no-store)、PNG 偽装の拒否、代理入力、閲覧のみ・同意なしのスタッフ、同意撤回後の遮断、画像削除の権限 | `tests/integration/meals.test.ts` |
 | 単体 | 画面の状態(確定・要確認・量・割合・追加・削除・構成不明・保存用の明細)、日付 | `app/src/features/meals/editorModel.test.ts`、`app/src/lib/date.test.ts` |
 | E2E | 写真から記録・小計表示・要確認のまま保存・修正して推定摂取量・再読込で一致・一覧・「食べなかった」、スタッフの代理入力・写真を見せない、同意撤回で開いたままの画面からの保存も拒否 | `app/tests/e2e/meals.spec.ts` |
+
+## 13. InBody・ダッシュボード・画像の削除・AI 比較(Sprint 3)
+
+| 層 | 主な内容 | 場所 |
+|---|---|---|
+| pgTAP | 本人の記録、範囲・小数・整合性・未来日・余分なキーの拒否、警告の規則(TypeScript と境目の値で一致)、修正と履歴、スタッフ(body:write)の代理入力・自分の入力だけ見える・7 日・削除不可、aal1 拒否、body:read の閲覧、食事の同意では見えない、担当外・管理者・anon の拒否、撤回・担当終了で即拒否、削除と本人だけの履歴、監査(値を残さない)、ダッシュボード(同意なし = null、未記録 = null、7 日分、値を出さない) | `supabase/tests/06_body_test.sql` |
+| pgTAP | 削除キュー:service_role だけが実行できる、30 日経過と 24 時間たった孤立画像だけを取り出す、取り出し中は再配布しない、成功で食事の参照を外し監査、失敗は再試行(間隔を空ける)、5 回で failed と監査、failed は自動で再試行しない、取り出し後に参照された画像は消さない、監査に画像のパスを残さない、解析記録の 90 日削除 | `supabase/tests/07_image_purge_test.sql` |
+| 結合 | 実際のログイン・MFA・同意の付与/撤回で InBody の権限・履歴・ダッシュボード。Edge Function `purge-expired-images` が Storage から実際に削除し、秘密のヘッダなし・利用者の JWT では実行できない、2 回目は何もしない | `tests/integration/body.test.ts`・`image-purge.test.ts` |
+| 結合・E2E | AI の候補が自動で確定しない(すべて要確認、「これで合っている」で確定) | `tests/integration/meals.test.ts`・`app/tests/e2e/meals.spec.ts` |
+| 単体 | 入力の検証・警告(packages/shared)、グラフの点・機種の変わり目・前回差・入力の増減・全角数字・日時(app)、写真が読めないときの案内(HEIC)、AI 比較の指標・費用の上限(scripts/ai-eval) | 各 `*.test.ts` |
+| E2E | 本人が 1 問ずつ入力・範囲外で進めない・機種の変更と体脂肪率の警告・指標ごとのグラフと注記・表・アクセシビリティ(axe)・修正と履歴、スタッフのダッシュボード(未記録・測定日・値を出さない)と代理入力、担当外の拒否、撤回で「同意なし」と画面の拒否 | `app/tests/e2e/body.spec.ts` |
+| 実機 | HEIC・iPhone・Android・PWA の手順 | [DEVICE_TEST.md](./DEVICE_TEST.md)(Sprint 4 で実施) |

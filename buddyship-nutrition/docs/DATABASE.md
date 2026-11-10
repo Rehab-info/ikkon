@@ -356,6 +356,12 @@ create table public.body_compositions (
 ```
 範囲は仮値。使用機種の測定範囲で見直す **[未決 D-12]**。
 
+Sprint 3 の実装(`20261110000600_body_dashboard_purge.sql`)での追加:
+- `condition public.body_condition`(`before_meal`/`after_meal`/`unknown`、既定 `unknown`)。測定条件の注記に使う。区分は仮 [D-12]。
+- CHECK に「骨格筋量 + 体脂肪量 < 体重」を追加(骨格筋量と体脂肪量はどちらも体重の一部のため)。
+- 変更履歴 `body_composition_history`(`op` = insert/update/delete、`changed_by`、`snapshot` = 値のスナップショット)。トリガーで記録するため、どの経路の変更も漏れない。記録の削除後も履歴は残り、本人だけが見られる。利用者の削除(profiles の削除)では一緒に消える。
+- テーブルへの直接アクセスは誰にも許さない(RLS 有効・ポリシーなし。RPC のみ)。
+
 ### 3.8 監査・利用量
 
 ```sql
@@ -487,8 +493,9 @@ meal.total_*         = Σ 確定した item.*(丸め前の値で合計。null �
 
 | データ | 保持(仮) | 未決 |
 |---|---|---|
-| 食事画像 | 30 日で自動削除。保存されなかった下書き画像は 24 時間 | D-09 |
-| meal_analyses | 90 日 | D-09 |
+| 食事画像 | 30 日で自動削除。保存されなかった下書き画像は 24 時間(Sprint 3 で実装:削除キュー `private.image_purge_queue` + Edge Function `purge-expired-images`。失敗は再試行し、5 回で failed として監査。定期実行の設定は staging 構築時) | D-09 |
+| meal_analyses | 90 日(Sprint 3 で実装:削除キューの取り出し時に削除) | D-09 |
+| InBody の変更履歴 | 記録と同じ(利用者の削除で一緒に消える) | D-20 |
 | 食事・InBody・記録状況 | 本人削除 / アカウント削除まで | D-20(介護記録としての扱い) |
 | 監査ログ | 1 年(アカウント削除時は ID を仮名化) | D-10 |
 | バックアップ | プランの保持期間に従う | D-31 |
