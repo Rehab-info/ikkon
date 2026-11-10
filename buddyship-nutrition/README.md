@@ -49,6 +49,7 @@ npm run dev -w app                          # http://127.0.0.1:5173
 | `npm run test:integration`                                    | 結合テスト(ローカルの Supabase が必要)                                        |
 | `npm run test:e2e`                                            | E2E(Playwright。ローカルの Supabase が必要)                                   |
 | `npm run check:generated`                                     | 生成物(食品マスターのシード・Edge Functions 用の計算モジュールの写し)が最新か |
+| `npm run ai-eval`                                             | AI 比較の評価(mock のみ・外部に送らない。docs/AI_EVALUATION.md)               |
 | `npm run check:secrets`                                       | ビルド成果物の秘密情報・service role の使用箇所の検査                         |
 
 CI は `.github/workflows/buddyship-ci.yml`(このフォルダの変更時だけ動く)。テストはすべてローカルの Supabase と合成データで動き、ローカル以外には接続しません。
