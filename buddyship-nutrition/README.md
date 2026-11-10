@@ -12,7 +12,8 @@
 app/               PWA(React + TypeScript + Vite + Tailwind CSS + shadcn/ui 形式の部品)
 packages/shared/   Zod スキーマ・エラーコード・同意スコープの表示(画面と共通)
 packages/nutrition/ 栄養計算ルール(食品成分表の列の対応・値の解釈・計算・丸め・1 日の表示・出典)。管理栄養士が監修できるよう独立させている
-scripts/sfct/      公式 Excel から成分表の値を取り出すスクリプト(SHA-256 照合)
+scripts/sfct/      公式 Excel から成分表の値を取り出す(SHA-256 照合)・食品マスターのシードを作るスクリプト
+scripts/sync-nutrition.mjs  packages/nutrition を Edge Functions 用に写す(CI で最新か検査)
 supabase/
   migrations/      DB マイグレーション(RLS・認可関数・RPC・監査ログ)
   tests/           pgTAP(RLS・権限・カタログ検査・利用量上限)
@@ -39,15 +40,16 @@ npm run dev -w app                          # http://127.0.0.1:5173
 
 ## テスト
 
-| コマンド                                                      | 内容                                                  |
-| ------------------------------------------------------------- | ----------------------------------------------------- |
-| `npm run lint` / `npm run typecheck` / `npm run format:check` | 静的検査(TypeScript strict)                           |
-| `npm test`                                                    | 単体テスト(Vitest)                                    |
-| `npm run test:functions` / `npm run lint:functions`           | Edge Functions(Deno)                                  |
-| `npm run test:db`                                             | pgTAP(RLS・権限・監査・上限)                          |
-| `npm run test:integration`                                    | 結合テスト(ローカルの Supabase が必要)                |
-| `npm run test:e2e`                                            | E2E(Playwright。ローカルの Supabase が必要)           |
-| `npm run check:secrets`                                       | ビルド成果物の秘密情報・service role の使用箇所の検査 |
+| コマンド                                                      | 内容                                                                          |
+| ------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `npm run lint` / `npm run typecheck` / `npm run format:check` | 静的検査(TypeScript strict)                                                   |
+| `npm test`                                                    | 単体テスト(Vitest)                                                            |
+| `npm run test:functions` / `npm run lint:functions`           | Edge Functions(Deno)                                                          |
+| `npm run test:db`                                             | pgTAP(RLS・権限・監査・上限)                                                  |
+| `npm run test:integration`                                    | 結合テスト(ローカルの Supabase が必要)                                        |
+| `npm run test:e2e`                                            | E2E(Playwright。ローカルの Supabase が必要)                                   |
+| `npm run check:generated`                                     | 生成物(食品マスターのシード・Edge Functions 用の計算モジュールの写し)が最新か |
+| `npm run check:secrets`                                       | ビルド成果物の秘密情報・service role の使用箇所の検査                         |
 
 CI は `.github/workflows/buddyship-ci.yml`(このフォルダの変更時だけ動く)。テストはすべてローカルの Supabase と合成データで動き、ローカル以外には接続しません。
 
