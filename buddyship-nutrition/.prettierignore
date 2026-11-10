@@ -1,0 +1,7 @@
+**/dist
+**/node_modules
+supabase/.temp
+supabase/functions/deno.lock
+package-lock.json
+docs
+app/tests/e2e/.accounts.json

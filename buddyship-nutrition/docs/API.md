@@ -6,6 +6,7 @@
   2. **PostgREST RPC**(`/rest/v1/rpc/<name>`)— 書き込み全般、スタッフ・管理者の操作、集計。
   3. **Edge Functions**(`/functions/v1/<name>`)— AI 呼び出し、エクスポート、Auth Admin API が必要な処理。
 - すべて `Authorization: Bearer <JWT>` 必須。匿名アクセスは不可。
+- RPC の返り値は `{"ok": true, "data": ...}` または `{"ok": false, "error": "<code>"}`(Sprint 1 実装。DATABASE §9)。クライアントは `parseRpcResult`(`packages/shared/src/rpc.ts`)で検証する。
 - 入出力スキーマは `packages/shared` の Zod で定義し、クライアント・Edge Function・テストで共有。DB 側でも CHECK 制約と RPC 内検証で二重に守る。
 
 ## 1. 共通
@@ -167,7 +168,9 @@ const SaveMeal = z.object({
 
 | 関数 | 説明 |
 |---|---|
-| `admin_set_role(user_id, role, active)` | |
+| `admin_check()` | 管理者(aal2)かの確認。`admin-invite-user` が service role を使う前に呼ぶ |
+| `admin_register_profile(user_id, display_name, role, facility_id)` | Auth に招待済みのユーザーにプロフィールとロールを付ける(role は member / staff のみ) |
+| `admin_set_role(user_id, role, active)` | 自分自身は変更不可。スタッフ停止時は担当割当を終了し同意を撤回 |
 | `admin_assign_staff(staff_id, member_id)` / `admin_end_assignment(id)` | 割当解除時に該当同意を自動撤回(D-07 決定後) |
 | `admin_list_users(filters)` | 表示名・ロール・所属のみ |
 | `admin_list_audit_logs(filters)` | 閲覧自体も記録 |

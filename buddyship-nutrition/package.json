@@ -1,0 +1,49 @@
+{
+  "name": "buddyship-nutrition",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Buddyship AI Nutrition — Phase 1",
+  "type": "module",
+  "engines": {
+    "node": ">=22.12 <23"
+  },
+  "workspaces": [
+    "packages/shared",
+    "app"
+  ],
+  "scripts": {
+    "build": "npm run build -w app",
+    "typecheck": "npm run typecheck -w packages/shared && npm run typecheck -w app && tsc -p tests/integration --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "npm run test -w packages/shared && npm run test -w app",
+    "test:integration": "vitest run --config tests/integration/vitest.config.ts",
+    "test:db": "supabase test db",
+    "test:e2e": "npm run test:e2e -w app",
+    "db:start": "supabase start",
+    "db:reset": "supabase db reset",
+    "db:types": "supabase gen types typescript --local --schema public > packages/shared/src/database.types.ts",
+    "check:secrets": "node scripts/check-secrets.mjs",
+    "seed:dev-users": "node scripts/seed-dev-users.mjs",
+    "test:functions": "deno test --config supabase/functions/deno.json supabase/functions/_shared/",
+    "lint:functions": "deno lint --config supabase/functions/deno.json supabase/functions && deno check --config supabase/functions/deno.json supabase/functions/admin-invite-user/index.ts"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@supabase/supabase-js": "2.119.0",
+    "@types/node": "22.20.5",
+    "deno": "2.9.6",
+    "eslint": "10.14.0",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "globals": "17.14.0",
+    "prettier": "3.9.10",
+    "supabase": "3.1.0",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.72.2",
+    "vitest": "5.1.0"
+  },
+  "overrides": {
+    "playwright-core": "1.63.0"
+  }
+}

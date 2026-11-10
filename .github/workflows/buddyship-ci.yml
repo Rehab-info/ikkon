@@ -1,0 +1,94 @@
+# Buddyship AI Nutrition の CI(buddyship-nutrition/ の変更時だけ動く。一献の Pages 公開とは無関係)
+# ローカルの Supabase(Docker)を起動し、合成データだけでテストする。秘密情報は使わない。
+name: Buddyship Nutrition CI
+
+on:
+  push:
+    paths:
+      - 'buddyship-nutrition/**'
+      - '.github/workflows/buddyship-ci.yml'
+  pull_request:
+    paths:
+      - 'buddyship-nutrition/**'
+      - '.github/workflows/buddyship-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: buddyship-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: buddyship-nutrition
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    env:
+      SUPABASE_TELEMETRY_DISABLED: '1'
+      DO_NOT_TRACK: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: buddyship-nutrition/.nvmrc
+          cache: npm
+          cache-dependency-path: buddyship-nutrition/package-lock.json
+
+      - name: Install (lockfile)
+        run: npm ci
+
+      - name: Dependency audit (runtime deps, high and above)
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Lint / format / typecheck
+        run: |
+          npm run lint
+          npm run format:check
+          npm run typecheck
+
+      - name: Unit tests (shared + app)
+        run: npm test
+
+      - name: Edge Functions lint, typecheck and tests (Deno)
+        run: |
+          npx deno lint --config supabase/functions/deno.json supabase/functions
+          npx deno check --config supabase/functions/deno.json supabase/functions/admin-invite-user/index.ts
+          npx deno test --config supabase/functions/deno.json supabase/functions/_shared/
+
+      - name: Start local Supabase
+        run: |
+          cp supabase/.env.example supabase/.env
+          npx supabase start
+
+      - name: Database tests (pgTAP, RLS and permissions)
+        run: npx supabase test db
+
+      - name: Integration tests (real JWT / MFA / RPC / Edge Function)
+        run: npm run test:integration
+
+      - name: Build app and check for secrets
+        run: |
+          export VITE_SUPABASE_URL=http://127.0.0.1:54321
+          export VITE_SUPABASE_ANON_KEY="$(npx supabase status -o json | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>console.log(JSON.parse(s.slice(s.indexOf("{"))).ANON_KEY))')"
+          npm run build
+          npm run check:secrets
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+        working-directory: buddyship-nutrition/app
+
+      - name: E2E tests
+        run: npx playwright test --trace off
+        working-directory: buddyship-nutrition/app
+
+      - name: Stop Supabase
+        if: always()
+        run: npx supabase stop --no-backup

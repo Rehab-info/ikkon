@@ -1,0 +1,44 @@
+-- テスト用ヘルパー(各テストのトランザクション内で作られ、終了時に消える)
+-- 利用者はすべて架空。ログインは request.jwt.claims を設定して authenticated ロールに切り替える
+create schema tests;
+grant usage on schema tests to authenticated, anon;
+
+-- 組織 A = シードのデモ事業者、組織 B = 別組織
+create function tests.org_a() returns uuid language sql immutable as $$ select '00000000-0000-4000-8000-000000000001'::uuid $$;
+create function tests.org_b() returns uuid language sql immutable as $$ select '00000000-0000-4000-8000-000000000002'::uuid $$;
+
+create function tests.new_user(p_name text, p_org uuid, p_roles public.app_role[]) returns uuid
+language plpgsql as $$
+declare v_id uuid := gen_random_uuid();
+begin
+  insert into auth.users(id, instance_id, aud, role, email)
+  values (v_id, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', v_id || '@example.invalid');
+  insert into public.profiles(user_id, organization_id, display_name) values (v_id, p_org, p_name);
+  insert into public.user_roles(user_id, organization_id, role) select v_id, p_org, r from unnest(p_roles) r;
+  return v_id;
+end $$;
+
+-- 名前で引けるように保存
+create table tests.users(name text primary key, id uuid not null);
+grant select on tests.users to authenticated, anon;
+create function tests.u(p_name text) returns uuid language sql stable as $$ select id from tests.users where name = p_name $$;
+grant execute on function tests.u(text) to authenticated, anon;
+
+create function tests.login(p_name text, p_aal text default 'aal2') returns void
+language plpgsql as $$
+begin
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', tests.u(p_name), 'role', 'authenticated', 'aal', p_aal)::text, true);
+  perform set_config('role', 'authenticated', true);
+end $$;
+
+create function tests.anon() returns void
+language plpgsql as $$
+begin
+  perform set_config('request.jwt.claims', json_build_object('role', 'anon')::text, true);
+  perform set_config('role', 'anon', true);
+end $$;
+
+-- RPC の結果の error(成功なら null)
+create function tests.err(p jsonb) returns text language sql immutable as $$ select case when (p->>'ok')::boolean then null else p->>'error' end $$;
+grant execute on function tests.err(jsonb) to authenticated, anon;

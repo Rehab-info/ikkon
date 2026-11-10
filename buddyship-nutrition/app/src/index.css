@@ -1,0 +1,57 @@
+@import 'tailwindcss';
+
+/*
+ * 高齢者向け UI の基盤(SCREENS §1)
+ * - 文字は rem 基準。ルートの文字サイズを 3 段階(18 / 20 / 22px)で切り替え、全体が比例して大きくなる
+ * - 色はコントラスト比 4.5:1 以上。良否を色で表さない
+ */
+@theme {
+  --color-ink: #111827; /* 本文(白地で 17:1) */
+  --color-ink-muted: #374151; /* 補足(白地で 10:1) */
+  --color-line: #6b7280; /* 枠線(白地で 4.8:1) */
+  --color-surface: #ffffff;
+  --color-surface-muted: #f3f4f6;
+  --color-brand: #1d4ed8; /* 主ボタン(白文字で 6.7:1) */
+  --color-brand-strong: #1e3a8a;
+  --color-focus: #b45309; /* フォーカス枠(白地で 5:1、青ボタンとも区別できる) */
+  --color-alert: #991b1b; /* エラー文(白地で 8:1)。必ず文と記号を併記する */
+  --font-sans:
+    'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'BIZ UDPGothic', 'Noto Sans JP', 'Yu Gothic UI', Meiryo, sans-serif;
+}
+
+html {
+  font-size: 112.5%; /* 18px */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+html[data-font-scale='1'] {
+  font-size: 125%;
+} /* 20px */
+html[data-font-scale='2'] {
+  font-size: 137.5%;
+} /* 22px */
+
+body {
+  margin: 0;
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
+/* キーボード操作のフォーカスを太くはっきり */
+:focus-visible {
+  outline: 4px solid var(--color-focus);
+  outline-offset: 3px;
+}
+
+/* 動きを減らす設定を尊重 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

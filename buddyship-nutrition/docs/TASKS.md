@@ -7,9 +7,11 @@
 ## Step 1 — 設計文書
 - [x] 既存リポジトリの確認
 - [x] 設計文書 9 点(v2.0)
-- [ ] Sprint 1 の前提となる未決事項の承認([DECISIONS.md §1.1](./DECISIONS.md))
+- [x] Sprint 1 の前提となる未決事項の承認(2026-11-10「推奨どおり」)
 
 ## Sprint 1 — 認証・プロフィール・担当割当・同意管理・DB マイグレーション・RLS テスト
+
+**状態:実装済み(2026-11-10)。結果は [reports/sprint-1.md](./reports/sprint-1.md)。**
 
 詳細計画は [DECISIONS.md §5](./DECISIONS.md)。
 

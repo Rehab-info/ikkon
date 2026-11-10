@@ -3,6 +3,7 @@
 - 文書版: **v2.0 ドラフト(承認待ち)**
 - DB: Supabase PostgreSQL。すべての変更は `supabase/migrations/` の SQL マイグレーションで管理(ダッシュボードでの手作業変更は禁止)。
 - 下の SQL は設計意図を示すもの。実装時にマイグレーションとして書き起こし、pgTAP で検証する。
+- **Sprint 1 実装済み**:§3.1〜§3.3、§3.8、§4(判定関数・RLS・Sprint 1 分の RPC)、§5 の一部。実体は `supabase/migrations/2026111000*_*.sql`。設計からの差分は §9。
 
 ## 1. スキーマ方針
 
@@ -400,3 +401,17 @@ meal.total_*         = Σ item.*(丸め前の値で合計)
 - 破壊的変更は「追加 → 移行 → 削除」の 3 段階。
 - CI:`supabase db reset` → pgTAP 全件 → 生成した型とコミット済みの型の差分チェック。
 - カタログ検査テスト:`public` の全テーブルで RLS 有効、SECURITY DEFINER 関数の `search_path` 固定、`PUBLIC` に EXECUTE なし、ビューの `security_invoker`。
+
+## 9. Sprint 1 実装での設計からの差分
+
+| 項目 | 設計 | 実装 | 理由 |
+|---|---|---|---|
+| RPC の返り値 | 未定義 | すべて `{"ok": true, "data": ...}` / `{"ok": false, "error": "<code>"}` | 拒否を例外にすると同じトランザクションの監査ログも消えるため(R-07)。拒否は監査ログに記録してからエラー結果を返す |
+| 利用量テーブル | `private.ai_usage` | `private.usage_counters(counter, subject_id, period_start)` | 1 分・日・月・エクスポートを 1 つの表で扱うため。区切りは Asia/Tokyo |
+| 同意文書 | 版とハッシュ | 版・題名・本文・ハッシュ(本文とハッシュの一致をトリガーで強制、書き換え禁止) | 同意した文面を後から確認できるようにするため |
+| `admin_check()` | なし | 追加 | `admin-invite-user` が service role を使う前に、呼出者の JWT で管理者(aal2)かを確認するため |
+| 監査ログの metadata | 「値を入れない」 | 許可キー(op, columns, scope, reason など)以外は `audit.log` が拒否。文字列は 64 文字まで | 健康データ・氏名が入り込むのを機械的に防ぐため |
+| 変更監査 | AFTER トリガー | profiles / user_roles / staff_assignments / staff_access_consents / user_agreements に設定。変わった列名だけ記録 | |
+| 管理者による自分のロール変更 | 規定なし | 禁止(`admin_set_role` で自分を対象にできない) | 管理者が自分をスタッフにして担当になる抜け道を防ぐ(DECISIONS §3-9) |
+| `profiles.timezone` | 既定 Asia/Tokyo | Asia/Tokyo のみ許可 | Phase 1 は国内のみ。将来の拡張時に制約を外す |
+| API の既定公開 | — | `auto_expose_new_tables = false`、関数・表の既定権限を取り消し、明示的に GRANT したものだけ公開 | 付け忘れで公開されることを防ぐ |

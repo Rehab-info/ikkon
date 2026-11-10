@@ -1,0 +1,7 @@
+dist
+node_modules
+test-results
+playwright-report
+tests/e2e/.accounts.json
+.env
+.env.local

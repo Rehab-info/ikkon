@@ -1,0 +1,13 @@
+# Supabase
+.branches
+.temp
+
+# dotenvx
+.env.keys
+.env.local
+.env.*.local
+.env
+
+# このサンドボックス専用(TLS 中継プロキシの CA)。コミットしない
+functions/.sandbox-ca.crt
+.env.sandbox
