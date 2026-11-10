@@ -60,7 +60,23 @@ test.describe.serial('Sprint 2: 食事記録', () => {
 
     await expect(member.getByRole('heading', { name: '食べたものと量の確認' })).toBeVisible();
     await expect(member.getByTestId('mock-banner')).toBeVisible();
-    await expect(member.getByTestId('needs-review')).toHaveCount(3); // 豚肉・サラダ油・豆腐
+    // AI が生成した食品候補は自動的に確定しない:最初はすべて要確認で、栄養の計算に入らない
+    const lines = await member.getByTestId('meal-line').count();
+    expect(lines).toBeGreaterThan(3);
+    await expect(member.getByTestId('needs-review')).toHaveCount(lines);
+    await expect(member.locator('[data-testid="meal-line"][data-status="confirmed"]')).toHaveCount(0);
+    await expect(panel(member)).toContainText(`(未確認 ${lines} 品)`);
+    // 「これで合っている」を押した食品だけが確定する(押すまでは AI の候補として示すだけ)
+    const suggestions = member.getByTestId('ai-suggestion');
+    const suggested = await suggestions.count();
+    expect(suggested).toBe(lines - 3);
+    while ((await suggestions.count()) > 0) {
+      await suggestions
+        .first()
+        .getByRole('button', { name: /で合っている$/ })
+        .click();
+    }
+    await expect(member.getByTestId('needs-review')).toHaveCount(3); // 豚肉・サラダ油・豆腐(候補を選ぶ必要がある)
     await expect(panel(member)).toHaveAttribute('data-scope', 'confirmed_only_subtotal');
     await expect(member.getByTestId('nutrition-heading')).toHaveText('確認済み食品のみの小計');
     await expect(panel(member)).toContainText('未確認の食品は含まれていません。(未確認 3 品)');

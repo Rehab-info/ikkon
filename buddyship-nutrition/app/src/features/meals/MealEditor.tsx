@@ -120,6 +120,8 @@ function LineCard(props: {
   const [searching, setSearching] = useState(false);
   const n = lineNutrients(l);
   const review = l.status === 'needs_review';
+  const suggested = l.suggested;
+  const others = l.candidates.filter((c) => c.food_id !== suggested?.food_id);
   const pick = (f: FoodRef) => {
     onChange(chooseFood(state, l.key, f));
     setSearching(false);
@@ -139,11 +141,22 @@ function LineCard(props: {
       {review && (
         <div className="mb-3 rounded-lg bg-surface-muted p-3" data-testid="needs-review">
           <p className="mb-2 text-lg font-bold text-alert">
-            <span aria-hidden="true">⚠ </span>要確認:どれに近いですか?
+            <span aria-hidden="true">⚠ </span>要確認:{suggested ? 'この食品で合っていますか?' : 'どれに近いですか?'}
           </p>
-          <p className="mb-2 text-base">選ぶまで、この食品は栄養の計算に入りません。</p>
+          <p className="mb-2 text-base">確かめるまで、この食品は栄養の計算に入りません。</p>
+          {suggested && (
+            <div className="mb-3" data-testid="ai-suggestion">
+              <p className="mb-2 text-lg">
+                AI の候補:<strong>{suggested.display_name}</strong>
+              </p>
+              <Button onClick={() => pick(suggested)} aria-label={`${suggested.display_name}で合っている`}>
+                これで合っている
+              </Button>
+              {others.length > 0 && <p className="mt-3 text-base">違うときは、下から選んでください。</p>}
+            </div>
+          )}
           <div className="flex flex-col gap-2">
-            {l.candidates.slice(0, 5).map((c) => (
+            {others.slice(0, 5).map((c) => (
               <Button key={c.food_id} variant="quiet" className="justify-start text-left" onClick={() => pick(c)}>
                 {c.display_name}
               </Button>

@@ -85,23 +85,30 @@ function linesOf(a: AnalyzeResponse): AnalyzedLine[] {
   return out;
 }
 
-/** 解析結果 → save_meal の明細(AI の推定値のまま、全部食べた) */
-function toPayloadItems(a: AnalyzeResponse) {
-  const mk = (l: AnalyzedLine, role: string, dish?: { id: string; label: string; known: boolean }) => ({
-    role,
-    dish_group_id: dish?.id ?? null,
-    dish_label: dish?.label ?? null,
-    dish_composition_known: dish ? dish.known : null,
-    match_status: l.match_status,
-    food_id: l.match_status === 'confirmed' && l.food ? l.food.food_id : null,
-    candidate_food_ids: l.match_status === 'confirmed' ? [] : l.candidates.map((c) => c.food_id),
-    origin: 'ai',
-    ai_label: l.ai_label,
-    ai_estimated_served_g: l.ai_estimated_served_g,
-    served_g: l.ai_estimated_served_g,
-    intake_percent: 100,
-    label: l.ai_label,
-  });
+/**
+ * 解析結果 → save_meal の明細(AI の推定値のまま、全部食べた)。
+ * AI の候補は自動確定されないので、利用者が「これで合っている」を押した操作を
+ * confirmSuggested で再現する(押さなければ全部が要確認のまま)。
+ */
+function toPayloadItems(a: AnalyzeResponse, confirmSuggested = true) {
+  const mk = (l: AnalyzedLine, role: string, dish?: { id: string; label: string; known: boolean }) => {
+    const chosen = confirmSuggested ? l.suggested : null;
+    return {
+      role,
+      dish_group_id: dish?.id ?? null,
+      dish_label: dish?.label ?? null,
+      dish_composition_known: dish ? dish.known : null,
+      match_status: chosen ? ('confirmed' as const) : ('needs_review' as const),
+      food_id: chosen ? chosen.food_id : null,
+      candidate_food_ids: chosen ? [] : l.candidates.map((c) => c.food_id),
+      origin: 'ai',
+      ai_label: l.ai_label,
+      ai_estimated_served_g: l.ai_estimated_served_g,
+      served_g: l.ai_estimated_served_g,
+      intake_percent: 100,
+      label: chosen ? chosen.display_name : l.ai_label,
+    };
+  };
   const out: ReturnType<typeof mk>[] = [];
   for (const it of a.items) {
     if (it.kind === 'food') {
@@ -200,19 +207,23 @@ describe('写真 → 解析 → 照合 → 保存 → 再表示', () => {
     expect(bad.error).not.toBeNull();
   });
 
-  it('analysis returns dishes with ingredients; exact unique matches are confirmed, ambiguous ones need review', async () => {
+  it('analysis returns dishes with ingredients; nothing is auto-confirmed, exact unique matches are only suggested', async () => {
     const r = await analyze(member.client, member.id, path);
     expect(r.status).toBe(200);
     if (!r.body) throw new Error('no body');
     analysis = r.body;
     expect(analysis.provider).toBe('mock');
     const all = linesOf(analysis);
-    const status = Object.fromEntries(all.map((l) => [l.ai_label, l.match_status]));
-    expect(status['ごはん']).toBe('confirmed');
-    expect(status['じゃがいも']).toBe('confirmed');
-    expect(status['豚肉']).toBe('needs_review'); // 候補が 2 つ
-    expect(status['豆腐']).toBe('needs_review');
-    expect(status['サラダ油']).toBe('needs_review'); // AI の確からしさが低い
+    // Sprint 3:AI が生成した食品候補は自動的に確定しない
+    expect(all.every((l) => l.match_status === 'needs_review')).toBe(true);
+    expect(JSON.stringify(analysis)).not.toContain('"confirmed"');
+    const strength = Object.fromEntries(all.map((l) => [l.ai_label, l.suggestion_strength]));
+    expect(strength['ごはん']).toBe('suggested');
+    expect(strength['じゃがいも']).toBe('suggested');
+    expect(strength['豚肉']).toBe('ambiguous'); // 候補が 2 つ
+    expect(strength['豆腐']).toBe('ambiguous');
+    expect(strength['サラダ油']).toBe('ambiguous'); // AI の確からしさが低い
+    for (const l of all) if (l.suggestion_strength !== 'suggested') expect(l.suggested).toBeNull();
     expect(
       all
         .find((l) => l.ai_label === '豚肉')!

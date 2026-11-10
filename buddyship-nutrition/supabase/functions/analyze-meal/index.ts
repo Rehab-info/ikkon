@@ -4,7 +4,7 @@
  *  1. 呼出者の JWT で:書き込み権限(本人 or meals:write の担当スタッフ)と AI 利用量の上限
  *  2. 呼出者の JWT で画像を取得(Storage のポリシーが効く)、中身を検証
  *  3. AI(D-01 決定までは mock)→ スキーマ検証(栄養値・診断・助言は受け取らない)
- *  4. 食品コードの照合 → packages/nutrition の initialMatchStatus で確定/要確認(D-19)
+ *  4. 食品コードの照合 → packages/nutrition の initialMatchStatus(常に要確認。AI 候補は自動確定しない)
  *  5. 解析記録を保存(食品名と提供量だけ)
  * service role は使わない。
  */
@@ -24,7 +24,7 @@ import { hashUserId, log } from '../_shared/log.ts';
 import { checkImage } from '../_shared/image.ts';
 import { AiMealResult } from '../_shared/ai/schema.ts';
 import { selectAdapter } from '../_shared/ai/index.ts';
-import { initialMatchStatus } from '../_shared/nutrition/index.ts';
+import { initialMatchStatus, suggestionOf } from '../_shared/nutrition/index.ts';
 
 const FN = 'analyze-meal';
 const Body = z
@@ -130,16 +130,21 @@ export async function handler(req: Request): Promise<Response> {
   }
   const line = (label: string, served_g: number, confidence: 'low' | 'medium' | 'high') => {
     const candidates = matches.get(label) ?? [];
-    const status = initialMatchStatus(
-      candidates.map((c) => ({ foodCode: c.food_code, exactMatch: c.exact_match })),
-      confidence,
-    );
+    const refs = candidates.map((c) => ({ ...c, foodCode: c.food_code, exactMatch: c.exact_match }));
+    // AI の候補は自動的に確定しない(常に要確認)。先頭に示す候補だけを返す
+    const status = initialMatchStatus();
+    const { strength, suggested } = suggestionOf(refs, confidence);
+    const strip = (c: (typeof refs)[number]) => {
+      const { foodCode: _f, exactMatch: _e, ...rest } = c;
+      return rest;
+    };
     return {
       ai_label: label,
       ai_estimated_served_g: served_g,
       confidence,
       match_status: status,
-      food: status === 'confirmed' ? candidates[0] : null,
+      suggestion_strength: strength,
+      suggested: suggested ? strip(suggested) : null,
       candidates,
     };
   };

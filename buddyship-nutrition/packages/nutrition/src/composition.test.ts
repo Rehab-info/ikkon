@@ -4,6 +4,7 @@ import {
   APPROXIMATE_REASON_TEXT,
   initialMatchStatus,
   mealTotalHeading,
+  suggestionOf,
   summarizeMeal,
   type MealLine,
 } from './composition.ts';
@@ -22,34 +23,19 @@ const line = (over: Partial<MealLine> & { g?: number }): MealLine => ({
   ...over,
 });
 
-describe('食品コードの対応付け(D-19:確実でなければ「要確認」)', () => {
-  it('候補が 1 つで名前が完全一致し、確からしさが低くないときだけ確定', () => {
-    expect(initialMatchStatus([{ foodCode: '01088', exactMatch: true }], 'high')).toBe('confirmed');
-    expect(initialMatchStatus([{ foodCode: '01088', exactMatch: true }], 'medium')).toBe('confirmed');
+describe('食品コードの対応付け(Sprint 3:AI の候補は自動的に確定しない)', () => {
+  it('AI 由来の明細は、候補の数・一致・確からしさにかかわらず常に要確認から始まる', () => {
+    expect(initialMatchStatus()).toBe('needs_review');
   });
 
-  it.each([
-    ['候補なし', [], 'high'],
-    [
-      '候補が複数',
-      [
-        { foodCode: '01088', exactMatch: true },
-        { foodCode: '01083', exactMatch: true },
-      ],
-      'high',
-    ],
-    ['あいまい一致', [{ foodCode: '01088', exactMatch: false }], 'high'],
-    [
-      '完全一致と別の候補',
-      [
-        { foodCode: '01088', exactMatch: true },
-        { foodCode: '01083', exactMatch: false },
-      ],
-      'high',
-    ],
-    ['AI の確からしさが低い', [{ foodCode: '01088', exactMatch: true }], 'low'],
-  ] as const)('%s → 要確認', (_label, cands, conf) => {
-    expect(initialMatchStatus(cands, conf)).toBe('needs_review');
+  it('先頭に示す「AI の候補」は、1 つ・完全一致・確からしさが低くないときだけ', () => {
+    const one = { foodCode: '01088', exactMatch: true };
+    expect(suggestionOf([one], 'high')).toEqual({ strength: 'suggested', suggested: one });
+    expect(suggestionOf([one], 'medium').strength).toBe('suggested');
+    expect(suggestionOf([one], 'low')).toEqual({ strength: 'ambiguous', suggested: null });
+    expect(suggestionOf([one, { foodCode: '01083', exactMatch: true }], 'high').strength).toBe('ambiguous');
+    expect(suggestionOf([{ foodCode: '01088', exactMatch: false }], 'high').strength).toBe('ambiguous');
+    expect(suggestionOf([], 'high')).toEqual({ strength: 'none', suggested: null });
   });
 });
 

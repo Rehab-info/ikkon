@@ -32,6 +32,8 @@ export interface EditorLine {
   intakePercent: number;
   status: 'confirmed' | 'needs_review';
   food: FoodRef | null;
+  /** AI が先頭に示した候補(確定ではない。利用者・スタッフが「これで合っている」を押すと確定) */
+  suggested: FoodRef | null;
   candidates: FoodRef[];
   origin: 'ai' | 'ai_corrected' | 'manual';
 }
@@ -55,13 +57,15 @@ export function fromAnalysis(a: AnalyzeResponse): EditorState {
     key: newKey(),
     role,
     dishKey,
-    label: l.match_status === 'confirmed' && l.food ? l.food.display_name : l.ai_label,
+    label: l.ai_label,
     aiLabel: l.ai_label,
     aiEstimatedServedG: l.ai_estimated_served_g,
     servedG: l.ai_estimated_served_g,
     intakePercent: 100,
-    status: l.match_status === 'confirmed' && l.food ? 'confirmed' : 'needs_review',
-    food: l.match_status === 'confirmed' ? l.food : null,
+    // AI の候補は自動的に確定しない(Sprint 3)。すべて要確認から始める
+    status: 'needs_review',
+    food: null,
+    suggested: l.suggested,
     candidates: l.candidates,
     origin: 'ai',
   });
@@ -102,6 +106,7 @@ export function fromSavedMeal(m: SavedMeal): EditorState {
       intakePercent: i.intake_percent,
       status: i.match_status,
       food,
+      suggested: null,
       candidates: i.candidates,
       origin: i.origin,
     };
@@ -117,7 +122,16 @@ export function chooseFood(s: EditorState, key: string, food: FoodRef): EditorSt
     ...s,
     lines: s.lines.map((l) =>
       l.key === key
-        ? { ...l, food, status: 'confirmed', label: food.display_name, candidates: [], origin: touched(l) }
+        ? {
+            ...l,
+            food,
+            status: 'confirmed',
+            label: food.display_name,
+            candidates: [],
+            suggested: null,
+            // AI の候補をそのまま確認したときは origin を保ち、別の食品を選んだときは ai_corrected
+            origin: l.suggested && l.suggested.food_id === food.food_id ? l.origin : touched(l),
+          }
         : l,
     ),
   };
@@ -165,6 +179,7 @@ export function addLine(
         intakePercent: 100,
         status: 'confirmed',
         food,
+        suggested: null,
         candidates: [],
         origin: 'manual',
       },

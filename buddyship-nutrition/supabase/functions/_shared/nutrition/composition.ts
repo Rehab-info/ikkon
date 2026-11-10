@@ -30,19 +30,32 @@ export interface FoodCandidate {
 }
 
 /**
- * AI の候補から、最初の対応付けの状態を決める。
- * 確定してよいのは「候補がちょうど 1 つで、名前が完全一致し、AI の確からしさが低くない」ときだけ。
- * それ以外(候補なし・複数・あいまい一致・確からしさ低)は要確認。
- * 確定した場合も、利用者・スタッフが画面で確認・修正できる。
+ * AI の候補から、最初の対応付けの状態を決める(Sprint 3 で変更)。
+ * **AI が生成した食品候補は自動的に確定しない**。AI 由来の明細は必ず「要確認」から始まり、
+ * 利用者またはスタッフが画面で選んだ(または「これで合っている」を押した)ときにだけ確定する。
  */
-export function initialMatchStatus(
-  candidates: readonly FoodCandidate[],
+export function initialMatchStatus(): MatchStatus {
+  return 'needs_review';
+}
+
+/** 候補を見せる強さ。suggested は画面で先頭に「AI の候補」として示す(確定はしない) */
+export type SuggestionStrength = 'suggested' | 'ambiguous' | 'none';
+
+/**
+ * 画面で先頭に示す候補(確定はしない)。
+ * 候補がちょうど 1 つで名前が完全一致し、AI の確からしさが低くないときだけ「AI の候補」として示す。
+ * それ以外(候補なし・複数・あいまい一致・確からしさ低)は、候補を並べて選んでもらう。
+ */
+export function suggestionOf<T extends FoodCandidate>(
+  candidates: readonly T[],
   aiConfidence: 'low' | 'medium' | 'high',
-): MatchStatus {
+): { strength: SuggestionStrength; suggested: T | null } {
+  if (candidates.length === 0) return { strength: 'none', suggested: null };
   const exact = candidates.filter((c) => c.exactMatch);
-  if (aiConfidence === 'low') return 'needs_review';
-  if (candidates.length !== 1 || exact.length !== 1) return 'needs_review';
-  return 'confirmed';
+  if (aiConfidence !== 'low' && candidates.length === 1 && exact.length === 1) {
+    return { strength: 'suggested', suggested: exact[0] ?? null };
+  }
+  return { strength: 'ambiguous', suggested: null };
 }
 
 export interface MealLine {

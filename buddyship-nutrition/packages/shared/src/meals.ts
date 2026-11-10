@@ -151,8 +151,10 @@ const AnalyzedLine = z.object({
   ai_label: z.string(),
   ai_estimated_served_g: z.number(),
   confidence: z.enum(['low', 'medium', 'high']),
-  match_status: MatchStatus,
-  food: FoodRef.nullable(),
+  // AI の候補は自動的に確定しない(Sprint 3)。suggested は画面で先頭に示す候補で、確定ではない
+  match_status: z.literal('needs_review'),
+  suggestion_strength: z.enum(['suggested', 'ambiguous', 'none']),
+  suggested: FoodRef.nullable(),
   candidates: FoodList,
 });
 export const AnalyzeResponse = z.object({

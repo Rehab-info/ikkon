@@ -50,8 +50,9 @@ const analysis: AnalyzeResponse = {
       ai_label: 'ごはん',
       ai_estimated_served_g: 150,
       confidence: 'high',
-      match_status: 'confirmed',
-      food: rice,
+      match_status: 'needs_review',
+      suggestion_strength: 'suggested',
+      suggested: rice,
       candidates: [rice],
     },
     {
@@ -65,7 +66,8 @@ const analysis: AnalyzeResponse = {
           ai_estimated_served_g: 50,
           confidence: 'medium',
           match_status: 'needs_review',
-          food: null,
+          suggestion_strength: 'ambiguous',
+          suggested: null,
           candidates: [pork1, pork2],
         },
       ],
@@ -73,25 +75,50 @@ const analysis: AnalyzeResponse = {
   ],
 };
 
+/** AI の候補「ごはん」を利用者が「これで合っている」で確定した状態 */
+const withRiceConfirmed = () => {
+  const s = fromAnalysis(analysis);
+  return chooseFood(s, s.lines[0]!.key, s.lines[0]!.suggested!);
+};
+
 describe('食事の確認・修正の状態', () => {
-  it('解析結果から:確定と要確認、料理のまとまり', () => {
+  it('解析結果から:AI の候補は自動で確定せず、すべて要確認から始まる', () => {
     const s = fromAnalysis(analysis);
-    expect(s.lines.map((l) => [l.label, l.status, l.role])).toEqual([
-      ['ごはん', 'confirmed', 'food'],
-      ['豚肉', 'needs_review', 'ingredient'],
+    expect(s.lines.map((l) => [l.label, l.status, l.role, l.food])).toEqual([
+      ['ごはん', 'needs_review', 'food', null],
+      ['豚肉', 'needs_review', 'ingredient', null],
     ]);
+    expect(s.lines[0]!.suggested).toEqual(rice);
+    expect(s.lines[1]!.suggested).toBeNull();
     expect(s.dishes).toHaveLength(1);
   });
 
-  it('要確認が残っていると「確認済み食品のみの小計」で、要確認の食品は数値に入らない', () => {
+  it('確認前の AI 候補は数値に入らない(0 品確認の小計)', () => {
     const { summary, heading } = summarize(fromAnalysis(analysis));
+    expect(heading.heading).toBe('確認済み食品のみの小計');
+    expect(summary.totals.energy_kcal.hundredths).toBe(0);
+  });
+
+  it('「これで合っている」で AI の候補を確定すると origin は ai のまま', () => {
+    const s = withRiceConfirmed();
+    expect(s.lines[0]).toMatchObject({ status: 'confirmed', label: 'ごはん', origin: 'ai', suggested: null });
+  });
+
+  it('AI の候補と違う食品を選ぶと ai_corrected', () => {
+    const s0 = fromAnalysis(analysis);
+    const s = chooseFood(s0, s0.lines[0]!.key, pork1);
+    expect(s.lines[0]).toMatchObject({ status: 'confirmed', label: '豚ロース', origin: 'ai_corrected' });
+  });
+
+  it('要確認が残っていると「確認済み食品のみの小計」で、要確認の食品は数値に入らない', () => {
+    const { summary, heading } = summarize(withRiceConfirmed());
     expect(heading.heading).toBe('確認済み食品のみの小計');
     expect(heading.notes[0]).toContain('未確認の食品は含まれていません');
     expect(summary.totals.energy_kcal.hundredths).toBe(234_00); // ごはん 150 g だけ
   });
 
   it('要確認の食品を候補から選ぶと確定し、「推定摂取量」になる', () => {
-    let s = fromAnalysis(analysis);
+    let s = withRiceConfirmed();
     s = chooseFood(s, s.lines[1]!.key, pork1);
     expect(s.lines[1]).toMatchObject({ status: 'confirmed', label: '豚ロース', origin: 'ai_corrected' });
     const { summary, heading } = summarize(s);
@@ -100,7 +127,7 @@ describe('食事の確認・修正の状態', () => {
   });
 
   it('提供量・食べた割合を変えると再計算される(一括と個別)', () => {
-    let s = fromAnalysis(analysis);
+    let s = withRiceConfirmed();
     s = setServed(s, s.lines[0]!.key, 100);
     expect(summarize(s).summary.totals.energy_kcal.hundredths).toBe(156_00);
     s = setIntake(s, 50);
