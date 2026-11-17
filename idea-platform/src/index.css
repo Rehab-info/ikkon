@@ -1,0 +1,65 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-ink: #14213d;
+  --color-ink-soft: #2a3a5c;
+  --color-charcoal: #2e3238;
+  --color-muted: #5f6670;
+  --color-line: #e4e6ea;
+  --color-line-strong: #cfd3d9;
+  --color-paper: #f7f7f5;
+  --color-accent: #8a6a2f;
+  --color-accent-soft: #f6f0e4;
+  --color-moss: #2f6b4f;
+  --color-moss-soft: #eaf4ee;
+  --color-rust: #9a3a24;
+  --color-rust-soft: #f9ece7;
+  --color-slate-soft: #eef0f3;
+
+  --font-sans: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', 'Yu Gothic UI', 'Yu Gothic',
+    Meiryo, system-ui, sans-serif;
+  --font-serif: 'Hiragino Mincho ProN', 'Yu Mincho', 'Noto Serif JP', serif;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-white font-sans text-charcoal antialiased;
+    line-height: 1.8;
+    font-feature-settings: 'palt' 1;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply text-ink;
+    line-height: 1.45;
+    letter-spacing: 0.02em;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-ink);
+    outline-offset: 2px;
+  }
+  ::selection {
+    background: var(--color-accent-soft);
+  }
+}
+
+/* React Flow のコントロール類を落ち着いた見た目に */
+.react-flow__controls-button {
+  border-bottom-color: var(--color-line) !important;
+}
+.react-flow__attribution {
+  font-size: 10px;
+}
+
+@media print {
+  @page {
+    margin: 16mm;
+  }
+  body {
+    background: white;
+  }
+}
