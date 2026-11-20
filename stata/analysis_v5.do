@@ -6,7 +6,6 @@
 *   - 夜間勤務の列名を実データに合わせて「夜間勤務有無」に修正
 *   - 1つ目のExcelの列名一覧（見出しのみ・個票値なし）をlogに出力
 *   - 対象期間を 0-4 で指定する方式に変更（既定：2019/04/01～2024/03/31）
-*   - データフォルダがOneDrive内の場合は停止する安全チェックを追加
 *
 * 対応：Stata 16 / 17 / 18 / 19 以降
 *
@@ -85,17 +84,6 @@ local root = usubstr("$RAW_XLSX", 1, `p' - 1)
 global ROOT "`root'"
 global XLSX "$ROOT/student_return.xlsx"
 global LOGF "$ROOT/analysis_run.log"
-
-* OneDrive等のクラウド同期フォルダに生データを置かない（研究計画書9・10章）
-if ustrpos(lower("$ROOT"), "onedrive") > 0 {
-    noi di as error "============================================================"
-    noi di as error "選択したフォルダはOneDrive（クラウド同期）の中にあります："
-    noi di as error "  $ROOT"
-    noi di as error "生データはOneDriveの外のローカルフォルダ（例 C:\study_data）に置き、"
-    noi di as error "そのフォルダ内のExcelを選び直してください。"
-    noi di as error "============================================================"
-    exit 601
-}
 
 noi di "選択したファイル： $RAW_XLSX"
 noi di "データフォルダ　： $ROOT"
