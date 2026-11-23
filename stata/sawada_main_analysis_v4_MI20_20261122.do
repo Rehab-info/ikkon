@@ -660,7 +660,7 @@ if `RUN_MI' == 1 {
                 if "`m'" == "Both" local ivars "i.industry_group i.occupation_group"
                 noi di "======== MI(20): `diseasename' / `m' ========"
                 * Use pooled imputation estimates, keeping facility/year hierarchy.
-                capture noisily mi estimate, post: ///
+                capture noisily mi estimate, post cmdok: ///
                     melogit return_anxiety `ivars' `adjust' ///
                     if disease == `d' || facility: || fiscal_year:, nolog
                 local rc = _rc
