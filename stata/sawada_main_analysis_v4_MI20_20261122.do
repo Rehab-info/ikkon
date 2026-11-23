@@ -1,17 +1,6 @@
 * ========================================================================
 * Sawada: return-to-work anxiety among hospitalized patients, 2019-2023
-* VERSION: 4.1 (2026-11-23; based on supervisor's v4.0)
-*
-* CHANGES FROM v4.0 (by Sawada):
-*   1. Removed the UTF-8 BOM at the start of the file (caused r(199)).
-*   2. Industry / occupation: replaced 2-character code-prefix grouping with
-*      major groups from the JOHAS unified code tables (統一産業分類コード表 p.146,
-*      統一職業分類コード表 p.147, 入院患者病職歴調査基礎解析 2026-03).
-*      Reference categories: industry = 製造業, occupation = 事務.
-*   3. MI: analysis covariates WITHOUT missing values are now added as
-*      predictors in the imputation model (previously they were omitted).
-*   4. RUN_MI default set to 0 (run descriptive + complete-case first).
-*
+* VERSION: 4.0 (2026-11-22; MI=20 protocol-aligned; Stata 18)
 *
 * Purpose: cohort flow, missingness, Table 1, disease-specific proportions,
 *          and complete-case + MI(20) mixed-effects logistic regressions.
@@ -53,8 +42,11 @@ noi di "=== Sawada 2026-11-22: cohort cleanup + Table1 + CC + 20-imputation MI m
 * Patient ID and copied survey data were audited on 22 Nov 2026.
 * Run complete-case sensitivity models first; then perform MI (M=20).
 local RUN_MODELS 1
-local RUN_MI 0   // v4.1: run CC first; set to 1 after reviewing CC output
+local RUN_MI 1
 local M 20  // both submitted protocol/ethics documents request >=20
+* Within each disease, pool two-character codes with fewer than 200
+* valid-outcome observations. This rule uses COUNTS, NOT outcome status.
+local MIN_GROUP_N 200
 
 * ========================================================================
 * 1. Import ONLY necessary analysis variables from each annual file.
@@ -345,63 +337,17 @@ quietly levelsof facility, local(facilities)
 local n_facilities : word count `facilities'
 noi di "Number of facilities in final cohort = `n_facilities'"
 
-* v4.1: Industry / occupation major groups from the JOHAS unified code tables
-* (統一産業分類コード表 p.146, 統一職業分類コード表 p.147).
-* real() makes the mapping robust to leading zeros ("011" or "11").
-gen double _ind = real(産業分類コード現職)
-gen byte industry_group = .
-replace industry_group = 1  if inlist(_ind, 11, 21, 31, 32, 41)
-replace industry_group = 2  if inrange(_ind, 51, 53)
-replace industry_group = 3  if inrange(_ind, 61, 84)
-replace industry_group = 4  if inrange(_ind, 91, 94)
-replace industry_group = 5  if inrange(_ind, 101, 105)
-replace industry_group = 6  if inrange(_ind, 111, 118)
-replace industry_group = 7  if inrange(_ind, 121, 132)
-replace industry_group = 8  if inrange(_ind, 141, 147) | inlist(_ind, 151, 152, 209)
-replace industry_group = 9  if inlist(_ind, 201, 202, 210)
-replace industry_group = 10 if inrange(_ind, 161, 164)
-replace industry_group = 11 if inrange(_ind, 203, 205)
-replace industry_group = 12 if inlist(_ind, 181, 182)
-replace industry_group = 13 if inrange(_ind, 171, 173)
-replace industry_group = 14 if inlist(_ind, 191, 192, 206, 207, 208) | inrange(_ind, 211, 214)
-replace industry_group = 15 if inrange(_ind, 221, 223)
-replace industry_group = 16 if _ind == 900
-label define indlbl 1 "農林漁業・鉱業" 2 "建設業" 3 "製造業" 4 "電気・ガス・水道" ///
-    5 "情報通信業" 6 "運輸業" 7 "卸売・小売業" 8 "金融・保険・不動産・物品賃貸" ///
-    9 "学術研究・専門技術サービス" 10 "宿泊・飲食サービス" 11 "生活関連サービス・娯楽" ///
-    12 "教育・学習支援" 13 "医療・福祉" 14 "複合サービス・その他サービス" ///
-    15 "公務" 16 "分類不能の産業"
-label values industry_group indlbl
-fvset base 3 industry_group      // reference: 製造業
-
-gen double _occ = real(職業分類コード現職)
-gen byte occupation_group = .
-replace occupation_group = 1  if inrange(_occ, 11, 33)
-replace occupation_group = 2  if inrange(_occ, 34, 37)
-replace occupation_group = 3  if inrange(_occ, 38, 44)
-replace occupation_group = 4  if inrange(_occ, 45, 46)
-replace occupation_group = 5  if inrange(_occ, 47, 53)
-replace occupation_group = 6  if inrange(_occ, 54, 56)
-replace occupation_group = 7  if inrange(_occ, 57, 59)
-replace occupation_group = 8  if inrange(_occ, 60, 64)
-replace occupation_group = 9  if inrange(_occ, 65, 89)
-replace occupation_group = 10 if _occ == 994
-label define occlbl 1 "専門的・技術的" 2 "管理的" 3 "事務" 4 "販売" 5 "サービス" ///
-    6 "保安" 7 "農林漁業" 8 "運輸・通信" 9 "生産工程・労務" 10 "分類不能の職業"
-label values occupation_group occlbl
-fvset base 3 occupation_group    // reference: 事務
-
-noi di "==== v4.1: codes not assigned to a major group (should be 0 or few) ===="
-quietly count if missing(industry_group) & 産業分類コード現職 != ""
-noi di "Industry code present but unmapped: " r(N)
-quietly count if missing(industry_group) & 産業分類コード現職 == ""
-noi di "Industry code blank: " r(N)
-quietly count if missing(occupation_group)
-noi di "Occupation unmapped: " r(N)
-noi di "==== v4.1: major-group counts by disease (valid outcome only) ===="
-noi tab industry_group disease if answered, missing
-noi tab occupation_group disease if answered, missing
-drop _ind _occ
+* Exploratory 2-character industry / occupation groupings.
+* These are CODE PREFIXES, not validated major-group classifications.
+foreach x in industry occupation {
+    if "`x'" == "industry" local source "産業分類コード現職"
+    if "`x'" == "occupation" local source "職業分類コード現職"
+    gen str2 `x'_prefix = substr(strtrim(`source'), 1, 2)
+    bysort disease `x'_prefix: egen long `x'_n = total(answered == 1)
+    replace `x'_prefix = "ZZ" if `x'_prefix != "" & `x'_n < `MIN_GROUP_N'
+    encode `x'_prefix, generate(`x'_group)
+    drop `x'_n
+}
 
 * Complete case includes BOTH industry and occupation, so sample is the
 * SAME for the three industry/occupation specifications within a disease.
@@ -641,7 +587,6 @@ if `RUN_MI' == 1 {
     local imp_binary ""
     local imp_nominal ""
     local all_imp ""
-    local complete_preds ""   // v4.1: complete analysis covariates used as predictors
 
     foreach v of local binary_vars {
         quietly count if missing(`v')
@@ -658,7 +603,6 @@ if `RUN_MI' == 1 {
             local imp_binary "`imp_binary' `v'"
             local all_imp "`all_imp' `v'"
         }
-        else local complete_preds "`complete_preds' i.`v'"
     }
     foreach v of local nominal_vars {
         quietly count if missing(`v')
@@ -675,7 +619,6 @@ if `RUN_MI' == 1 {
             local imp_nominal "`imp_nominal' `v'"
             local all_imp "`all_imp' `v'"
         }
-        else local complete_preds "`complete_preds' i.`v'"
     }
     mi set mlong
     mi register regular return_anxiety disease facility fiscal_year age male
@@ -692,9 +635,8 @@ if `RUN_MI' == 1 {
         if "`imp_nominal'" != "" local specs "`specs' (mlogit, augment) `imp_nominal'"
         noi di "MI variables: `all_imp'"
         noi di "Fixed predictors in imputation: disease, facility, discharge FY, age, sex, outcome"
-        noi di "v4.1: complete analysis covariates added as predictors: `complete_preds'"
         capture noisily mi impute chained `specs' = ///
-            i.disease i.facility i.fiscal_year c.age i.male i.return_anxiety `complete_preds', ///
+            i.disease i.facility i.fiscal_year c.age i.male i.return_anxiety, ///
             add(`M') burnin(10) rseed(20261122) dots
         if _rc {
             local mi_ok 0
@@ -779,7 +721,7 @@ noi di "05_model_ORs.xlsx and 06_MI20_model_ORs_APPROX.xlsx (if generated)."
 noi di "DO NOT SEND: 2019-2023.xlsx or any individual-level data."
 noi di "Three levels: patient, facility-specific discharge fiscal year, facility."
 noi di "Exclude old surveys; one first eligible admission per patient."
-noi di "v4.1: Industry/occupation = major groups from JOHAS unified code tables."
+noi di "Industry/occupation code-prefix groupings need codebook review."
 noi di "CC models are sensitivity analysis; MI(20) requires codebook review before final reporting."
 noi di "For correct finite-M MI p-values/CIs consult the log, not 06_MI20_model_ORs_APPROX.xlsx."
 noi di "Ethics application requests MI >=20; M=20 meets minimum."
